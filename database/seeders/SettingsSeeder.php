@@ -1,0 +1,311 @@
+<?php
+
+namespace Database\Seeders;
+
+use App\Helpers\SettingsHelper;
+use App\Models\Setting;
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Illuminate\Database\Seeder;
+
+class SettingsSeeder extends Seeder
+{
+    /**
+     * Run the database seeds.
+     */
+    public function run(): void
+    {
+        $defaultSettings = [
+            // General Settings
+            [
+                'key' => 'site_name',
+                'value' => config('app.name'),
+                'type' => 'string',
+                'group' => 'general',
+                'label' => 'Site Name',
+                'order' => 1,
+                'is_public' => true,
+            ],
+            [
+                'key' => 'site_email',
+                'value' => config('mail.from.address'),
+                'type' => 'email',
+                'group' => 'general',
+                'label' => 'Site Email',
+                'order' => 2,
+                'is_public' => true,
+            ],
+            [
+                'key' => 'site_phone',
+                'value' => '',
+                'type' => 'string',
+                'group' => 'general',
+                'label' => 'Site Phone',
+                'order' => 3,
+                'is_public' => true,
+            ],
+            [
+                'key' => 'site_address',
+                'value' => '',
+                'type' => 'textarea',
+                'group' => 'general',
+                'label' => 'Site Address',
+                'order' => 4,
+                'is_public' => true,
+            ],
+            [
+                'key' => 'support_whatsapp_number',
+                'value' => '',
+                'type' => 'string',
+                'group' => 'general',
+                'label' => 'Support WhatsApp Number',
+                'order' => 5,
+                'is_public' => true,
+            ],
+            [
+                'key' => 'site_currency',
+                'value' => 'NGN',
+                'type' => 'string',
+                'group' => 'general',
+                'label' => 'Currency Code',
+                'order' => 6,
+                'is_public' => true,
+            ],
+            [
+                'key' => 'site_currency_symbol',
+                'value' => '₦',
+                'type' => 'string',
+                'group' => 'general',
+                'label' => 'Currency Symbol',
+                'order' => 7,
+                'is_public' => true,
+            ],
+            [
+                'key' => 'site_description',
+                'value' => '',
+                'type' => 'textarea',
+                'group' => 'general',
+                'label' => 'Site Description',
+                'order' => 8,
+                'is_public' => true,
+            ],
+            [
+                'key' => 'site_logo',
+                'value' => '',
+                'type' => 'string',
+                'group' => 'general',
+                'label' => 'Site Logo URL',
+                'order' => 9,
+                'is_public' => true,
+            ],
+            [
+                'key' => 'site_favicon',
+                'value' => '',
+                'type' => 'string',
+                'group' => 'general',
+                'label' => 'Favicon URL',
+                'order' => 10,
+                'is_public' => true,
+            ],
+            [
+                'key' => 'maintenance_mode',
+                'value' => '0',
+                'type' => 'boolean',
+                'group' => 'general',
+                'label' => 'Maintenance Mode',
+                'order' => 11,
+                'is_public' => false,
+            ],
+            [
+                'key' => 'platform_fee_tier_1_max',
+                'value' => '10000',
+                'type' => 'number',
+                'group' => 'general',
+                'label' => 'Tier 1 Maximum',
+                'order' => 12,
+                'is_public' => true,
+            ],
+            [
+                'key' => 'platform_fee_tier_1_rate',
+                'value' => '7.5',
+                'type' => 'number',
+                'group' => 'general',
+                'label' => 'Tier 1 Service Fee (%)',
+                'order' => 13,
+                'is_public' => true,
+            ],
+            [
+                'key' => 'platform_fee_tier_2_max',
+                'value' => '50000',
+                'type' => 'number',
+                'group' => 'general',
+                'label' => 'Tier 2 Maximum',
+                'order' => 14,
+                'is_public' => true,
+            ],
+            [
+                'key' => 'platform_fee_tier_2_rate',
+                'value' => '5',
+                'type' => 'number',
+                'group' => 'general',
+                'label' => 'Tier 2 Service Fee (%)',
+                'order' => 15,
+                'is_public' => true,
+            ],
+            [
+                'key' => 'platform_fee_tier_3_max',
+                'value' => '200000',
+                'type' => 'number',
+                'group' => 'general',
+                'label' => 'Tier 3 Maximum',
+                'order' => 16,
+                'is_public' => true,
+            ],
+            [
+                'key' => 'platform_fee_tier_3_rate',
+                'value' => '3',
+                'type' => 'number',
+                'group' => 'general',
+                'label' => 'Tier 3 Service Fee (%)',
+                'order' => 17,
+                'is_public' => true,
+            ],
+            [
+                'key' => 'platform_fee_tier_4_rate',
+                'value' => '2',
+                'type' => 'number',
+                'group' => 'general',
+                'label' => 'Final Tier Service Fee (%)',
+                'order' => 18,
+                'is_public' => true,
+            ],
+            [
+                'key' => 'about_team_members',
+                'value' => json_encode(SettingsHelper::aboutTeamMembers()),
+                'type' => 'json',
+                'group' => 'general',
+                'label' => 'About Page Team Members',
+                'order' => 19,
+                'is_public' => true,
+            ],
+
+            // Payment Settings
+            [
+                'key' => 'default_payment_gateway',
+                'value' => 'paystack',
+                'type' => 'string',
+                'group' => 'payment',
+                'label' => 'Default Payment Gateway',
+                'order' => 1,
+                'is_public' => true,
+            ],
+            [
+                'key' => 'enable_cash_on_delivery',
+                'value' => '1',
+                'type' => 'boolean',
+                'group' => 'payment',
+                'label' => 'Enable Cash on Delivery',
+                'order' => 2,
+                'is_public' => true,
+            ],
+            [
+                'key' => 'test_mode',
+                'value' => '1',
+                'type' => 'boolean',
+                'group' => 'payment',
+                'label' => 'Test Mode',
+                'order' => 3,
+                'is_public' => false,
+            ],
+            [
+                'key' => 'paystack_test_public_key',
+                'value' => '',
+                'type' => 'string',
+                'group' => 'payment',
+                'label' => 'Paystack Test Public Key',
+                'order' => 4,
+                'is_public' => false,
+            ],
+            [
+                'key' => 'paystack_test_secret_key',
+                'value' => '',
+                'type' => 'string',
+                'group' => 'payment',
+                'label' => 'Paystack Test Secret Key',
+                'order' => 5,
+                'is_public' => false,
+            ],
+            [
+                'key' => 'paystack_public_key',
+                'value' => '',
+                'type' => 'string',
+                'group' => 'payment',
+                'label' => 'Paystack Public Key',
+                'order' => 6,
+                'is_public' => false,
+            ],
+            [
+                'key' => 'paystack_secret_key',
+                'value' => '',
+                'type' => 'string',
+                'group' => 'payment',
+                'label' => 'Paystack Secret Key',
+                'order' => 7,
+                'is_public' => false,
+            ],
+
+            // Shipping Settings
+            [
+                'key' => 'shipping_enabled',
+                'value' => '1',
+                'type' => 'boolean',
+                'group' => 'shipping',
+                'label' => 'Enable Shipping',
+                'order' => 1,
+                'is_public' => true,
+            ],
+            [
+                'key' => 'shipping_method',
+                'value' => 'flat_rate',
+                'type' => 'string',
+                'group' => 'shipping',
+                'label' => 'Shipping Method',
+                'order' => 2,
+                'is_public' => true,
+            ],
+            [
+                'key' => 'shipping_fee',
+                'value' => '700',
+                'type' => 'number',
+                'group' => 'shipping',
+                'label' => 'Delivery Fee',
+                'order' => 3,
+                'is_public' => true,
+            ],
+            [
+                'key' => 'free_shipping_threshold',
+                'value' => '10000',
+                'type' => 'number',
+                'group' => 'shipping',
+                'label' => 'Free Delivery Threshold',
+                'order' => 4,
+                'is_public' => true,
+            ],
+            [
+                'key' => 'estimated_delivery_days',
+                'value' => '3',
+                'type' => 'number',
+                'group' => 'shipping',
+                'label' => 'Estimated Delivery Days',
+                'order' => 5,
+                'is_public' => true,
+            ],
+        ];
+
+        foreach ($defaultSettings as $setting) {
+            Setting::firstOrCreate(
+                ['key' => $setting['key']],
+                $setting
+            );
+        }
+    }
+}

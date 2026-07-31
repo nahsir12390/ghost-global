@@ -1,0 +1,17 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /login
+Disallow: /register
+Disallow: /password/*
+Disallow: /email/*
+Disallow: /*?*sort=
+Disallow: /*?*page=*filter=
+Disallow: /storage/
+Disallow: /vendor/
+
+Sitemap: /sitemap.xml
+
+# Crawl-delay in seconds
+Crawl-delay: 1
