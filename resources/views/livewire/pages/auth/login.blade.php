@@ -73,7 +73,7 @@ new #[Layout('layouts.guest')] class extends Component
                         <svg class="input-icon h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12H8m8 0l-4 4m4-4l-4-4m8-2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h12a2 2 0 012 2z" />
                         </svg>
-                        <input wire:model.blur="form.email" id="email" class="form-input @error('form.email') form-input-error @enderror" type="email" name="email" required autofocus autocomplete="username" placeholder="you@example.com">
+                        <input wire:model.defer="form.email" id="email" class="form-input @error('form.email') form-input-error @enderror" type="email" name="email" required autofocus autocomplete="username" placeholder="you@example.com">
                     </div>
                     @error('form.email')
                         <p class="error-message">{{ $message }}</p>
@@ -103,7 +103,7 @@ new #[Layout('layouts.guest')] class extends Component
 
                 <div class="flex flex-col gap-3 rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
                     <label for="remember" class="flex items-center">
-                        <input wire:model.change="form.remember" id="remember" type="checkbox" class="form-checkbox">
+                        <input wire:model.defer="form.remember" id="remember" type="checkbox" class="form-checkbox">
                         <span class="ml-2 text-sm text-gray-600">Remember me</span>
                     </label>
                     <span class="text-[11px] font-medium uppercase tracking-[0.2em] text-gray-400">Protected</span>

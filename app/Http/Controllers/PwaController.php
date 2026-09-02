@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Helpers\SettingsHelper;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Response as ResponseFactory;
+use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
 
 class PwaController extends Controller
@@ -19,15 +19,56 @@ class PwaController extends Controller
         );
 
         return response()->json([
+            'id' => '/',
             'name' => $siteName,
             'short_name' => mb_strimwidth($siteName, 0, 12, ''),
             'description' => $siteDescription,
-            'start_url' => url('/'),
-            'scope' => url('/'),
+            'start_url' => '/?source=pwa',
+            'scope' => '/',
             'display' => 'standalone',
-            'background_color' => '#ffffff',
-            'theme_color' => '#dc2626',
-            'orientation' => 'portrait',
+            'display_override' => ['window-controls-overlay', 'standalone', 'minimal-ui'],
+            'background_color' => '#090909',
+            'theme_color' => '#090909',
+            'orientation' => 'any',
+            'lang' => str_replace('_', '-', app()->getLocale()),
+            'dir' => 'ltr',
+            'categories' => ['shopping', 'business', 'lifestyle'],
+            'prefer_related_applications' => false,
+            'shortcuts' => [
+                [
+                    'name' => 'Shop products',
+                    'short_name' => 'Shop',
+                    'description' => 'Browse products from active sellers.',
+                    'url' => route('shop', absolute: false),
+                    'icons' => [[
+                        'src' => route('pwa.icon', ['size' => 192]),
+                        'sizes' => '192x192',
+                        'type' => 'image/png',
+                    ]],
+                ],
+                [
+                    'name' => 'Shopping cart',
+                    'short_name' => 'Cart',
+                    'description' => 'Review items in your cart.',
+                    'url' => route('cart', absolute: false),
+                    'icons' => [[
+                        'src' => route('pwa.icon', ['size' => 192]),
+                        'sizes' => '192x192',
+                        'type' => 'image/png',
+                    ]],
+                ],
+                [
+                    'name' => 'Track an order',
+                    'short_name' => 'Track',
+                    'description' => 'Check the latest status of an order.',
+                    'url' => route('tracking.index', absolute: false),
+                    'icons' => [[
+                        'src' => route('pwa.icon', ['size' => 192]),
+                        'sizes' => '192x192',
+                        'type' => 'image/png',
+                    ]],
+                ],
+            ],
             'icons' => [
                 [
                     'src' => route('pwa.icon', ['size' => 192]),
@@ -66,7 +107,7 @@ class PwaController extends Controller
         $cachePrefix = Str::slug($siteName ?: 'storefront');
 
         $script = view('pwa.service-worker', [
-            'cacheName' => $cachePrefix . '-' . md5($version),
+            'cacheName' => $cachePrefix.'-'.md5($version),
             'offlineUrl' => url('/offline.html'),
             'manifestUrl' => route('pwa.manifest'),
             'icon192Url' => route('pwa.icon', ['size' => 192]),
@@ -278,7 +319,7 @@ SVG;
 
         if (count($words) >= 2) {
             return Str::upper(
-                mb_substr($words[0], 0, 1) .
+                mb_substr($words[0], 0, 1).
                 mb_substr($words[1], 0, 1)
             );
         }

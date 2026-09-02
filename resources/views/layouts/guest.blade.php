@@ -415,10 +415,10 @@
         }
     </style>
 </head>
-<body class="min-h-screen bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50 font-sans antialiased">
+<body class="auth-experience min-h-screen bg-[#f5f3ee] font-sans antialiased" data-auth-experience>
     <div class="min-h-screen flex flex-col">
         <!-- Modern Header -->
-        <header class="auth-header">
+        <header class="auth-header lg:absolute lg:inset-x-0 lg:top-0 lg:bg-transparent lg:text-white lg:border-transparent">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex h-14 items-center justify-between sm:h-16">
                     <!-- Logo -->
@@ -438,7 +438,7 @@
 
                     <!-- Back to home with icon -->
                     <a href="{{ route('home') }}" 
-                       class="inline-flex items-center gap-2 text-xs font-medium text-gray-600 transition-colors duration-200 group hover:text-red-600 sm:text-sm">
+                       class="inline-flex items-center gap-2 text-xs font-medium text-gray-600 transition-colors duration-200 group hover:text-red-600 sm:text-sm lg:text-white/65 lg:hover:text-white">
                         <svg class="w-4 h-4 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                         </svg>
@@ -450,7 +450,33 @@
         </header>
 
         <!-- Main Content -->
-        <main class="flex flex-1 items-start justify-center p-3 pt-4 sm:items-center sm:p-6 lg:p-8">
+        <main class="grid flex-1 lg:min-h-screen lg:grid-cols-[minmax(0,1.05fr)_minmax(32rem,.95fr)]">
+            <section class="auth-visual relative hidden min-h-screen overflow-hidden bg-[#090909] px-10 pb-12 pt-28 text-white lg:flex lg:flex-col lg:justify-between xl:px-16">
+                <div class="absolute inset-0" data-auth-canvas aria-hidden="true"></div>
+                <div class="storefront-noise absolute inset-0 opacity-30" aria-hidden="true"></div>
+                <div class="relative z-10 max-w-xl" data-auth-copy>
+                    <div class="storefront-eyebrow storefront-eyebrow--dark"><span class="storefront-eyebrow__dot"></span>Welcome to {{ $siteName }}</div>
+                    <h2 class="mt-6 text-6xl font-semibold leading-[.9] tracking-[-.065em] xl:text-7xl">Your world of<br><span class="storefront-outline-text">better finds.</span></h2>
+                    <p class="mt-7 max-w-md text-base leading-7 text-white/55">Sign in once. Discover trusted sellers, save what you love and follow every order from checkout to your door.</p>
+                </div>
+                <div class="relative z-10 grid grid-cols-3 gap-3" data-auth-copy>
+                    <div class="auth-benefit"><strong>Secure</strong><span>Protected checkout</span></div>
+                    <div class="auth-benefit"><strong>Personal</strong><span>Your saved finds</span></div>
+                    <div class="auth-benefit"><strong>Connected</strong><span>Live order status</span></div>
+                </div>
+            </section>
+
+            <section class="relative flex flex-col items-stretch justify-start px-3 pb-5 pt-0 sm:items-center sm:justify-center sm:px-8 sm:py-10 lg:min-h-screen lg:px-10 lg:py-24">
+            <div class="auth-mobile-stage relative -mx-3 mb-[-2.1rem] min-h-[13rem] overflow-hidden bg-[#090909] px-6 pb-14 pt-7 text-white sm:hidden" aria-hidden="true">
+                <div class="storefront-noise absolute inset-0 opacity-30"></div>
+                <div class="auth-mobile-orbit auth-mobile-orbit--outer"></div>
+                <div class="auth-mobile-orbit auth-mobile-orbit--inner"></div>
+                <div class="auth-mobile-cube"><span></span><span></span><span></span></div>
+                <div class="relative z-10">
+                    <span class="text-[10px] font-bold uppercase tracking-[.24em] text-white/45">Secure access</span>
+                    <p class="mt-2 max-w-[13rem] text-2xl font-semibold leading-[.95] tracking-[-.045em]">Welcome to your<br><span class="text-red-400">shopping world.</span></p>
+                </div>
+            </div>
             <!-- Modern Auth Card -->
             <div class="auth-card">
                 <!-- Logo & Header -->
@@ -492,10 +518,10 @@
                     @endif
                 </div>
             </div>
+            </section>
         </main>
     </div>
 
-    @include('partials.app-launch-promo')
     @include('partials.pwa-install-prompt')
     @include('partials.toast-stack')
 

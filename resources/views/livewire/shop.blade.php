@@ -137,7 +137,7 @@
                                         <input
                                             id="shop-search"
                                             type="text"
-                                            wire:model.live.debounce.500ms="search"
+                                            wire:model.live.debounce.850ms="search"
                                             placeholder="Search by name or description"
                                             class="w-full rounded-2xl border-gray-300 px-4 py-3 pl-11 text-sm focus:border-red-500 focus:ring-red-500"
                                         >

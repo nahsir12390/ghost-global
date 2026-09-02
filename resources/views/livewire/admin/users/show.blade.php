@@ -48,7 +48,7 @@
                         </div>
                         <div>
                             <label for="email" class="mb-2 block text-sm font-medium text-gray-700">Email</label>
-                            <input id="email" type="email" wire:model.blur="email" class="w-full rounded-lg border border-gray-300 px-4 py-2.5 @error('email') border-red-500 @enderror">
+                            <input id="email" type="email" wire:model.defer="email" class="w-full rounded-lg border border-gray-300 px-4 py-2.5 @error('email') border-red-500 @enderror">
                             @error('email') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                         </div>
                         @if($user->isVendor())

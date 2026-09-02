@@ -45,7 +45,7 @@
                     <label for="site_email" class="block text-sm font-medium text-gray-700 mb-1">
                         Site Email *
                     </label>
-                    <input type="email" id="site_email" name="site_email" wire:model.blur="settings.site_email"
+                    <input type="email" id="site_email" name="site_email" wire:model.defer="settings.site_email"
                            class="shadow-sm focus:ring-red-500 focus:border-red-500 block w-full sm:text-sm border-gray-300 rounded-md">
                     @error('settings.site_email')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>

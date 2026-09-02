@@ -65,7 +65,7 @@ new class extends Component
     <form wire:submit="updateProfileInformation" class="space-y-6">
         <div>
             <label for="name" class="block text-sm font-medium text-gray-700">Full Name</label>
-            <input wire:model.blur="name" 
+            <input wire:model.defer="name"
                    id="name" 
                    name="name" 
                    type="text" 
@@ -80,7 +80,7 @@ new class extends Component
 
         <div>
             <label for="email" class="block text-sm font-medium text-gray-700">Email Address</label>
-            <input wire:model.blur="email" 
+            <input wire:model.defer="email"
                    id="email" 
                    name="email" 
                    type="email" 

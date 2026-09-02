@@ -3,15 +3,17 @@
 @section('title', 'Shopping Cart')
 
 @section('content')
+    <x-storefront.page-hero eyebrow="Your selection" title="Shopping bag." description="Review your finds, adjust quantities instantly and move securely to checkout." step="Step 1 of 2" />
+    <div class="bg-[#f5f3ee] py-6 sm:py-10">
     <div x-data="cartPage({
             cart: { items: @js($cartData['items'] ?? []), summary: @js($cartData['summary'] ?? []) },
             checkoutUrl: @js(auth()->check() ? route('checkout') : route('login')),
             isAuthenticated: @js(auth()->check())
         })"
-        class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex flex-col lg:flex-row gap-8">
             <div class="lg:w-2/3">
-                <div class="bg-white rounded-lg shadow-sm p-6">
+                <div class="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
                     <div class="flex items-center justify-between mb-6">
                         <h1 class="text-2xl font-bold text-gray-900">Shopping Cart</h1>
                         <span class="text-sm text-gray-500" x-show="summary.line_items > 0" x-text="summary.line_items + ' ' + (summary.line_items === 1 ? 'item' : 'items')"></span>
@@ -21,7 +23,7 @@
                         <div>
                             <div class="space-y-4">
                                 <template x-for="item in itemsArray" :key="item.product_id">
-                                    <div class="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                                    <div class="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 p-4 border border-slate-200 rounded-2xl hover:border-red-200 hover:shadow-lg hover:shadow-slate-900/5 transition-all">
                                         <div class="flex-shrink-0 w-20 h-20 bg-gray-100 rounded-md overflow-hidden">
                                             <template x-if="item.image_url">
                                                 <img :src="item.image_url" :alt="item.name" class="w-full h-full object-cover">
@@ -105,29 +107,32 @@
             </div>
 
             <div class="lg:w-1/3" x-show="itemsArray.length">
-                <div class="bg-white rounded-lg shadow-sm p-6 lg:sticky lg:top-6">
-                    <h2 class="text-lg font-semibold text-gray-900 mb-4">Order Summary</h2>
+                <div class="rounded-[2rem] border border-white/10 bg-[#101010] p-6 text-white shadow-2xl lg:sticky lg:top-24">
+                    <div class="mb-6 flex items-center justify-between gap-4">
+                        <h2 class="text-xl font-semibold tracking-tight text-white">Order Summary</h2>
+                        <span class="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-bold uppercase tracking-[.18em] text-white/60">Secure</span>
+                    </div>
 
-                    <div class="space-y-3 mb-6">
+                    <div class="mb-6 space-y-4">
                         <div class="flex justify-between text-sm">
-                            <span class="text-gray-600">Subtotal</span>
-                            <span class="text-gray-900" x-text="money(summary.subtotal)"></span>
+                            <span class="text-white/60">Subtotal</span>
+                            <span class="font-medium text-white" x-text="money(summary.subtotal)"></span>
                         </div>
                         <div class="flex justify-between text-sm">
-                            <span class="text-gray-600" x-text="'Platform Service Fee (' + summary.service_fee_rate + '%)'"></span>
-                            <span class="text-gray-900" x-text="money(summary.tax)"></span>
+                            <span class="text-white/60" x-text="'Platform Service Fee (' + summary.service_fee_rate + '%)'"></span>
+                            <span class="font-medium text-white" x-text="money(summary.tax)"></span>
                         </div>
                         <div class="flex justify-between text-sm">
-                            <span class="text-gray-600">Delivery Fee</span>
-                            <span class="text-gray-900" x-text="summary.shipping === 0 ? 'Free' : money(summary.shipping)"></span>
+                            <span class="text-white/60">Delivery Fee</span>
+                            <span class="font-semibold text-emerald-400" x-text="summary.shipping === 0 ? 'Free' : money(summary.shipping)"></span>
                         </div>
-                        <div class="border-t border-gray-200 pt-3 flex justify-between text-lg font-semibold">
-                            <span class="text-gray-900">Total</span>
-                            <span class="text-red-600" x-text="money(summary.total)"></span>
+                        <div class="flex justify-between border-t border-white/15 pt-5 text-lg font-semibold">
+                            <span class="text-white">Total</span>
+                            <span class="text-xl text-red-400" x-text="money(summary.total)"></span>
                         </div>
                     </div>
 
-                    <div class="mb-6 p-3 bg-blue-50 rounded-md text-sm text-blue-700">
+                    <div class="mb-6 rounded-2xl border border-emerald-400/20 bg-emerald-400/10 p-4 text-sm font-medium text-emerald-300">
                         <template x-if="summary.shipping === 0">
                             <span>Free delivery applied!</span>
                         </template>
@@ -143,12 +148,13 @@
                     </template>
 
                     <a :href="summary.can_checkout ? checkoutUrl : '#'"
-                       :class="summary.can_checkout ? 'bg-red-600 hover:bg-red-700' : 'bg-gray-400 pointer-events-none cursor-not-allowed'"
-                       class="block w-full text-white py-3 px-4 rounded-md text-base font-medium text-center transition-colors">
+                       :class="summary.can_checkout ? 'bg-red-600 hover:bg-red-500 shadow-lg shadow-red-950/40' : 'bg-white/15 text-white/50 pointer-events-none cursor-not-allowed'"
+                       class="block w-full rounded-2xl px-4 py-4 text-center text-base font-semibold text-white transition-all">
                         <span x-text="isAuthenticated ? 'Proceed to Checkout' : 'Login to Checkout'"></span>
                     </a>
                 </div>
             </div>
         </div>
+    </div>
     </div>
 @endsection

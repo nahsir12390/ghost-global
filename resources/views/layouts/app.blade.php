@@ -261,51 +261,55 @@
         <header
             x-data="{
                 mobileMenuOpen: false,
+                scrolled: false,
                 init() {
+                    this.scrolled = window.scrollY > 12;
                     this.$watch('mobileMenuOpen', (value) => {
                         document.body.classList.toggle('overflow-hidden', value);
                     });
                 }
             }"
+            @scroll.window="scrolled = window.scrollY > 12"
             @keydown.escape.window="mobileMenuOpen = false"
-            class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50"
+            :class="scrolled ? 'border-white/70 bg-white/90 shadow-[0_14px_45px_-24px_rgba(15,23,42,.35)] backdrop-blur-xl' : 'border-slate-200/80 bg-white'"
+            class="sticky top-0 z-50 border-b transition-all duration-300"
         >
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between items-center h-16">
+            <div class="mx-auto max-w-[90rem] px-4 sm:px-6 lg:px-8">
+                <div class="flex h-[4.5rem] items-center justify-between">
                     <!-- Logo -->
                     <div class="min-w-0 flex-1 md:flex-none">
-                        <a href="{{ route('home') }}" class="flex items-center min-w-0">
+                        <a href="{{ route('home') }}" class="group flex min-w-0 items-center">
                             @if(file_exists(public_path('storage/logo.png')))
                                 <img src="{{ asset('storage/logo.png') }}" alt="Logo" class="h-8 w-auto">
                             @else
                                 <span class="flex min-w-0 items-center gap-2">
-                                    <img src="{{ asset('images/keffi-cart-logo.svg') }}" alt="Logo" class="h-9 w-9 shrink-0">
-                                    <span class="truncate text-base font-bold text-red-600 sm:text-xl">{{ \App\Helpers\SettingsHelper::get('site_name', config('app.name', 'E-Commerce')) }}</span>
+                                    <img src="{{ asset('images/keffi-cart-logo.svg') }}" alt="Logo" class="h-10 w-10 shrink-0 transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-105">
+                                    <span class="truncate text-base font-bold tracking-[-.025em] text-slate-950 sm:text-xl">{{ \App\Helpers\SettingsHelper::get('site_name', config('app.name', 'E-Commerce')) }}</span>
                                 </span>
                             @endif
                         </a>
                     </div>
 
                     <!-- Desktop Navigation -->
-                    <nav class="hidden xl:flex items-center rounded-full border border-gray-200 bg-gray-50/80 px-3 py-2 shadow-sm">
+                    <nav class="hidden items-center rounded-full bg-[#101010] p-1.5 shadow-xl shadow-slate-900/10 xl:flex">
                         <a href="{{ route('home') }}" 
-                           class="rounded-full px-4 py-2 text-sm font-semibold transition {{ request()->routeIs('home') ? 'bg-white text-red-600 shadow-sm' : 'text-gray-700 hover:text-red-600' }}">
+                           class="rounded-full px-4 py-2 text-sm font-semibold transition {{ request()->routeIs('home') ? 'bg-white text-slate-950 shadow-sm' : 'text-white/60 hover:bg-white/10 hover:text-white' }}">
                             Home
                         </a>
                         <a href="{{ route('shop') }}" 
-                           class="rounded-full px-4 py-2 text-sm font-semibold transition {{ request()->routeIs('shop') ? 'bg-white text-red-600 shadow-sm' : 'text-gray-700 hover:text-red-600' }}">
+                           class="rounded-full px-4 py-2 text-sm font-semibold transition {{ request()->routeIs('shop') ? 'bg-white text-slate-950 shadow-sm' : 'text-white/60 hover:bg-white/10 hover:text-white' }}">
                             Shop
                         </a>
                         <a href="{{ route('tracking.index') }}" 
-                           class="rounded-full px-4 py-2 text-sm font-semibold transition {{ request()->routeIs('tracking.*') ? 'bg-white text-red-600 shadow-sm' : 'text-gray-700 hover:text-red-600' }}">
+                           class="rounded-full px-4 py-2 text-sm font-semibold transition {{ request()->routeIs('tracking.*') ? 'bg-white text-slate-950 shadow-sm' : 'text-white/60 hover:bg-white/10 hover:text-white' }}">
                             Track Order
                         </a>
                         <a href="{{ route('about') }}" 
-                           class="rounded-full px-4 py-2 text-sm font-semibold transition {{ request()->routeIs('about') ? 'bg-white text-red-600 shadow-sm' : 'text-gray-700 hover:text-red-600' }}">
+                           class="rounded-full px-4 py-2 text-sm font-semibold transition {{ request()->routeIs('about') ? 'bg-white text-slate-950 shadow-sm' : 'text-white/60 hover:bg-white/10 hover:text-white' }}">
                             About
                         </a>
                         <a href="{{ route('contact') }}" 
-                           class="rounded-full px-4 py-2 text-sm font-semibold transition {{ request()->routeIs('contact') ? 'bg-white text-red-600 shadow-sm' : 'text-gray-700 hover:text-red-600' }}">
+                           class="rounded-full px-4 py-2 text-sm font-semibold transition {{ request()->routeIs('contact') ? 'bg-white text-slate-950 shadow-sm' : 'text-white/60 hover:bg-white/10 hover:text-white' }}">
                             Contact
                         </a>
                     </nav>
@@ -313,7 +317,7 @@
                     <!-- Right side icons -->
                     <div class="ml-3 flex items-center gap-2 md:gap-4">
                         <!-- Cart (visible for all users) -->
-                        <a href="{{ route('cart') }}" class="relative shrink-0 text-gray-700 hover:text-red-600">
+                        <a href="{{ route('cart') }}" aria-label="Shopping cart" class="relative inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:-translate-y-0.5 hover:border-red-200 hover:text-red-600 hover:shadow-lg">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                                       d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -322,7 +326,7 @@
                         </a>
 
                         <!-- Wishlist -->
-                            <a href="{{ route('wishlist') }}" class="relative hidden text-gray-700 hover:text-red-600 md:inline-flex">
+                            <a href="{{ route('wishlist') }}" aria-label="Wishlist" class="relative hidden h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:-translate-y-0.5 hover:border-red-200 hover:text-red-600 hover:shadow-lg md:inline-flex">
                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
                                 </svg>
@@ -545,7 +549,8 @@
                         <!-- Mobile menu button -->
                        <div class="xl:hidden">
     <button @click="mobileMenuOpen = !mobileMenuOpen" 
-            class="inline-flex items-center justify-center rounded-xl p-2 text-gray-700 transition hover:bg-gray-100 hover:text-red-600">
+            :aria-label="mobileMenuOpen ? 'Close navigation' : 'Open navigation'"
+            class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#101010] text-white transition hover:bg-red-600">
         <svg x-show="!mobileMenuOpen" x-cloak class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
         </svg>
@@ -561,7 +566,7 @@
     <div x-show="mobileMenuOpen"
          x-cloak
          @click="mobileMenuOpen = false"
-         class="fixed inset-0 top-16 z-40 bg-slate-900/30 backdrop-blur-sm xl:hidden"
+         class="fixed inset-0 top-[4.5rem] z-40 bg-slate-950/45 backdrop-blur-sm xl:hidden"
          style="display: none;"></div>
 
     <!-- Mobile menu panel -->
@@ -574,9 +579,9 @@
           x-transition:leave-start="opacity-100 scale-100"
           x-transition:leave-end="opacity-0 scale-95"
           @click.away="mobileMenuOpen = false"
-         class="fixed inset-x-0 bottom-0 top-16 z-50 border-t border-gray-200 bg-white shadow-lg xl:hidden"
+         class="fixed bottom-3 left-3 right-3 top-[5.25rem] z-50 overflow-hidden rounded-[2rem] border border-white/70 bg-white/95 shadow-2xl backdrop-blur-xl xl:hidden"
           style="display: none;">
-        <div class="h-full overflow-y-auto overscroll-contain px-4 py-4 pb-8 space-y-3">
+        <div class="h-full space-y-2 overflow-y-auto overscroll-contain px-4 pb-8 pt-5">
             <a href="{{ route('home') }}" 
                class="block rounded-xl px-4 py-3 text-gray-700 hover:text-red-600 hover:bg-gray-50 font-medium {{ request()->routeIs('home') ? 'text-red-600 bg-red-50' : '' }}"
                @click="mobileMenuOpen = false">
@@ -911,8 +916,9 @@
     </div>
 
     @livewireScripts
-    <!-- Alpine.js for interactive components -->
-    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+
+    {{-- Livewire 3 ships with Alpine. Loading the CDN copy as well reinitializes Alpine
+         and prevents Livewire controls such as pagination from receiving clicks. --}}
     
     <script>
         window.KeffiCart = {
@@ -1605,9 +1611,79 @@
         </div>
     @endguest
 
-    @include('partials.app-launch-promo')
     @include('partials.pwa-install-prompt')
     @include('partials.toast-stack')
+
+    @auth
+        @if(filled(config('webpush.vapid.public_key')))
+            <div
+                x-data="{ visible: false, init() { this.visible = Notification.permission === 'default' && !localStorage.getItem('push-alert-prompt-dismissed') }, dismiss() { this.visible = false; localStorage.setItem('push-alert-prompt-dismissed', '1') } }"
+                x-show="visible"
+                x-cloak
+                class="fixed bottom-4 left-4 z-[60] max-w-[calc(100vw-2rem)] sm:bottom-6 sm:left-6 sm:w-96"
+            >
+                <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-2xl">
+                    <p class="text-sm font-bold text-slate-900">Get order updates</p>
+                    <p class="mt-1 text-xs leading-5 text-slate-500">Enable alerts for delivery and order-status changes on this device.</p>
+                    <div class="mt-3 flex items-center gap-2">
+                        <button type="button" @click="window.dispatchEvent(new Event('store:enable-push')); visible = false" class="rounded-xl bg-red-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-red-700">Enable alerts</button>
+                        <button type="button" @click="dismiss()" class="px-2 py-2 text-xs font-semibold text-slate-500 hover:text-slate-800">Not now</button>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+                (() => {
+                    const config = {
+                        publicKey: @js(config('webpush.vapid.public_key')),
+                        subscribeUrl: @js(route('push-subscriptions.store')),
+                        csrf: document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
+                    };
+
+                    const decodeKey = (value) => {
+                        const base64 = (value + '='.repeat((4 - value.length % 4) % 4)).replace(/-/g, '+').replace(/_/g, '/');
+                        return Uint8Array.from(atob(base64), (character) => character.charCodeAt(0));
+                    };
+
+                    window.addEventListener('store:enable-push', async () => {
+                        try {
+                            if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+                                throw new Error('Push alerts are not supported by this browser.');
+                            }
+
+                            if (await Notification.requestPermission() !== 'granted') {
+                                throw new Error('Notifications were not enabled. You can allow them later in browser settings.');
+                            }
+
+                            const registration = await navigator.serviceWorker.ready;
+                            const subscription = await registration.pushManager.getSubscription() || await registration.pushManager.subscribe({
+                                userVisibleOnly: true,
+                                applicationServerKey: decodeKey(config.publicKey),
+                            });
+                            const payload = subscription.toJSON();
+                            payload.endpoint = subscription.endpoint;
+
+                            const response = await fetch(config.subscribeUrl, {
+                                method: 'POST',
+                                headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'X-CSRF-TOKEN': config.csrf },
+                                body: JSON.stringify(payload),
+                            });
+                            const result = await response.json();
+
+                            if (!response.ok) {
+                                throw new Error(result.message || 'Could not enable alerts.');
+                            }
+
+                            localStorage.removeItem('push-alert-prompt-dismissed');
+                            window.KeffiCart?.notify(result.message, 'success');
+                        } catch (error) {
+                            window.KeffiCart?.notify(error.message || 'Could not enable alerts.', 'error');
+                        }
+                    });
+                })();
+            </script>
+        @endif
+    @endauth
 
     <!-- Custom Scripts -->
     @stack('scripts')

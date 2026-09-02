@@ -9,11 +9,13 @@
 @endsection
 
 @section('content')
-    <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+    <x-storefront.page-hero eyebrow="Your account" title="Profile settings." description="Keep your identity, security and shopping preferences up to date." />
+    <div class="bg-[#f5f3ee] py-8 sm:py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <!-- Left Sidebar -->
             <div class="lg:col-span-1">
-                <div class="bg-white rounded-lg shadow-sm p-6">
+                <div class="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm lg:sticky lg:top-24">
                     <!-- Profile Picture Section -->
                     <div class="mb-6 text-center">
                         <div class="mb-4 flex justify-center">
@@ -126,5 +128,6 @@
                 </div>
             </div>
         </div>
+    </div>
     </div>
 @endsection

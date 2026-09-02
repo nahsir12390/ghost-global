@@ -3,14 +3,9 @@
 @section('title', 'Checkout - ' . config('app.name'))
 
 @section('content')
-<div class="min-h-screen bg-gray-50 py-12">
+<x-storefront.page-hero eyebrow="Secure checkout" title="Almost yours." description="Confirm delivery details and choose how you would like to pay." step="Step 2 of 2" />
+<div class="min-h-screen bg-[#f5f3ee] py-10 sm:py-14">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <!-- Header -->
-        <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold text-gray-900 mb-2">Checkout</h1>
-            <p class="text-gray-600">Complete your order in just a few steps</p>
-        </div>
-        
         <!-- Checkout Content -->
         <div>
             @livewire('checkout')

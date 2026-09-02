@@ -148,12 +148,15 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16">
             <!-- Product Images Section - Modern Gallery -->
-            <div class="animate-fade-in-up">
+            <div
+                class="animate-fade-in-up"
+                x-data="{ selectedImage: 0, images: @js(collect($images)->map(fn ($image) => asset('storage/' . $image))->values()) }"
+            >
                 <!-- Main Image Container -->
                 <div class="relative group rounded-2xl overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 shadow-xl">
                     <div class="aspect-w-1 aspect-h-1">
-                        @if($images && isset($images[$selectedImage]))
-                            <img src="{{ asset('storage/' . $images[$selectedImage]) }}" 
+                        @if($images && isset($images[0]))
+                            <img :src="images[selectedImage]" src="{{ asset('storage/' . $images[0]) }}"
                                  alt="{{ $product->name }}" 
                                  class="w-full h-full object-contain p-8 transition-transform duration-700 group-hover:scale-105">
                         @else
@@ -211,15 +214,15 @@
                 @if($images && count($images) > 1)
                     <div class="flex gap-3 mt-4 overflow-x-auto pb-2 modern-scrollbar">
                         @foreach($images as $index => $image)
-                            <button wire:click="selectImage({{ $index }})"
+                            <button type="button" @click="selectedImage = {{ $index }}"
+                                    :aria-pressed="selectedImage === {{ $index }}"
                                     class="flex-shrink-0 group focus:outline-none">
                                 <div class="relative">
                                     <img src="{{ asset('storage/' . $image) }}" 
                                          alt="Thumbnail {{ $index + 1 }}" 
-                                         class="w-20 h-20 object-cover rounded-xl border-2 transition-all duration-200 {{ $selectedImage == $index ? 'border-red-500 shadow-lg' : 'border-gray-200 group-hover:border-red-300' }}">
-                                    @if($selectedImage == $index)
-                                        <div class="absolute inset-0 bg-red-500/10 rounded-xl"></div>
-                                    @endif
+                                         :class="selectedImage === {{ $index }} ? 'border-red-500 shadow-lg' : 'border-gray-200 group-hover:border-red-300'"
+                                         class="w-20 h-20 object-cover rounded-xl border-2 transition-all duration-200">
+                                    <div x-show="selectedImage === {{ $index }}" class="absolute inset-0 bg-red-500/10 rounded-xl"></div>
                                 </div>
                             </button>
                         @endforeach

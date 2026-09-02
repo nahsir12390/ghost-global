@@ -69,7 +69,7 @@
                             <!-- Name -->
                             <div>
                                 <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Name</label>
-                                <input type="text" wire:model.blur="name" id="name" 
+                                <input type="text" wire:model.defer="name" id="name"
                                        class="w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-red-500 focus:border-red-500 text-sm sm:text-base">
                                 @error('name') <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span> @enderror
                             </div>
@@ -77,7 +77,7 @@
                             <!-- Email -->
                             <div>
                                 <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                                <input type="email" wire:model.blur="email" id="email" 
+                                <input type="email" wire:model.defer="email" id="email"
                                        class="w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-red-500 focus:border-red-500 text-sm sm:text-base">
                                 @error('email') <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span> @enderror
                             </div>

@@ -9,14 +9,10 @@
 @endsection
 
 @section('content')
-<div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-    <div class="bg-white shadow-sm rounded-lg overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
-            <h1 class="text-2xl font-bold text-gray-900">My Orders</h1>
-            <p class="mt-1 text-sm text-gray-600">
-                View and track all your orders in one place
-            </p>
-        </div>
+<x-storefront.page-hero eyebrow="Your purchases" title="Order history." description="Every purchase, payment and delivery update—organized in one place." />
+<div class="bg-[#f5f3ee] py-8 sm:py-12">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm">
 
         <div class="p-6">
             @if(session('success'))
@@ -34,7 +30,7 @@
             @if($orders->count() > 0)
                 <div class="space-y-6">
                     @foreach($orders as $order)
-                        <div class="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow duration-200 hover:border-red-100">
+                        <div class="rounded-2xl border border-slate-200 p-5 transition-all duration-300 hover:-translate-y-0.5 hover:border-red-200 hover:shadow-xl hover:shadow-slate-900/5 sm:p-6">
                             <div class="flex flex-col md:flex-row md:items-center md:justify-between">
                                 <div class="flex-1">
                                     <div class="flex items-center space-x-4">
@@ -160,6 +156,7 @@
             @endif
         </div>
     </div>
+</div>
 </div>
 
 @push('styles')

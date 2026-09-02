@@ -74,7 +74,7 @@ new #[Layout('layouts.guest')] class extends Component
         <!-- Email Address -->
         <div>
             <label for="email" class="form-label">Email</label>
-            <input wire:model.blur="email" 
+            <input wire:model.defer="email"
                    id="email" 
                    class="form-input @error('email') form-input-error @enderror" 
                    type="email" 

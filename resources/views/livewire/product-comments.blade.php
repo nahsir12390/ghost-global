@@ -74,7 +74,7 @@
                         <label class="block text-sm font-medium text-gray-700 mb-2">Your Name</label>
                         <input 
                             type="text" 
-                            wire:model.blur="guest_name" 
+                            wire:model.defer="guest_name"
                             placeholder="Enter your name"
                             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                         >
@@ -86,7 +86,7 @@
                         <label class="block text-sm font-medium text-gray-700 mb-2">Your Email</label>
                         <input 
                             type="email" 
-                            wire:model.blur="guest_email" 
+                            wire:model.defer="guest_email"
                             placeholder="your@email.com"
                             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                         >

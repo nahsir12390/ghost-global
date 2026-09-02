@@ -129,7 +129,7 @@ new #[Layout('layouts.guest')] class extends Component
                 <div class="mt-4 grid grid-cols-2 gap-3">
                     <label class="cursor-pointer rounded-2xl border p-3 transition"
                            :class="accountType === 'customer' ? 'border-red-500 bg-white shadow-sm' : 'border-gray-200 bg-white hover:border-red-200'">
-                        <input type="radio" wire:model.change="account_type" x-model="accountType" value="customer" class="sr-only">
+                        <input type="radio" wire:model.defer="account_type" x-model="accountType" value="customer" class="sr-only">
                         <div class="flex items-start gap-3">
                             <span class="mt-1 flex h-5 w-5 items-center justify-center rounded-full border"
                                   :class="accountType === 'customer' ? 'border-red-500' : 'border-gray-300'">
@@ -144,7 +144,7 @@ new #[Layout('layouts.guest')] class extends Component
 
                     <label class="cursor-pointer rounded-2xl border p-3 transition"
                            :class="accountType === 'vendor' ? 'border-red-500 bg-white shadow-sm' : 'border-gray-200 bg-white hover:border-red-200'">
-                        <input type="radio" wire:model.change="account_type" x-model="accountType" value="vendor" class="sr-only">
+                        <input type="radio" wire:model.defer="account_type" x-model="accountType" value="vendor" class="sr-only">
                         <div class="flex items-start gap-3">
                             <span class="mt-1 flex h-5 w-5 items-center justify-center rounded-full border"
                                   :class="accountType === 'vendor' ? 'border-red-500' : 'border-gray-300'">
@@ -160,7 +160,7 @@ new #[Layout('layouts.guest')] class extends Component
 
                 <div x-cloak x-show="showReferral" x-transition.opacity.duration.150ms class="mt-4 rounded-2xl border border-emerald-100 bg-white p-3.5">
                     <label for="referralCode" class="form-label mb-2 text-emerald-900">Referral Code</label>
-                    <input wire:model.blur="referralCode"
+                    <input wire:model.defer="referralCode"
                            id="referralCode"
                            class="form-input bg-white @error('referralCode') form-input-error @enderror"
                            type="text"
@@ -185,7 +185,7 @@ new #[Layout('layouts.guest')] class extends Component
 
                 <div>
                     <label for="email" class="form-label">Email Address</label>
-                    <input wire:model.blur="email" id="email" class="form-input @error('email') form-input-error @enderror" type="email" name="email" required autocomplete="username" placeholder="you@example.com">
+                    <input wire:model.defer="email" id="email" class="form-input @error('email') form-input-error @enderror" type="email" name="email" required autocomplete="username" placeholder="you@example.com">
                     @error('email')
                         <p class="error-message">{{ $message }}</p>
                     @enderror

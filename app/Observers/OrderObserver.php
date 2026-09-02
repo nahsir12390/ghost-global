@@ -7,15 +7,19 @@ use App\Mail\AdminOrderCancelledMail;
 use App\Mail\OrderStatusUpdated;
 use App\Models\Order;
 use App\Models\OrderStatusHistory;
+use App\Services\WebPushService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Contracts\Events\ShouldHandleEventsAfterCommit;
 
-class OrderObserver
+class OrderObserver implements ShouldHandleEventsAfterCommit
 {
     /**
      * Cache for original status values to avoid database column issues
      */
     private static $originalStatuses = [];
+
+    private static $originalPaymentStatuses = [];
 
     /**
      * Handle the Order "updating" event.
@@ -23,6 +27,7 @@ class OrderObserver
     public function updating(Order $order): void
     {
         self::$originalStatuses[$order->id] = $order->getOriginal('status');
+        self::$originalPaymentStatuses[$order->id] = $order->getOriginal('payment_status');
     }
 
     /**
@@ -31,9 +36,16 @@ class OrderObserver
     public function updated(Order $order): void
     {
         $previousStatus = self::$originalStatuses[$order->id] ?? $order->getOriginal('status');
+        $previousPaymentStatus = self::$originalPaymentStatuses[$order->id] ?? $order->getOriginal('payment_status');
         $statusChanged = $previousStatus !== $order->status;
+        $paymentCompleted = $previousPaymentStatus !== 'paid' && $order->payment_status === 'paid';
 
         unset(self::$originalStatuses[$order->id]);
+        unset(self::$originalPaymentStatuses[$order->id]);
+
+        if ($paymentCompleted) {
+            app(WebPushService::class)->sendPaidOrderAlerts($order);
+        }
 
         if (!$statusChanged) {
             return;
@@ -78,6 +90,17 @@ class OrderObserver
             Log::warning('Skipped order status email because no recipient email was found.', [
                 'order_id' => $order->id,
             ]);
+        }
+
+        $orderUser = $order->user;
+
+        if ($orderUser) {
+            app(WebPushService::class)->sendToUser(
+                $orderUser,
+                'Order update',
+                "Your order {$order->order_number} is now {$order->status}.",
+                route('my.orders.show', $order)
+            );
         }
 
         if ($order->status === 'cancelled') {

@@ -1,5 +1,67 @@
 import './bootstrap';
 
+const loadStorefrontExperience = () => {
+    if (document.querySelector('[data-storefront-home]')) {
+        import('./storefront-experience');
+    }
+};
+
+const loadAuthExperience = () => {
+    if (document.querySelector('[data-auth-experience]')) {
+        import('./auth-experience');
+    }
+};
+
+document.addEventListener('DOMContentLoaded', loadStorefrontExperience);
+document.addEventListener('livewire:navigated', loadStorefrontExperience);
+document.addEventListener('DOMContentLoaded', loadAuthExperience);
+document.addEventListener('livewire:navigated', loadAuthExperience);
+
+const initialiseInterfacePolish = () => {
+    if (document.documentElement.dataset.interfaceReady === 'true') return;
+    document.documentElement.dataset.interfaceReady = 'true';
+
+    const progress = document.createElement('div');
+    progress.className = 'navigation-progress';
+    progress.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(progress);
+
+    document.addEventListener('click', (event) => {
+        const link = event.target.closest('a[href]');
+        if (!link || link.target === '_blank' || link.hasAttribute('download')) return;
+        const url = new URL(link.href, window.location.href);
+        if (url.origin !== window.location.origin || url.href === window.location.href || url.hash) return;
+        progress.classList.add('navigation-progress--active');
+    });
+
+    window.addEventListener('pageshow', () => progress.classList.remove('navigation-progress--active'));
+
+    if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+        document.addEventListener('pointermove', (event) => {
+            const card = event.target.closest('[data-tilt-card]');
+            if (!card) return;
+            const bounds = card.getBoundingClientRect();
+            const rotateX = ((event.clientY - bounds.top) / bounds.height - 0.5) * -5;
+            const rotateY = ((event.clientX - bounds.left) / bounds.width - 0.5) * 5;
+            card.style.setProperty('--tilt-x', `${rotateX}deg`);
+            card.style.setProperty('--tilt-y', `${rotateY}deg`);
+        });
+
+        document.addEventListener('pointerout', (event) => {
+            const card = event.target.closest('[data-tilt-card]');
+            if (!card || card.contains(event.relatedTarget)) return;
+            card.style.removeProperty('--tilt-x');
+            card.style.removeProperty('--tilt-y');
+        });
+    }
+};
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initialiseInterfacePolish);
+} else {
+    initialiseInterfacePolish();
+}
+
 let deferredInstallPrompt = null;
 let hasReloadedForServiceWorker = false;
 

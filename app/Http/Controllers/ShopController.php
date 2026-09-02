@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\Category;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class ShopController extends Controller
 {
@@ -13,58 +14,59 @@ class ShopController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Product::where('is_active', true)
-            ->with('category');
-        
-        // Search
-        if ($request->has('search')) {
-            $query->where('name', 'like', '%' . $request->search . '%')
-                  ->orWhere('description', 'like', '%' . $request->search . '%');
-        }
-        
-        // Category filter
-        if ($request->has('category')) {
-            $query->whereHas('category', function($q) use ($request) {
-                $q->where('slug', $request->category);
-            });
-        }
-        
-        // Price filter
-        if ($request->has('min_price')) {
-            $query->where('price', '>=', $request->min_price);
-        }
-        
-        if ($request->has('max_price')) {
-            $query->where('price', '<=', $request->max_price);
-        }
-        
-        // Sorting
-        $sort = $request->get('sort', 'latest');
-        switch ($sort) {
-            case 'price_asc':
-                $query->orderBy('price', 'asc');
-                break;
-            case 'price_desc':
-                $query->orderBy('price', 'desc');
-                break;
-            case 'name_asc':
-                $query->orderBy('name', 'asc');
-                break;
-            case 'name_desc':
-                $query->orderBy('name', 'desc');
-                break;
-            case 'featured':
-                $query->where('is_featured', true)->orderBy('created_at', 'desc');
-                break;
-            default: // latest
-                $query->orderBy('created_at', 'desc');
-                break;
-        }
-        
-        $products = $query->paginate(12);
-        $categories = Category::where('is_active', true)->get();
-        
-        return view('shop', compact('products', 'categories'));
+        $filters = $request->validate([
+            'search' => ['nullable', 'string', 'max:100'],
+            'category' => ['nullable', 'string', 'max:120'],
+            'min_price' => ['nullable', 'numeric', 'min:0'],
+            'max_price' => ['nullable', 'numeric', 'min:0'],
+            'sort' => ['nullable', 'in:latest,popular,price_low,price_high,name'],
+            'per_page' => ['nullable', 'integer', 'in:12,24,48'],
+        ]);
+
+        $search = trim((string) ($filters['search'] ?? ''));
+        $sort = $filters['sort'] ?? 'latest';
+        $perPage = (int) ($filters['per_page'] ?? 12);
+
+        $query = Product::query()
+            ->select([
+                'id', 'vendor_id', 'category_id', 'name', 'slug', 'price', 'compare_price',
+                'quantity', 'images', 'product_type', 'is_active', 'created_at',
+            ])
+            ->with([
+                'category:id,name,slug',
+                'vendor:id,name,role,store_name,store_slug,vendor_is_active,verified_at,verification_status',
+            ])
+            ->where('is_active', true)
+            ->when($search !== '', function ($productQuery) use ($search) {
+                $term = '%' . $search . '%';
+
+                $productQuery->where(function ($searchQuery) use ($term) {
+                    $searchQuery->where('name', 'like', $term)
+                        ->orWhere('description', 'like', $term);
+                });
+            })
+            ->when(filled($filters['category'] ?? null), function ($productQuery) use ($filters) {
+                $productQuery->whereHas('category', fn ($categoryQuery) => $categoryQuery->where('slug', $filters['category']));
+            })
+            ->when(array_key_exists('min_price', $filters) && $filters['min_price'] !== null, fn ($productQuery) => $productQuery->where('price', '>=', $filters['min_price']))
+            ->when(array_key_exists('max_price', $filters) && $filters['max_price'] !== null, fn ($productQuery) => $productQuery->where('price', '<=', $filters['max_price']));
+
+        match ($sort) {
+            'popular' => $query->withCount(['orderItems as total_sold'])->orderByDesc('total_sold')->orderByDesc('created_at'),
+            'price_low' => $query->orderBy('price'),
+            'price_high' => $query->orderByDesc('price'),
+            'name' => $query->orderBy('name'),
+            default => $query->latest(),
+        };
+
+        $products = $query->paginate($perPage)->withQueryString();
+        $categories = Cache::remember(
+            'shop_filter_categories',
+            now()->addMinutes(15),
+            fn () => Category::query()->where('is_active', true)->orderBy('name')->get(['id', 'name', 'slug'])
+        );
+
+        return view('shop', compact('products', 'categories', 'search', 'sort', 'perPage'));
     }
 
     /**

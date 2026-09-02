@@ -111,7 +111,7 @@
                             </label>
                             <input type="email" 
                                    id="shipping_email"
-                                   wire:model.blur="shipping_email"
+                                   wire:model.defer="shipping_email"
                                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500 @error('shipping_email') border-red-500 @enderror">
                             @error('shipping_email')
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -260,7 +260,7 @@
                             </label>
                             <input type="email" 
                                    id="billing_email"
-                                   wire:model.blur="billing_email"
+                                   wire:model.defer="billing_email"
                                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500 @error('billing_email') border-red-500 @enderror">
                             @error('billing_email')
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>

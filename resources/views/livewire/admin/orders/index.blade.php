@@ -109,7 +109,7 @@
                             </svg>
                         </div>
                         <input
-                            wire:model.live.debounce.700ms="search"
+                            wire:model.live.debounce.850ms="search"
                             type="search"
                             placeholder="{{ $isVendorView ? 'Search by order number, customer, phone, or email...' : 'Search by order number, customer, or vendor...' }}"
                             class="form-input-modern w-full rounded-2xl border border-slate-200 py-3 pl-11 pr-4"

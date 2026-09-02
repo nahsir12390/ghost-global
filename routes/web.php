@@ -16,6 +16,7 @@ use App\Http\Controllers\ReferralController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\PwaController;
+use App\Http\Controllers\WebPushSubscriptionController;
 use App\Http\Controllers\VendorUpgradeController;
 use App\Http\Controllers\Admin\{
     DashboardController,
@@ -55,6 +56,10 @@ Route::get('/sw.js', [PwaController::class, 'serviceWorker'])->name('pwa.service
 Route::get('/pwa/icon/{size}.png', [PwaController::class, 'icon'])
     ->whereNumber('size')
     ->name('pwa.icon');
+Route::middleware('auth')->group(function () {
+    Route::post('/push-subscriptions', [WebPushSubscriptionController::class, 'store'])->name('push-subscriptions.store');
+    Route::delete('/push-subscriptions', [WebPushSubscriptionController::class, 'destroy'])->name('push-subscriptions.destroy');
+});
 // Order Tracking Routes (PUBLIC - No auth required)
 Route::get('/track-order', [OrderTrackingController::class, 'index'])->name('tracking.index');
 Route::post('/track-order', [OrderTrackingController::class, 'search'])->name('tracking.search');

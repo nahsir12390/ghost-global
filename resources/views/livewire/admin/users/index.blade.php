@@ -30,7 +30,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
                     </div>
-                    <input wire:model.live.debounce.500ms="search" 
+                    <input wire:model.live.debounce.850ms="search"
                            type="search" 
                            placeholder="Search users or stores..."
                            class="pl-10 pr-4 py-3 border border-slate-200 rounded-2xl w-full focus:ring-2 focus:ring-red-500 focus:border-red-500">
