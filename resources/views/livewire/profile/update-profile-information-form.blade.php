@@ -69,7 +69,7 @@ new class extends Component
                    id="name" 
                    name="name" 
                    type="text" 
-                   class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm @error('name') border-red-500 @enderror" 
+                   class="mt-2 block w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 shadow-sm outline-none transition focus:border-red-400 focus:bg-white focus:ring-4 focus:ring-red-100 sm:text-sm @error('name') border-red-500 @enderror"
                    required 
                    autofocus 
                    autocomplete="name">
@@ -84,7 +84,7 @@ new class extends Component
                    id="email" 
                    name="email" 
                    type="email" 
-                   class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm @error('email') border-red-500 @enderror" 
+                   class="mt-2 block w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 shadow-sm outline-none transition focus:border-red-400 focus:bg-white focus:ring-4 focus:ring-red-100 sm:text-sm @error('email') border-red-500 @enderror"
                    required 
                    autocomplete="username">
             @error('email')
@@ -132,7 +132,7 @@ new class extends Component
 
         <div class="flex items-center gap-4">
             <button type="submit" 
-                    class="btn-primary px-6 disabled:opacity-50 disabled:cursor-not-allowed"
+                    class="rounded-2xl bg-red-600 px-6 py-3 font-semibold text-white shadow-lg shadow-red-100 transition hover:-translate-y-0.5 hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
                     wire:loading.attr="disabled"
                     wire:target="updateProfileInformation">
                 <span wire:loading.remove wire:target="updateProfileInformation">Save Changes</span>

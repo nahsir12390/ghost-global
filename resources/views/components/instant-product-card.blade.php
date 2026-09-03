@@ -92,9 +92,10 @@
     }"
     class="instant-product-card group relative min-w-0 overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition duration-300 hover:shadow-xl"
     data-tilt-card
+    data-product-id="{{ $product->id }}"
 >
     @if($discountPercent)
-        <div class="absolute left-2 top-2 z-10 rounded-lg bg-gradient-to-r from-red-600 to-rose-600 px-2 py-1 text-[10px] font-bold text-white shadow-lg sm:left-3 sm:top-3 sm:rounded-xl sm:text-xs">
+        <div class="product-sale-badge absolute left-2 top-2 z-10 rounded-lg bg-gradient-to-r from-red-600 to-rose-600 px-2 py-1 text-[10px] font-bold text-white shadow-lg sm:left-3 sm:top-3 sm:rounded-xl sm:text-xs">
             -{{ $discountPercent }}%
         </div>
     @endif

@@ -1,14 +1,14 @@
 <div class="space-y-4">
     <!-- Current Photo Display -->
     @if($previewUrl)
-        <div class="flex flex-col items-center">
+        <div class="flex flex-col items-center rounded-3xl border border-slate-200 bg-slate-50 p-5">
             <img src="{{ $previewUrl }}" 
                  alt="Profile Photo Preview"
-                 class="w-32 h-32 rounded-lg object-cover border-4 border-red-100 shadow-md">
+                 class="h-32 w-32 rounded-[1.75rem] border-4 border-white object-cover shadow-xl">
             <p class="text-sm text-gray-600 mt-3">Current Profile Picture</p>
         </div>
     @else
-        <div class="flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50">
+        <div class="flex flex-col items-center justify-center rounded-3xl border-2 border-dashed border-slate-300 bg-slate-50 p-8 transition hover:border-red-300 hover:bg-red-50/40">
             <svg class="w-12 h-12 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
@@ -27,7 +27,7 @@
                 id="photo" 
                 wire:model="photo"
                 accept="image/*"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm file:mr-4 file:rounded-full file:border-0 file:bg-slate-950 file:px-4 file:py-2 file:font-semibold file:text-white focus:border-red-400 focus:bg-white focus:ring-4 focus:ring-red-100">
         </div>
         @error('photo')
             <p class="text-red-600 text-sm mt-2">{{ $message }}</p>
@@ -41,16 +41,18 @@
             <button 
                 type="button"
                 wire:click="updatePhoto"
-                class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200 font-medium flex items-center justify-center gap-2">
+                wire:loading.attr="disabled"
+                wire:target="updatePhoto"
+                class="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-red-600 px-4 py-3 font-semibold text-white transition hover:bg-red-700 disabled:opacity-50">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                 </svg>
-                Upload Photo
+                <span wire:loading.remove wire:target="updatePhoto">Upload Photo</span><span wire:loading wire:target="updatePhoto">Uploading...</span>
             </button>
             <button 
                 type="button"
                 wire:click="$set('photo', null)"
-                class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200 font-medium">
+                class="flex-1 rounded-2xl border border-slate-200 px-4 py-3 font-semibold text-slate-700 transition hover:bg-slate-50">
                 Cancel
             </button>
         @else
@@ -58,7 +60,8 @@
                 <button 
                     type="button"
                     wire:click="deletePhoto"
-                    class="flex-1 px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors duration-200 font-medium flex items-center justify-center gap-2">
+                    wire:confirm="Remove your profile picture?"
+                    class="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-red-200 px-4 py-3 font-semibold text-red-600 transition hover:bg-red-50">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>

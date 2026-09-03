@@ -76,14 +76,15 @@ class ProductComments extends Component
 
     public function render()
     {
-        $comments = $this->product->comments()->paginate(5);
-        $averageRating = $this->product->comments()->avg('rating') ?? 0;
-        $totalComments = $this->product->comments()->count();
+        $comments = $this->product->comments()->with('user:id,name,profile_photo_path')->paginate(5);
+        $summary = $this->product->comments()
+            ->selectRaw('COUNT(*) as total, COALESCE(AVG(rating), 0) as average')
+            ->first();
 
         return view('livewire.product-comments', [
             'comments' => $comments,
-            'averageRating' => $averageRating,
-            'totalComments' => $totalComments,
+            'averageRating' => (float) $summary->average,
+            'totalComments' => (int) $summary->total,
         ]);
     }
 }

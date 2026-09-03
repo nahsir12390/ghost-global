@@ -1,4 +1,4 @@
-<div class="bg-white">
+<div class="bg-[#f5f3ee]">
     @php
         $images = is_array($product->images) ? $product->images : (is_string($product->images) ? json_decode($product->images, true) : []);
         $images = $images ?? [];
@@ -116,7 +116,7 @@
     </style>
 
     <!-- Modern Breadcrumb -->
-    <div class="glass-effect sticky top-16 z-30">
+    <div class="glass-effect sticky top-16 z-30 border-b border-slate-200/70">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <nav class="flex" aria-label="Breadcrumb">
                 <ol class="flex items-center space-x-3 text-sm">
@@ -145,20 +145,20 @@
     </div>
 
     <!-- Main Product Section -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16">
+    <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-14">
+        <div class="grid grid-cols-1 gap-8 lg:grid-cols-[1.05fr_.95fr] lg:gap-12">
             <!-- Product Images Section - Modern Gallery -->
             <div
                 class="animate-fade-in-up"
                 x-data="{ selectedImage: 0, images: @js(collect($images)->map(fn ($image) => asset('storage/' . $image))->values()) }"
             >
                 <!-- Main Image Container -->
-                <div class="relative group rounded-2xl overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 shadow-xl">
+                <div class="group relative overflow-hidden rounded-[2rem] border border-white bg-gradient-to-br from-white to-slate-100 shadow-[0_28px_70px_-38px_rgba(15,23,42,.55)]">
                     <div class="aspect-w-1 aspect-h-1">
                         @if($images && isset($images[0]))
                             <img :src="images[selectedImage]" src="{{ asset('storage/' . $images[0]) }}"
                                  alt="{{ $product->name }}" 
-                                 class="w-full h-full object-contain p-8 transition-transform duration-700 group-hover:scale-105">
+                                 class="h-full w-full object-contain p-8 transition-transform duration-700 group-hover:scale-[1.035] sm:p-12">
                         @else
                             <div class="w-full h-[500px] flex items-center justify-center">
                                 <svg class="w-32 h-32 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -231,7 +231,7 @@
             </div>
 
             <!-- Product Info Section -->
-            <div class="animate-scale-in">
+            <div class="animate-scale-in rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-8 lg:sticky lg:top-36 lg:self-start">
                 <!-- Product Header -->
                 <div class="mb-6">
                     <div class="flex items-center gap-3 mb-3">
@@ -240,10 +240,8 @@
                             {{ $product->category->name }}
                         </a>
                         <div class="flex items-center gap-2">
-                            <div class="flex text-yellow-400">
-                                ★ ★ ★ ★ ★
-                            </div>
-                            <span class="text-xs text-gray-500">(24 reviews)</span>
+                            <div class="flex text-amber-400" aria-label="{{ number_format((float) $product->comments_avg_rating, 1) }} out of 5 stars">★★★★★</div>
+                            <a href="#customer-reviews" class="text-xs font-semibold text-slate-500 transition hover:text-red-600">{{ $product->comments_count ? number_format((float) $product->comments_avg_rating, 1).' · '.$product->comments_count.' reviews' : 'No reviews yet' }}</a>
                         </div>
                     </div>
 
@@ -251,7 +249,7 @@
                         {{ $product->name }}
                     </h1>
 
-                    <div class="flex items-center gap-4">
+                    <div class="flex flex-wrap items-center gap-3">
                         <div class="flex items-center gap-2">
                             <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -328,7 +326,7 @@
                 </div>
 
                 <!-- Pricing Section -->
-                <div class="mb-8 p-6 rounded-2xl bg-gradient-to-r from-red-50 via-pink-50 to-rose-50">
+                <div class="mb-8 rounded-[1.5rem] border border-red-100 bg-gradient-to-br from-red-50 via-white to-rose-50 p-5 sm:p-6">
                     <div class="flex items-baseline gap-4">
                         <div>
                             <span class="text-4xl lg:text-5xl font-bold text-gray-900">
@@ -362,12 +360,7 @@
                         Product Description
                     </h3>
                     <div class="text-gray-600 leading-relaxed space-y-2">
-                        <p>{{ Str::limit($product->description, 300) }}</p>
-                        @if(strlen($product->description) > 300)
-                            <button class="text-red-600 hover:text-red-700 text-sm font-medium">
-                                Read more →
-                            </button>
-                        @endif
+                                <p>{{ $product->description }}</p>
                     </div>
                 </div>
 
@@ -559,7 +552,7 @@
 
     <!-- Related Products Section -->
     @if($this->relatedProducts->count() > 0)
-        <div class="bg-gray-50 py-16 mt-16">
+        <div class="mt-16 bg-white py-16">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="text-center mb-12">
                     <span class="inline-block px-4 py-1.5 bg-red-100 text-red-700 rounded-full text-sm font-semibold mb-3">
@@ -735,7 +728,7 @@
     @endif
 
     <!-- Comments Section -->
-    <div class="bg-gray-50 py-16">
+    <div id="customer-reviews" class="scroll-mt-28 bg-slate-950 py-16 text-white sm:py-20">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             @livewire('product-comments', ['product' => $product])
         </div>

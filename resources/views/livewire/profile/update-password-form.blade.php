@@ -46,7 +46,7 @@ new class extends Component
                        id="update_password_current_password" 
                        name="current_password" 
                        x-bind:type="showPassword ? 'text' : 'password'" 
-                       class="block w-full rounded-md border border-gray-300 py-2 px-3 pr-14 shadow-sm focus:border-red-500 focus:outline-none focus:ring-red-500 sm:text-sm @error('current_password') border-red-500 @enderror" 
+                       class="block w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 pr-16 shadow-sm outline-none transition focus:border-red-400 focus:bg-white focus:ring-4 focus:ring-red-100 sm:text-sm @error('current_password') border-red-500 @enderror"
                        autocomplete="current-password">
                 <button type="button" @click="showPassword = !showPassword" class="absolute inset-y-0 right-0 flex items-center pr-4 text-sm font-medium text-gray-400 transition hover:text-red-600">
                     <span x-text="showPassword ? 'Hide' : 'Show'"></span>
@@ -64,7 +64,7 @@ new class extends Component
                        id="update_password_password" 
                        name="password" 
                        x-bind:type="showPassword ? 'text' : 'password'" 
-                       class="block w-full rounded-md border border-gray-300 py-2 px-3 pr-14 shadow-sm focus:border-red-500 focus:outline-none focus:ring-red-500 sm:text-sm @error('password') border-red-500 @enderror" 
+                       class="block w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 pr-16 shadow-sm outline-none transition focus:border-red-400 focus:bg-white focus:ring-4 focus:ring-red-100 sm:text-sm @error('password') border-red-500 @enderror"
                        autocomplete="new-password">
                 <button type="button" @click="showPassword = !showPassword" class="absolute inset-y-0 right-0 flex items-center pr-4 text-sm font-medium text-gray-400 transition hover:text-red-600">
                     <span x-text="showPassword ? 'Hide' : 'Show'"></span>
@@ -82,7 +82,7 @@ new class extends Component
                        id="update_password_password_confirmation" 
                        name="password_confirmation" 
                        x-bind:type="showPassword ? 'text' : 'password'" 
-                       class="block w-full rounded-md border border-gray-300 py-2 px-3 pr-14 shadow-sm focus:border-red-500 focus:outline-none focus:ring-red-500 sm:text-sm @error('password_confirmation') border-red-500 @enderror" 
+                       class="block w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 pr-16 shadow-sm outline-none transition focus:border-red-400 focus:bg-white focus:ring-4 focus:ring-red-100 sm:text-sm @error('password_confirmation') border-red-500 @enderror"
                        autocomplete="new-password">
                 <button type="button" @click="showPassword = !showPassword" class="absolute inset-y-0 right-0 flex items-center pr-4 text-sm font-medium text-gray-400 transition hover:text-red-600">
                     <span x-text="showPassword ? 'Hide' : 'Show'"></span>
@@ -95,7 +95,7 @@ new class extends Component
 
         <div class="flex items-center gap-4">
             <button type="submit" 
-                    class="btn-primary px-6 disabled:opacity-50 disabled:cursor-not-allowed"
+                    class="rounded-2xl bg-slate-950 px-6 py-3 font-semibold text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
                     wire:loading.attr="disabled"
                     wire:target="updatePassword">
                 <span wire:loading.remove wire:target="updatePassword">Update Password</span>

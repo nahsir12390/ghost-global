@@ -793,8 +793,8 @@
                 <div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
                     <div class="flex flex-col gap-6 rounded-[2rem] border border-white/10 bg-white/5 p-6 shadow-2xl shadow-black/20 backdrop-blur sm:p-8 lg:flex-row lg:items-center lg:justify-between">
                         <div class="max-w-2xl">
-                            <span class="inline-flex rounded-full border border-red-400/30 bg-red-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-red-200">Store Update</span>
-                            <h2 class="mt-4 text-2xl font-semibold tracking-tight text-white sm:text-3xl">A cleaner shopping experience with a mobile app coming soon.</h2>
+                            <span class="inline-flex items-center gap-2 rounded-full border border-emerald-400/25 bg-emerald-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-emerald-200"><span class="h-1.5 w-1.5 rounded-full bg-emerald-300"></span>Install ready</span>
+                            <h2 class="mt-4 text-2xl font-semibold tracking-tight text-white sm:text-3xl">Your favourite store, now one tap away.</h2>
                             <p class="mt-3 text-sm leading-6 text-slate-300 sm:text-base">{{ $footerDescription }}</p>
                         </div>
 
@@ -802,9 +802,10 @@
                             <a href="{{ route('shop') }}" class="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100">
                                 Explore Store
                             </a>
-                            <a href="{{ route('tracking.index') }}" class="inline-flex items-center justify-center rounded-2xl border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10">
-                                Track an Order
-                            </a>
+                            <button type="button" data-pwa-footer-install onclick="window.triggerStoreInstallPrompt?.()" class="inline-flex items-center justify-center gap-2 rounded-2xl bg-red-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-red-950/30 transition hover:-translate-y-0.5 hover:bg-red-500">
+                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v12m0 0 4-4m-4 4-4-4M5 19h14" /></svg>
+                                <span data-pwa-install-label>Install App</span>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -830,7 +831,7 @@
                         <div class="mt-6 flex flex-wrap gap-3">
                             <span class="inline-flex items-center rounded-full border border-emerald-400/20 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-200">Secure checkout</span>
                             <span class="inline-flex items-center rounded-full border border-sky-400/20 bg-sky-500/10 px-3 py-1 text-xs font-medium text-sky-200">Responsive design</span>
-                            <span class="inline-flex items-center rounded-full border border-amber-400/20 bg-amber-500/10 px-3 py-1 text-xs font-medium text-amber-200">App coming soon</span>
+                            <span class="inline-flex items-center rounded-full border border-amber-400/20 bg-amber-500/10 px-3 py-1 text-xs font-medium text-amber-200">Installable app</span>
                         </div>
                     </div>
 
@@ -888,21 +889,31 @@
                     </div>
                 </div>
 
-                <div class="mt-10 rounded-3xl border border-red-500/15 bg-gradient-to-r from-red-600/10 via-red-500/5 to-transparent px-5 py-5">
-                    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                        <div class="max-w-2xl">
-                            <div class="inline-flex items-center gap-2 rounded-full bg-red-500/15 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-red-300">
-                                <span class="inline-flex h-2 w-2 rounded-full bg-emerald-400"></span>
-                                Coming Soon
+                <div class="relative mt-10 overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-red-600/20 via-white/[0.06] to-emerald-500/10 p-5 sm:p-7">
+                    <div class="absolute -right-16 -top-20 h-56 w-56 rounded-full bg-red-500/15 blur-3xl" aria-hidden="true"></div>
+                    <div class="relative grid gap-6 lg:grid-cols-[1fr_auto] lg:items-center">
+                        <div class="flex items-start gap-4 sm:gap-5">
+                            <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-red-500 to-red-700 shadow-xl shadow-red-950/40 sm:h-16 sm:w-16">
+                                <svg class="h-7 w-7 text-white sm:h-8 sm:w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="3" stroke-width="1.8"/><path stroke-linecap="round" stroke-width="1.8" d="M10 18h4" /></svg>
                             </div>
-                            <h3 class="mt-3 text-lg font-semibold text-white sm:text-xl">Our mobile application is launching soon</h3>
-                            <p class="mt-2 text-sm leading-6 text-gray-300">
-                                Get ready for faster browsing, smoother order tracking, and a more app-like shopping experience on your phone.
-                            </p>
+                            <div class="max-w-2xl">
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <span class="text-[10px] font-bold uppercase tracking-[0.22em] text-red-300">{{ $footerSiteName }} App</span>
+                                    <span data-pwa-install-status class="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2.5 py-1 text-[10px] font-semibold text-emerald-200">Ready for your device</span>
+                                </div>
+                                <h3 class="mt-2 text-xl font-semibold tracking-tight text-white sm:text-2xl">Shop faster from your home screen.</h3>
+                                <p class="mt-2 text-sm leading-6 text-slate-300">Install the secure web app for quick access, a focused full-screen experience and easier order tracking—without visiting an app store.</p>
+                                <div class="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-xs font-medium text-slate-300">
+                                    <span class="inline-flex items-center gap-1.5"><span class="text-emerald-400">✓</span> Quick launch</span>
+                                    <span class="inline-flex items-center gap-1.5"><span class="text-emerald-400">✓</span> Lightweight</span>
+                                    <span class="inline-flex items-center gap-1.5"><span class="text-emerald-400">✓</span> No app store</span>
+                                </div>
+                            </div>
                         </div>
 
-                        <button type="button" onclick="window.scrollTo({ top: 0, behavior: 'smooth' })" class="inline-flex items-center justify-center rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-red-600 transition hover:bg-red-50">
-                            Back to Top
+                        <button type="button" data-pwa-footer-install onclick="window.triggerStoreInstallPrompt?.()" class="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-white px-6 py-3.5 text-sm font-bold text-slate-950 shadow-xl transition hover:-translate-y-0.5 hover:bg-red-50 disabled:cursor-default disabled:opacity-60 lg:w-auto">
+                            <svg class="h-5 w-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v12m0 0 4-4m-4 4-4-4M5 19h14" /></svg>
+                            <span data-pwa-install-label>Install {{ $footerSiteName }}</span>
                         </button>
                     </div>
                 </div>
@@ -1252,6 +1263,36 @@
     @php
         $supportWhatsAppNumber = \App\Helpers\SettingsHelper::supportWhatsAppNumber();
         $supportSiteName = \App\Helpers\SettingsHelper::get('site_name', config('app.name', 'E-Commerce'));
+        $supportContext = match (true) {
+            request()->routeIs('product.show') => [
+                'label' => 'Product assistance',
+                'message' => 'Hi! I have a question about the product I am viewing: '.request()->fullUrl(),
+            ],
+            request()->routeIs('cart') => [
+                'label' => 'Cart assistance',
+                'message' => 'Hi! I need help with the items in my cart.',
+            ],
+            request()->routeIs('checkout*', 'payment.*') => [
+                'label' => 'Checkout assistance',
+                'message' => 'Hi! I need help completing my checkout or payment.',
+            ],
+            request()->routeIs('tracking.*') => [
+                'label' => 'Order tracking',
+                'message' => 'Hi! I need help tracking my order.',
+            ],
+            request()->routeIs('my.orders*') => [
+                'label' => 'Order assistance',
+                'message' => 'Hi! I need help with one of my orders.',
+            ],
+            request()->routeIs('contact*') => [
+                'label' => 'Contact support',
+                'message' => 'Hi! I visited the contact page and would like some help.',
+            ],
+            default => [
+                'label' => 'Customer support',
+                'message' => 'Hi! I need help shopping on '.$supportSiteName.'.',
+            ],
+        };
         $supportFaqs = [
             [
                 'question' => 'How do I place an order?',
@@ -1286,6 +1327,7 @@
             isOpen: false,
             activeFaq: null,
             faqs: @json($supportFaqs),
+            draftMessage: "",
             openFaq(index) {
                 this.activeFaq = this.activeFaq === index ? null : index;
             },
@@ -1297,8 +1339,8 @@
                 });
             },
             contactSupport(message) {
-                const text = encodeURIComponent(message || "Hi! I need help.");
-                window.open("https://wa.me/{{ $supportWhatsAppNumber }}?text=" + text, "_blank");
+                const outgoingMessage = (message || this.draftMessage || "Hi! I need help.").trim();
+                window.open("https://wa.me/{{ $supportWhatsAppNumber }}?text=" + encodeURIComponent(outgoingMessage), "_blank", "noopener,noreferrer");
             },
             toggle() {
                 this.isOpen = !this.isOpen;
@@ -1315,6 +1357,8 @@
                 this.resetPanelScroll();
             }
         }'
+        x-init="draftMessage = $el.dataset.contextMessage"
+        data-context-message="{{ $supportContext['message'] }}"
         x-cloak
         @keydown.escape.window="close()"
         class="fixed bottom-4 right-4 z-[9999] sm:bottom-6 sm:right-6"
@@ -1361,13 +1405,16 @@
                                 </svg>
                             </div>
                             <div>
-                                <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/75">WhatsApp Help</p>
+                                <div class="flex items-center gap-2">
+                                    <span class="h-2 w-2 rounded-full bg-emerald-200 shadow-[0_0_0_4px_rgba(167,243,208,0.16)]"></span>
+                                    <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/80">Online support</p>
+                                </div>
                                 <h3 class="mt-1 text-lg font-semibold">{{ $supportSiteName }} Support</h3>
-                                <p class="text-xs text-white/75">Simple answers, then one-tap WhatsApp support</p>
+                                <p class="text-xs text-white/75">Usually replies as soon as possible</p>
                             </div>
                         </div>
 
-                        <button @click="close()" class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20">
+                        <button type="button" @click="close()" aria-label="Close customer support" class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20">
                             <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                             </svg>
@@ -1375,20 +1422,50 @@
                     </div>
 
                     <div class="mt-4 rounded-2xl border border-white/10 bg-white/10 p-3.5 backdrop-blur-sm">
-                        <p class="text-sm leading-6 text-white/90">
-                            Tell us what you need help with. You can check a quick answer first, then continue on WhatsApp if needed.
-                        </p>
+                        <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-100">Help for this page</p>
+                        <p class="mt-1 text-sm font-semibold leading-6 text-white">{{ $supportContext['label'] }}</p>
                     </div>
                 </div>
             </div>
 
             <div x-ref="supportScroller" class="min-h-0 flex-1 overflow-y-auto bg-slate-50 px-4 py-4 sm:px-5">
+                <div class="mb-4 rounded-[1.4rem] border border-emerald-100 bg-white p-4 shadow-sm">
+                    <label for="support-message" class="text-sm font-semibold text-slate-900">How can we help?</label>
+                    <p class="mt-1 text-xs leading-5 text-slate-500">Edit the message if needed, then continue securely in WhatsApp.</p>
+                    <textarea
+                        id="support-message"
+                        x-model="draftMessage"
+                        rows="3"
+                        maxlength="500"
+                        class="mt-3 w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 px-3.5 py-3 text-sm leading-6 text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100"
+                        placeholder="Write your support message..."
+                    ></textarea>
+                    <button
+                        type="button"
+                        @click="contactSupport()"
+                        :disabled="!draftMessage.trim()"
+                        class="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-500 to-green-500 px-4 py-3.5 text-sm font-bold text-white shadow-[0_12px_24px_-12px_rgba(16,185,129,0.8)] transition hover:-translate-y-0.5 hover:from-emerald-600 hover:to-green-600 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                        <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M12.032 2.001c-5.514 0-10 4.486-10 10 0 1.767.463 3.428 1.263 4.873L2 22l5.218-1.299c1.391.763 2.981 1.2 4.677 1.2 5.513 0 9.999-4.486 9.999-10 0-5.514-4.486-10-9.999-10zm0 18.6c-1.513 0-2.983-.405-4.239-1.167l-.304-.18-3.097.772.827-3.011-.197-.315a7.992 7.992 0 01-1.262-4.299c0-4.416 3.593-8.009 8.009-8.009 4.416 0 8.009 3.593 8.009 8.009 0 4.416-3.593 8.009-8.009 8.009z"/>
+                        </svg>
+                        Start WhatsApp chat
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                    </button>
+                    <p class="mt-2.5 text-center text-[11px] text-slate-400">WhatsApp will open in a new tab. No message is sent automatically.</p>
+                </div>
+
+                <div class="mb-2 flex items-center justify-between gap-3 px-1">
+                    <p class="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">Quick answers</p>
+                    <span class="text-[11px] text-slate-400">Tap to expand</span>
+                </div>
                 <div class="space-y-2.5">
                     <template x-for="(faq, index) in faqs" :key="index">
                         <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
                             <button
                                 type="button"
                                 @click="openFaq(index)"
+                                :aria-expanded="activeFaq === index"
                                 class="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left transition hover:bg-slate-50"
                             >
                                 <span class="pr-2 text-sm font-semibold leading-6 text-slate-800" x-text="faq.question"></span>
@@ -1411,11 +1488,8 @@
                     </template>
                 </div>
 
-                <div class="mt-4 rounded-[1.4rem] border border-emerald-100 bg-white p-4 shadow-sm">
-                    <p class="text-sm font-semibold text-slate-900">Need direct help instead?</p>
-                    <p class="mt-1 text-sm leading-6 text-slate-600">
-                        Pick a support option below and we will open WhatsApp with a ready message for you.
-                    </p>
+                <div class="mt-4 rounded-[1.4rem] border border-slate-200 bg-white p-4 shadow-sm">
+                    <p class="text-sm font-semibold text-slate-900">Popular support topics</p>
 
                     <div class="mt-4 grid gap-2.5">
                         <button
@@ -1454,6 +1528,7 @@
             @click="toggle()"
             class="group relative flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-r from-emerald-500 to-green-500 shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-2xl active:scale-95 sm:h-14 sm:w-14"
             aria-label="Open customer support"
+            :aria-expanded="isOpen"
         >
             <span class="absolute inset-0 rounded-full bg-emerald-500 opacity-75 whatsapp-pulse"></span>
             <svg class="relative z-10 h-7 w-7 text-white sm:h-8 sm:w-8" fill="currentColor" viewBox="0 0 24 24">

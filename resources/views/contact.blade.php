@@ -3,224 +3,50 @@
 @section('title', 'Contact Us')
 
 @section('content')
-<div class="bg-gradient-to-br from-gray-50 to-white py-16">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <!-- Page Header -->
-        <div class="text-center mb-16">
-            <div class="inline-block mb-4">
-                <span class="inline-block px-4 py-1 bg-red-100 text-red-700 rounded-full text-sm font-semibold">Get In Touch</span>
-            </div>
-            <h1 class="text-5xl font-bold text-gray-900 mb-4">Contact Our Support Team</h1>
-            <p class="text-xl text-gray-600 max-w-2xl mx-auto">Have a question? We're here to help. Reach out to us through any of these channels.</p>
-        </div>
+@php
+    $siteName = \App\Helpers\SettingsHelper::get('site_name', config('app.name', 'Keffi Cart'));
+    $siteEmail = \App\Helpers\SettingsHelper::get('site_email', config('mail.from.address'));
+    $sitePhone = \App\Helpers\SettingsHelper::get('site_phone', '+234 909 123 456');
+    $siteAddress = \App\Helpers\SettingsHelper::get('site_address', 'Keffi, Nigeria');
+    $whatsAppNumber = \App\Helpers\SettingsHelper::supportWhatsAppNumber();
+@endphp
 
-        <!-- Contact Info Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
-            <!-- Email Card -->
-            @php
-                $siteEmail = \App\Helpers\SettingsHelper::get('site_email', config('mail.from.address'));
-            @endphp
-            <div class="bg-white rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300 p-8 border border-gray-100">
-                <div class="flex items-center justify-center mb-4">
-                    <div class="flex items-center justify-center w-14 h-14 bg-red-100 rounded-lg">
-                        <svg class="w-7 h-7 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-                        </svg>
+<x-storefront.page-hero eyebrow="Human support" title="Let’s talk." description="Questions about an order, a product or selling with us? Tell us what you need and we’ll point you in the right direction." step="We’re listening" />
+
+<div class="bg-[#f5f3ee] px-4 py-10 sm:px-6 sm:py-16 lg:px-8">
+    <div class="mx-auto max-w-6xl">
+        @if(session('success'))<div class="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-medium text-emerald-700" role="status">{{ session('success') }}</div>@endif
+        @if(session('error'))<div class="mb-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700" role="alert">{{ session('error') }}</div>@endif
+
+        <div class="grid gap-6 lg:grid-cols-[1.2fr_.8fr]">
+            <section class="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-8 lg:p-10" data-reveal>
+                <div class="max-w-xl"><span class="text-[10px] font-bold uppercase tracking-[.22em] text-red-500">Send a message</span><h2 class="mt-3 text-3xl font-semibold tracking-[-.04em] text-slate-950">How can we help?</h2><p class="mt-3 text-sm leading-6 text-slate-500">Share the details below. We usually respond within one business day.</p></div>
+                <form action="{{ route('contact.submit') }}" method="POST" class="mt-8 space-y-5">
+                    @csrf
+                    <div class="grid gap-5 sm:grid-cols-2">
+                        <label class="block"><span class="mb-2 block text-sm font-semibold text-slate-800">Full name</span><input type="text" name="name" value="{{ old('name', auth()->user()?->name) }}" required autocomplete="name" placeholder="Your full name" class="w-full rounded-2xl border-slate-200 bg-slate-50 px-4 py-4 text-base focus:border-red-500 focus:bg-white focus:ring-red-500 @error('name') border-red-400 @enderror">@error('name')<span class="mt-2 block text-xs text-red-600">{{ $message }}</span>@enderror</label>
+                        <label class="block"><span class="mb-2 block text-sm font-semibold text-slate-800">Email address</span><input type="email" name="email" value="{{ old('email', auth()->user()?->email) }}" required autocomplete="email" placeholder="you@example.com" class="w-full rounded-2xl border-slate-200 bg-slate-50 px-4 py-4 text-base focus:border-red-500 focus:bg-white focus:ring-red-500 @error('email') border-red-400 @enderror">@error('email')<span class="mt-2 block text-xs text-red-600">{{ $message }}</span>@enderror</label>
                     </div>
-                </div>
-                <h3 class="text-lg font-bold text-gray-900 mb-2 text-center">Email</h3>
-                <p class="text-gray-600 text-center mb-3">Send us an email anytime</p>
-                <a href="mailto:{{ $siteEmail }}" class="text-red-600 font-semibold text-center block hover:text-red-700 transition-colors">{{ $siteEmail }}</a>
-            </div>
+                    <label class="block"><span class="mb-2 block text-sm font-semibold text-slate-800">Subject</span><input type="text" name="subject" value="{{ old('subject') }}" required placeholder="What can we help with?" class="w-full rounded-2xl border-slate-200 bg-slate-50 px-4 py-4 text-base focus:border-red-500 focus:bg-white focus:ring-red-500 @error('subject') border-red-400 @enderror">@error('subject')<span class="mt-2 block text-xs text-red-600">{{ $message }}</span>@enderror</label>
+                    <label class="block"><span class="mb-2 block text-sm font-semibold text-slate-800">Message</span><textarea name="message" rows="6" required minlength="10" maxlength="5000" placeholder="Tell us what happened and include an order number if relevant." class="w-full resize-none rounded-2xl border-slate-200 bg-slate-50 px-4 py-4 text-base focus:border-red-500 focus:bg-white focus:ring-red-500 @error('message') border-red-400 @enderror">{{ old('message') }}</textarea>@error('message')<span class="mt-2 block text-xs text-red-600">{{ $message }}</span>@enderror</label>
+                    <button type="submit" class="storefront-button storefront-button--primary w-full shadow-lg shadow-red-600/20 sm:w-auto">Send message <span aria-hidden="true">↗</span></button>
+                </form>
+            </section>
 
-            <!-- Phone Card -->
-            @php
-                $sitePhone = \App\Helpers\SettingsHelper::get('site_phone', '+234 909 123 456');
-            @endphp
-            <div class="bg-white rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300 p-8 border border-gray-100">
-                <div class="flex items-center justify-center mb-4">
-                    <div class="flex items-center justify-center w-14 h-14 bg-red-100 rounded-lg">
-                        <svg class="w-7 h-7 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 00.948.684l1.498 4.493a1 1 0 00.502.756l2.73 1.365a1 1 0 001.27-1.27l-1.365-2.73a1 1 0 00.756-.502l4.493-1.498a1 1 0 00.684-.949V5a2 2 0 00-2-2h-2.5a2 2 0 00-2 2v2m0 0H9m0 0a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2h14a2 2 0 002-2v-5"></path>
-                        </svg>
-                    </div>
-                </div>
-                <h3 class="text-lg font-bold text-gray-900 mb-2 text-center">Phone</h3>
-                <p class="text-gray-600 text-center mb-3">Call us Mon-Fri 9am-5pm</p>
-                <a href="tel:{{ preg_replace('/[^0-9+]/', '', $sitePhone) }}" class="text-red-600 font-semibold text-center block hover:text-red-700 transition-colors">{{ $sitePhone }}</a>
-            </div>
-
-            <!-- Location Card -->
-            @php
-                $siteAddress = \App\Helpers\SettingsHelper::get('site_address', 'Lagos, Nigeria');
-            @endphp
-            <div class="bg-white rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300 p-8 border border-gray-100">
-                <div class="flex items-center justify-center mb-4">
-                    <div class="flex items-center justify-center w-14 h-14 bg-red-100 rounded-lg">
-                        <svg class="w-7 h-7 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                        </svg>
-                    </div>
-                </div>
-                <h3 class="text-lg font-bold text-gray-900 mb-2 text-center">Location</h3>
-                <p class="text-gray-600 text-center mb-3">Visit our office</p>
-                <p class="text-red-600 font-semibold text-center">{{ $siteAddress }}</p>
-            </div>
-        </div>
-
-        <!-- Main Content Section -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <!-- Contact Form -->
-            <div class="lg:col-span-2">
-                <div class="bg-white rounded-xl shadow-lg p-8 border border-gray-100">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-2">Send us a Message</h2>
-                    <p class="text-gray-600 mb-8">Fill out the form below and we'll get back to you as soon as possible.</p>
-
-                    <form action="{{ route('contact.submit') }}" method="POST" class="space-y-6">
-                        @csrf
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <!-- Name -->
-                            <div>
-                                <label for="name" class="block text-sm font-semibold text-gray-900 mb-2">Full Name</label>
-                                <input
-                                    type="text"
-                                    id="name"
-                                    name="name"
-                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all @error('name') border-red-500 @enderror"
-                                    placeholder="John Doe"
-                                    required
-                                >
-                                @error('name')
-                                    <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                                @enderror
-                            </div>
-
-                            <!-- Email -->
-                            <div>
-                                <label for="email" class="block text-sm font-semibold text-gray-900 mb-2">Email Address</label>
-                                <input
-                                    type="email"
-                                    id="email"
-                                    name="email"
-                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all @error('email') border-red-500 @enderror"
-                                    placeholder="john@example.com"
-                                    required
-                                >
-                                @error('email')
-                                    <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                                @enderror
-                            </div>
+            <aside class="space-y-4" data-reveal>
+                <div class="relative overflow-hidden rounded-[2rem] bg-[#101010] p-7 text-white sm:p-8">
+                    <div class="absolute -right-16 -top-16 h-44 w-44 rounded-full bg-red-600/30 blur-3xl"></div>
+                    <div class="relative"><span class="text-[10px] font-bold uppercase tracking-[.22em] text-white/40">Direct lines</span><h2 class="mt-3 text-3xl font-semibold tracking-[-.04em]">Prefer a quicker hello?</h2>
+                        <div class="mt-8 space-y-3">
+                            <a href="mailto:{{ $siteEmail }}" class="block rounded-2xl border border-white/10 bg-white/5 p-4 transition hover:bg-white/10"><span class="block text-xs text-white/40">Email</span><strong class="mt-1 block break-all text-sm">{{ $siteEmail }}</strong></a>
+                            <a href="tel:{{ preg_replace('/[^0-9+]/', '', $sitePhone) }}" class="block rounded-2xl border border-white/10 bg-white/5 p-4 transition hover:bg-white/10"><span class="block text-xs text-white/40">Call</span><strong class="mt-1 block text-sm">{{ $sitePhone }}</strong></a>
+                            <a href="https://wa.me/{{ $whatsAppNumber }}?text={{ rawurlencode('Hi, I need help with ' . $siteName) }}" target="_blank" rel="noopener" class="block rounded-2xl bg-emerald-500 p-4 transition hover:bg-emerald-400"><span class="block text-xs text-white/70">WhatsApp</span><strong class="mt-1 block text-sm">Start a conversation →</strong></a>
                         </div>
-
-                        <!-- Subject -->
-                        <div>
-                            <label for="subject" class="block text-sm font-semibold text-gray-900 mb-2">Subject</label>
-                            <input
-                                type="text"
-                                id="subject"
-                                name="subject"
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all @error('subject') border-red-500 @enderror"
-                                placeholder="How can we help?"
-                                required
-                            >
-                            @error('subject')
-                                <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <!-- Message -->
-                        <div>
-                            <label for="message" class="block text-sm font-semibold text-gray-900 mb-2">Message</label>
-                            <textarea
-                                id="message"
-                                name="message"
-                                rows="5"
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all resize-none @error('message') border-red-500 @enderror"
-                                placeholder="Tell us more about your inquiry..."
-                                required
-                            ></textarea>
-                            @error('message')
-                                <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <!-- Submit Button -->
-                        <button
-                            type="submit"
-                            class="btn-primary w-full"
-                        >
-                            Send Message
-                        </button>
-                    </form>
-                </div>
-            </div>
-
-            <!-- FAQ Section -->
-            <div class="lg:col-span-1">
-                <div class="bg-white rounded-xl shadow-lg p-8 border border-gray-100">
-                    <h3 class="text-2xl font-bold text-gray-900 mb-6">Quick Help</h3>
-                    <div class="space-y-4">
-                        <details class="group cursor-pointer">
-                            <summary class="flex items-center gap-3 font-semibold text-gray-900 hover:text-red-600 transition-colors">
-                                <span class="flex-shrink-0 w-6 h-6 bg-red-100 rounded-full flex items-center justify-center group-open:bg-red-600 group-open:text-white transition-all">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                                    </svg>
-                                </span>
-                                Response Time?
-                            </summary>
-                            <p class="text-gray-600 text-sm mt-3 ml-9">We respond within 24 hours during business days.</p>
-                        </details>
-
-                        <details class="group cursor-pointer">
-                            <summary class="flex items-center gap-3 font-semibold text-gray-900 hover:text-red-600 transition-colors">
-                                <span class="flex-shrink-0 w-6 h-6 bg-red-100 rounded-full flex items-center justify-center group-open:bg-red-600 group-open:text-white transition-all">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                                    </svg>
-                                </span>
-                                Weekend Support?
-                            </summary>
-                            <p class="text-gray-600 text-sm mt-3 ml-9">Yes! Our team works 7 days a week for your convenience.</p>
-                        </details>
-
-                        <details class="group cursor-pointer">
-                            <summary class="flex items-center gap-3 font-semibold text-gray-900 hover:text-red-600 transition-colors">
-                                <span class="flex-shrink-0 w-6 h-6 bg-red-100 rounded-full flex items-center justify-center group-open:bg-red-600 group-open:text-white transition-all">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                                    </svg>
-                                </span>
-                                Track My Order?
-                            </summary>
-                            <p class="text-gray-600 text-sm mt-3 ml-9">Visit our <a href="{{ route('tracking.index') }}" class="text-red-600 font-semibold hover:underline">tracking page</a> to check order status.</p>
-                        </details>
                     </div>
                 </div>
-            </div>
-        </div>
-
-        <!-- Bottom CTA Section -->
-        @php
-            $siteName = \App\Helpers\SettingsHelper::get('site_name', config('app.name', 'E-Commerce'));
-            $sitePhone = \App\Helpers\SettingsHelper::get('site_phone', '+234 909 123 456');
-            $phoneForCall = \App\Helpers\SettingsHelper::formatWhatsAppNumber($sitePhone);
-            $phoneForWhatsApp = \App\Helpers\SettingsHelper::supportWhatsAppNumber();
-        @endphp
-        <div class="mt-16 bg-gradient-to-r from-red-600 to-red-700 rounded-xl px-8 py-12 text-center text-white shadow-lg">
-            <h2 class="text-3xl font-bold mb-4">Ready to Get Help?</h2>
-            <p class="text-red-100 mb-6 max-w-xl mx-auto">If you prefer immediate assistance, reach out to us on WhatsApp or call us directly. We're available round the clock!</p>
-            <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                <button onclick="window.open('https://wa.me/{{ $phoneForWhatsApp }}?text=Hi%21%20I%20need%20help%20with%20{{ urlencode($siteName) }}', '_blank')" 
-                        class="inline-block bg-white text-red-600 font-bold px-8 py-3 rounded-lg hover:bg-red-50 transition-colors">
-                    💬 Chat on WhatsApp
-                </button>
-                <a href="tel:{{ $phoneForCall }}" class="inline-block bg-red-500 text-white font-bold px-8 py-3 rounded-lg hover:bg-red-800 transition-colors border-2 border-white">
-                    📞 Call Us Now
-                </a>
-            </div>
+                <div class="rounded-[2rem] border border-slate-200 bg-white p-7"><span class="text-[10px] font-bold uppercase tracking-[.22em] text-red-500">Visit us</span><h3 class="mt-3 text-xl font-semibold text-slate-950">{{ $siteAddress }}</h3><p class="mt-2 text-sm leading-6 text-slate-500">For order help, including your order number helps us respond faster.</p></div>
+                <a href="{{ route('tracking.index') }}" class="flex items-center justify-between rounded-[2rem] border border-slate-200 bg-white p-6 transition hover:border-red-200 hover:shadow-lg"><span><strong class="block text-slate-950">Track an order</strong><small class="mt-1 block text-slate-500">Get a live status update</small></span><span class="text-xl text-red-500">↗</span></a>
+            </aside>
         </div>
     </div>
 </div>

@@ -37,7 +37,7 @@ class ProductDetails extends Component
         $this->product = $product->load([
             'category:id,name,slug',
             'vendor:id,name,role,store_name,store_slug,vendor_is_active,verified_at,verification_status',
-        ]);
+        ])->loadCount('comments')->loadAvg('comments', 'rating');
         $this->loadCart();
         $this->loadWishlistStatus();
         

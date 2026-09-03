@@ -17,7 +17,29 @@ document.addEventListener('livewire:navigated', loadStorefrontExperience);
 document.addEventListener('DOMContentLoaded', loadAuthExperience);
 document.addEventListener('livewire:navigated', loadAuthExperience);
 
+const registerProductAnimations = () => {
+    const cards = document.querySelectorAll('[data-tilt-card]:not([data-motion-ready])');
+    if (!cards.length) return;
+
+    document.documentElement.classList.add('product-motion-ready');
+    const observer = window.KeffiProductObserver || new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+            if (!entry.isIntersecting) return;
+            entry.target.classList.add('product-card-visible');
+            observer.unobserve(entry.target);
+        });
+    }, { rootMargin: '0px 0px -5% 0px', threshold: 0.08 });
+    window.KeffiProductObserver = observer;
+
+    cards.forEach((card, index) => {
+        card.dataset.motionReady = 'true';
+        card.style.setProperty('--product-delay', `${Math.min(index % 4, 3) * 70}ms`);
+        observer.observe(card);
+    });
+};
+
 const initialiseInterfacePolish = () => {
+    registerProductAnimations();
     if (document.documentElement.dataset.interfaceReady === 'true') return;
     document.documentElement.dataset.interfaceReady = 'true';
 
@@ -45,6 +67,8 @@ const initialiseInterfacePolish = () => {
             const rotateY = ((event.clientX - bounds.left) / bounds.width - 0.5) * 5;
             card.style.setProperty('--tilt-x', `${rotateX}deg`);
             card.style.setProperty('--tilt-y', `${rotateY}deg`);
+            card.style.setProperty('--spotlight-x', `${event.clientX - bounds.left}px`);
+            card.style.setProperty('--spotlight-y', `${event.clientY - bounds.top}px`);
         });
 
         document.addEventListener('pointerout', (event) => {
@@ -54,6 +78,16 @@ const initialiseInterfacePolish = () => {
             card.style.removeProperty('--tilt-y');
         });
     }
+
+    window.addEventListener('cart:changed', (event) => {
+        const productId = event.detail?.productId;
+        if (!productId || !event.detail?.item) return;
+        document.querySelectorAll(`[data-product-id="${productId}"]`).forEach((card) => {
+            card.classList.remove('product-card-added');
+            window.requestAnimationFrame(() => card.classList.add('product-card-added'));
+            window.setTimeout(() => card.classList.remove('product-card-added'), 650);
+        });
+    });
 };
 
 if (document.readyState === 'loading') {
@@ -61,6 +95,7 @@ if (document.readyState === 'loading') {
 } else {
     initialiseInterfacePolish();
 }
+document.addEventListener('livewire:navigated', initialiseInterfacePolish);
 
 let deferredInstallPrompt = null;
 let hasReloadedForServiceWorker = false;
@@ -72,6 +107,26 @@ const isIos = () =>
 const isStandalone = () =>
     window.matchMedia('(display-mode: standalone)').matches ||
     window.navigator.standalone === true;
+
+const updateFooterInstallState = () => {
+    const installed = isStandalone();
+    const available = Boolean(deferredInstallPrompt) || isIos();
+
+    document.querySelectorAll('[data-pwa-footer-install]').forEach((button) => {
+        button.disabled = installed;
+        button.setAttribute('aria-label', installed ? 'App already installed' : 'Install this store as an app');
+    });
+
+    document.querySelectorAll('[data-pwa-install-label]').forEach((label) => {
+        label.textContent = installed ? 'App Installed' : (isIos() ? 'How to Install' : 'Install App');
+    });
+
+    document.querySelectorAll('[data-pwa-install-status]').forEach((status) => {
+        status.textContent = installed
+            ? 'Installed on this device'
+            : (available ? 'Ready to install' : 'Installation help available');
+    });
+};
 
 const hideInstallPrompt = () => {
     const prompt = document.getElementById('pwa-install-prompt');
@@ -158,6 +213,7 @@ const promptInstall = async () => {
         }
 
         deferredInstallPrompt = null;
+        updateFooterInstallState();
         hideInstallPrompt();
         return;
     }
@@ -250,6 +306,7 @@ const registerServiceWorker = () => {
 document.addEventListener('DOMContentLoaded', () => {
     registerGlobalInstallActions();
     registerInstallHandlers();
+    updateFooterInstallState();
     showInstallPrompt();
     registerServiceWorker();
 });
@@ -257,6 +314,7 @@ document.addEventListener('DOMContentLoaded', () => {
 window.addEventListener('beforeinstallprompt', (event) => {
     event.preventDefault();
     deferredInstallPrompt = event;
+    updateFooterInstallState();
     showInstallPrompt();
 });
 
@@ -264,4 +322,5 @@ window.addEventListener('appinstalled', () => {
     deferredInstallPrompt = null;
     hideInstallPrompt();
     window.localStorage.removeItem('pwa-install-dismissed');
+    updateFooterInstallState();
 });

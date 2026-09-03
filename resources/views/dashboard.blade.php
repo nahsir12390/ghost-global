@@ -21,16 +21,26 @@
             ->where('status', 'completed')
             ->sum('amount');
         $recentOrders = $currentUser->orders()->latest()->take(5)->get();
+        $orderSummary = $currentUser->orders()
+            ->selectRaw("COUNT(*) as total, SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending, SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed")
+            ->first();
     @endphp
 
-    <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-        <div class="hidden" aria-hidden="true">
-            <livewire:layout.navigation />
-        </div>
-
-        <div class="mb-8">
-            <h1 class="text-3xl font-bold text-gray-900">Welcome back, {{ $currentUser->name }}!</h1>
-            <p class="mt-2 text-gray-600">Here's what's happening with your account.</p>
+    <div class="min-h-screen bg-[#f5f3ee]">
+    <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
+        <div class="relative mb-8 overflow-hidden rounded-[2rem] bg-slate-950 px-6 py-8 text-white shadow-[0_28px_70px_-34px_rgba(15,23,42,.8)] sm:px-8 lg:px-10">
+            <div class="absolute -right-16 -top-24 h-64 w-64 rounded-full bg-red-600/30 blur-3xl" aria-hidden="true"></div>
+            <div class="relative flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                    <p class="text-xs font-bold uppercase tracking-[.24em] text-red-400">My account</p>
+                    <h1 class="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Welcome back, {{ str($currentUser->name)->before(' ') }}.</h1>
+                    <p class="mt-2 text-sm text-slate-300 sm:text-base">Orders, rewards and account tools in one calm workspace.</p>
+                </div>
+                <div class="flex flex-wrap gap-3">
+                    <a href="{{ route('shop') }}" class="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-slate-950 transition hover:-translate-y-0.5 hover:bg-red-50">Continue shopping</a>
+                    <a href="{{ route('profile') }}" class="rounded-2xl border border-white/15 bg-white/5 px-5 py-3 text-sm font-bold text-white transition hover:bg-white/10">Profile settings</a>
+                </div>
+            </div>
         </div>
 
         <div class="mb-8 rounded-3xl border border-slate-200 bg-gradient-to-r from-slate-950 via-slate-900 to-red-800 p-6 text-white shadow-sm">
@@ -78,7 +88,7 @@
         </div>
 
         <div class="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
-            <div class="rounded-2xl bg-white p-6 shadow-sm">
+            <div class="rounded-[1.5rem] border border-white bg-white/90 p-6 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl">
                 <div class="flex items-center">
                     <div class="rounded-md bg-red-100 p-3">
                         <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -87,12 +97,12 @@
                     </div>
                     <div class="ml-4">
                         <p class="text-sm font-medium text-gray-600">Total Orders</p>
-                        <p class="text-2xl font-semibold text-gray-900">{{ $currentUser->orders()->count() }}</p>
+                        <p class="text-2xl font-semibold text-gray-900">{{ (int) $orderSummary->total }}</p>
                     </div>
                 </div>
             </div>
 
-            <div class="rounded-2xl bg-white p-6 shadow-sm">
+            <div class="rounded-[1.5rem] border border-white bg-white/90 p-6 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl">
                 <div class="flex items-center">
                     <div class="rounded-md bg-yellow-100 p-3">
                         <svg class="h-6 w-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -101,12 +111,12 @@
                     </div>
                     <div class="ml-4">
                         <p class="text-sm font-medium text-gray-600">Pending Orders</p>
-                        <p class="text-2xl font-semibold text-gray-900">{{ $currentUser->orders()->where('status', 'pending')->count() }}</p>
+                        <p class="text-2xl font-semibold text-gray-900">{{ (int) $orderSummary->pending }}</p>
                     </div>
                 </div>
             </div>
 
-            <div class="rounded-2xl bg-white p-6 shadow-sm">
+            <div class="rounded-[1.5rem] border border-white bg-white/90 p-6 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl">
                 <div class="flex items-center">
                     <div class="rounded-md bg-green-100 p-3">
                         <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -115,12 +125,12 @@
                     </div>
                     <div class="ml-4">
                         <p class="text-sm font-medium text-gray-600">Completed Orders</p>
-                        <p class="text-2xl font-semibold text-gray-900">{{ $currentUser->orders()->where('status', 'completed')->count() }}</p>
+                        <p class="text-2xl font-semibold text-gray-900">{{ (int) $orderSummary->completed }}</p>
                     </div>
                 </div>
             </div>
 
-            <div class="rounded-2xl bg-white p-6 shadow-sm">
+            <div class="rounded-[1.5rem] border border-white bg-white/90 p-6 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl">
                 <div class="flex items-center">
                     <div class="rounded-md bg-emerald-100 p-3">
                         <svg class="h-6 w-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -136,7 +146,7 @@
         </div>
 
         <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-            <div class="rounded-2xl bg-white p-6 shadow-sm">
+            <div class="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-7">
                 <div class="mb-6 flex items-center justify-between">
                     <h2 class="text-lg font-semibold text-gray-900">Recent Orders</h2>
                     <a href="{{ route('my.orders') }}" class="text-sm font-medium text-red-600 hover:text-red-700">
@@ -147,7 +157,7 @@
                 @if($recentOrders->count() > 0)
                     <div class="space-y-4">
                         @foreach($recentOrders as $order)
-                            <div class="rounded-lg border border-gray-200 p-4 transition-colors hover:border-red-200">
+                            <a href="{{ route('my.orders.show', $order) }}" class="block rounded-2xl border border-slate-200 p-4 transition hover:border-red-200 hover:bg-red-50/40">
                                 <div class="flex items-center justify-between">
                                     <div>
                                         <p class="text-sm font-medium text-gray-900">Order #{{ $order->order_number }}</p>
@@ -163,7 +173,7 @@
                                     </span>
                                 </div>
                                 <p class="mt-2 text-sm text-gray-600">{{ \App\Helpers\SettingsHelper::currency($order->total) }}</p>
-                            </div>
+                            </a>
                         @endforeach
                     </div>
                 @else
@@ -177,7 +187,7 @@
                 @endif
             </div>
 
-            <div class="rounded-2xl bg-white p-6 shadow-sm">
+            <div class="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-7">
                 <h2 class="mb-6 text-lg font-semibold text-gray-900">Account Management</h2>
                 <div class="space-y-4">
                     <a href="{{ route('profile') }}" class="flex items-center rounded-lg border border-gray-200 p-4 transition-colors hover:border-red-200 hover:bg-red-50">
@@ -244,5 +254,6 @@
                 </div>
             </div>
         </div>
+    </div>
     </div>
 @endsection
