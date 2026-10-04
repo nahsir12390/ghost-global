@@ -5,7 +5,8 @@ namespace App\Livewire\Admin\Products;
 use App\Models\Category;
 use App\Models\Product;
 use App\Services\ImageUploadService;
-use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
@@ -14,41 +15,23 @@ class Create extends Component
     use WithFileUploads;
 
     public $categories = [];
-
     public $name;
-
     public $category_id;
-
     public array $delivery_countries = [];
-
     public int $processing_min_days = 0;
-
     public int $processing_max_days = 0;
-
     public $description;
-
     public $product_type = Product::TYPE_PHYSICAL;
-
     public $price;
-
     public $compare_price;
-
     public $quantity;
-
     public $sku;
-
     public $images = [];
-
     public $digital_file;
-
     public $download_link;
-
     public $course_access_url;
-
     public $access_instructions;
-
     public $is_featured = false;
-
     public $is_active = true;
 
     protected function rules(): array
@@ -56,20 +39,21 @@ class Create extends Component
         return [
             'name' => 'required|string|max:255',
             'delivery_countries' => ['array'],
-            'delivery_countries.*' => [\Illuminate\Validation\Rule::in(array_keys(config('countries')))],
+            'delivery_countries.*' => [Rule::in(array_keys(config('countries')))],
             'processing_min_days' => 'required|integer|min:0|max:365',
             'processing_max_days' => 'required|integer|gte:processing_min_days|max:365',
             'category_id' => 'required|exists:categories,id',
             'description' => 'nullable|string',
             'product_type' => 'required|in:physical,digital,course',
-            'price' => 'required|numeric|min:0',
-            'compare_price' => 'nullable|numeric|min:0',
-            'quantity' => 'nullable|integer|min:0',
+            'price' => 'required|numeric|min:0|max:999999999',
+            'compare_price' => 'nullable|numeric|gte:price|max:999999999',
+            'quantity' => $this->product_type === Product::TYPE_PHYSICAL ? 'required|integer|min:0' : 'nullable|integer|min:0',
             'sku' => 'nullable|string|max:100|unique:products,sku',
+            'images' => 'array|max:10',
             'images.*' => 'image|mimes:jpeg,png,jpg,gif,webp,heic,heif|max:10240',
             'digital_file' => 'nullable|file|max:51200|mimes:pdf,zip,rar,doc,docx,ppt,pptx,xls,xlsx,mp4,mp3',
-            'download_link' => 'nullable|url|max:2048',
-            'course_access_url' => 'nullable|url|max:2048',
+            'download_link' => 'nullable|url:http,https|max:2048',
+            'course_access_url' => 'nullable|url:http,https|max:2048',
             'access_instructions' => 'nullable|string|max:5000',
             'is_featured' => 'boolean',
             'is_active' => 'boolean',
@@ -80,8 +64,9 @@ class Create extends Component
         'name.required' => 'Product name is required.',
         'category_id.required' => 'Please select a category.',
         'price.required' => 'Regular price is required.',
-        'price.numeric' => 'Price must be a valid number.',
-        'quantity.integer' => 'Quantity must be a whole number.',
+        'compare_price.gte' => 'Compare price must be greater than or equal to the regular price.',
+        'quantity.required' => 'Quantity is required for physical products.',
+        'images.max' => 'A product can have at most 10 images.',
         'images.*.image' => 'Each file must be an image.',
         'images.*.mimes' => 'Images must be JPEG, PNG, GIF, WEBP, or HEIC format.',
         'images.*.max' => 'Each image must not exceed 10MB.',
@@ -89,144 +74,79 @@ class Create extends Component
 
     public function mount()
     {
-        $user = auth()->user()?->fresh();
-
-        abort_unless($user?->canManageProducts(), 403);
-
-        $this->categories = Category::where('is_active', true)
-            ->orderBy('name')
-            ->get();
-
+        abort_unless(auth()->user()?->fresh()?->canManageProducts(), 403);
+        $this->categories = Category::where('is_active', true)->orderBy('name')->get();
     }
 
     public function updatedProductType($value): void
     {
         if ($value === Product::TYPE_PHYSICAL) {
-            $this->digital_file = null;
-            $this->download_link = null;
-            $this->course_access_url = null;
-            $this->access_instructions = null;
-        }
-
-        if ($value === Product::TYPE_DIGITAL) {
-            $this->course_access_url = null;
+            $this->digital_file = $this->download_link = $this->course_access_url = $this->access_instructions = null;
+        } elseif ($value === Product::TYPE_DIGITAL) {
+            $this->course_access_url = $this->access_instructions = null;
             $this->quantity = null;
-        }
-
-        if ($value === Product::TYPE_COURSE) {
-            $this->digital_file = null;
-            $this->download_link = null;
+            $this->delivery_countries = [];
+            $this->processing_min_days = $this->processing_max_days = 0;
+        } elseif ($value === Product::TYPE_COURSE) {
+            $this->digital_file = $this->download_link = null;
             $this->quantity = null;
+            $this->delivery_countries = [];
+            $this->processing_min_days = $this->processing_max_days = 0;
         }
-
-        $this->resetValidation([
-            'quantity',
-            'digital_file',
-            'download_link',
-            'course_access_url',
-            'access_instructions',
-        ]);
+        $this->resetValidation();
     }
 
-    public function updatedImages(): void
-    {
-        $this->validateOnly('images.*');
-    }
-
-    public function updatedDigitalFile(): void
-    {
-        $this->validateOnly('digital_file');
-    }
+    public function updatedImages(): void { $this->validateOnly('images.*'); }
+    public function updatedDigitalFile(): void { $this->validateOnly('digital_file'); }
 
     public function save()
     {
-        $user = auth()->user()?->fresh();
-
-        abort_unless($user?->canManageProducts(), 403);
-
+        abort_unless(auth()->user()?->fresh()?->canManageProducts(), 403);
         $this->prepareFieldsForSelectedType();
-
-        $validated = $this->validate();
-
+        $this->validate();
         $this->validateProductTypeConfiguration();
-        $this->validatePricingConfiguration();
-
-        $slug = $this->generateUniqueSlug($this->name);
 
         $imagePaths = [];
-        if (! empty($this->images) && is_array($this->images)) {
-            $imageService = new ImageUploadService;
-            $uploadedPaths = $imageService->uploadAndCompressMultiple($this->images, 'products');
-
-            if (empty($uploadedPaths)) {
-                session()->flash('error', 'Failed to upload and compress images.');
-
-                return;
-            }
-
-            $imagePaths = $uploadedPaths;
-        }
-
-        $sku = $this->sku;
-        if (empty($sku)) {
-            $sku = 'PROD-'.strtoupper(Str::random(8));
-        } else {
-            $existingSku = Product::where('sku', $sku)->first();
-            if ($existingSku) {
-                $this->addError('sku', 'This SKU already exists. Please use a different SKU.');
-
+        if ($this->images) {
+            $imagePaths = (new ImageUploadService)->uploadAndCompressMultiple($this->images, 'products');
+            if (count($imagePaths) !== count($this->images)) {
+                session()->flash('error', 'One or more product images could not be processed. Please try again.');
                 return;
             }
         }
 
-        $digitalFilePath = $this->digital_file
-            ? $this->digital_file->store('digital-products', 'public')
-            : null;
+        $digitalFilePath = $this->digital_file ? $this->digital_file->store('digital-products', 'public') : null;
 
-        try {
-            $product = Product::create([
-                'delivery_countries' => $this->delivery_countries,
-                'processing_min_days' => $this->processing_min_days,
-                'processing_max_days' => $this->processing_max_days,
-                'category_id' => $this->category_id,
-                'name' => $this->name,
-                'slug' => $slug,
-                'description' => $this->description,
-                'product_type' => $this->product_type,
-                'price' => $this->price,
-                'compare_price' => $this->compare_price,
-                'quantity' => $this->product_type === Product::TYPE_PHYSICAL ? (int) $this->quantity : 0,
-                'sku' => $sku,
-                'images' => ! empty($imagePaths) ? json_encode($imagePaths) : null,
-                'download_file_path' => $digitalFilePath,
-                'download_link' => $this->product_type === Product::TYPE_DIGITAL ? $this->download_link : null,
-                'course_access_url' => $this->product_type === Product::TYPE_COURSE ? $this->course_access_url : null,
-                'access_instructions' => $this->access_instructions,
-                'is_featured' => $this->is_featured,
-                'is_active' => $this->is_active,
-            ]);
+        Product::create([
+            'delivery_countries' => $this->product_type === Product::TYPE_PHYSICAL ? $this->delivery_countries : [],
+            'processing_min_days' => $this->product_type === Product::TYPE_PHYSICAL ? $this->processing_min_days : 0,
+            'processing_max_days' => $this->product_type === Product::TYPE_PHYSICAL ? $this->processing_max_days : 0,
+            'category_id' => $this->category_id,
+            'name' => $this->name,
+            'slug' => Product::uniqueSlug($this->name),
+            'description' => $this->description,
+            'product_type' => $this->product_type,
+            'price' => $this->price,
+            'compare_price' => $this->compare_price,
+            'quantity' => $this->product_type === Product::TYPE_PHYSICAL ? (int) $this->quantity : 0,
+            'sku' => filled($this->sku) ? $this->sku : Product::uniqueSku(),
+            'images' => $imagePaths,
+            'download_file_path' => $this->product_type === Product::TYPE_DIGITAL ? $digitalFilePath : null,
+            'download_link' => $this->product_type === Product::TYPE_DIGITAL ? $this->download_link : null,
+            'course_access_url' => $this->product_type === Product::TYPE_COURSE ? $this->course_access_url : null,
+            'access_instructions' => $this->product_type === Product::TYPE_COURSE ? $this->access_instructions : null,
+            'is_featured' => $this->is_featured,
+            'is_active' => $this->is_active,
+        ]);
 
-            session()->flash('success', 'Product created successfully.');
-
-            return redirect()->route('admin.products.index');
-        } catch (\Exception $e) {
-            \Log::error('Failed to create product', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-            session()->flash('error', 'Failed to create product. Please check the form and try again.');
-
-            return;
-        }
+        session()->flash('success', 'Product created successfully.');
+        return redirect()->route('admin.products.index');
     }
 
     public function removeImage($index)
     {
         if (isset($this->images[$index])) {
-            // If it's a temporary uploaded file, delete it
-            if (is_object($this->images[$index]) && method_exists($this->images[$index], 'delete')) {
-                $this->images[$index]->delete();
-            }
+            if (is_object($this->images[$index]) && method_exists($this->images[$index], 'delete')) $this->images[$index]->delete();
             unset($this->images[$index]);
             $this->images = array_values($this->images);
         }
@@ -234,33 +154,11 @@ class Create extends Component
 
     private function validateProductTypeConfiguration(): void
     {
-        if ($this->product_type === Product::TYPE_PHYSICAL && (! is_numeric($this->quantity) || (int) $this->quantity < 0)) {
-            throw \Illuminate\Validation\ValidationException::withMessages([
-                'quantity' => 'Quantity is required for physical products.',
-            ]);
-        }
-
         if ($this->product_type === Product::TYPE_DIGITAL && ! $this->digital_file && blank($this->download_link)) {
-            throw \Illuminate\Validation\ValidationException::withMessages([
-                'digital_file' => 'Upload a file or add a download link for digital products.',
-                'download_link' => 'Upload a file or add a download link for digital products.',
-            ]);
+            throw ValidationException::withMessages(['digital_file' => 'Upload a file or add a download link for digital products.']);
         }
-
         if ($this->product_type === Product::TYPE_COURSE && blank($this->course_access_url) && blank($this->access_instructions)) {
-            throw \Illuminate\Validation\ValidationException::withMessages([
-                'course_access_url' => 'Add a course access URL or instructions for course products.',
-                'access_instructions' => 'Add a course access URL or instructions for course products.',
-            ]);
-        }
-    }
-
-    private function validatePricingConfiguration(): void
-    {
-        if (filled($this->compare_price) && (float) $this->compare_price < (float) $this->price) {
-            throw \Illuminate\Validation\ValidationException::withMessages([
-                'compare_price' => 'Compare at price should be greater than or equal to the regular price.',
-            ]);
+            throw ValidationException::withMessages(['course_access_url' => 'Add a course access URL or instructions for course products.']);
         }
     }
 
@@ -268,40 +166,21 @@ class Create extends Component
     {
         if ($this->product_type !== Product::TYPE_PHYSICAL) {
             $this->quantity = null;
+            $this->delivery_countries = [];
+            $this->processing_min_days = $this->processing_max_days = 0;
         }
-
         if ($this->product_type !== Product::TYPE_DIGITAL) {
             $this->digital_file = null;
             $this->download_link = null;
         }
-
         if ($this->product_type !== Product::TYPE_COURSE) {
             $this->course_access_url = null;
-        }
-
-        if ($this->product_type === Product::TYPE_PHYSICAL) {
             $this->access_instructions = null;
         }
     }
 
-    private function generateUniqueSlug(string $name): string
-    {
-        $baseSlug = Str::slug($name);
-        $slug = $baseSlug;
-        $counter = 1;
-
-        while (Product::where('slug', $slug)->exists()) {
-            $slug = $baseSlug.'-'.$counter;
-            $counter++;
-        }
-
-        return $slug;
-    }
-
     public function render()
     {
-        return view('livewire.admin.products.create', [
-            'categories' => $this->categories,
-        ]);
+        return view('livewire.admin.products.create');
     }
 }
