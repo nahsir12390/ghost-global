@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'name' => env('APP_NAME', 'Laravel'),
+    'name' => env('APP_NAME', 'Ghost Global'),
 
     /*
     |--------------------------------------------------------------------------
@@ -34,7 +34,7 @@ return [
     |--------------------------------------------------------------------------
     |
     | When your application is in debug mode, detailed error messages with
-    | stack traces will be shown on every error that occurs within your
+    | stack traces will be shown for every error that occurs within your
     | application. If disabled, a simple generic error page is shown.
     |
     */
@@ -46,9 +46,9 @@ return [
     | Application URL
     |--------------------------------------------------------------------------
     |
-    | This URL is used by the console to properly generate URLs when using
-    | the Artisan command line tool. You should set this to the root of
-    | the application so that it's available within Artisan commands.
+    | This URL is used by the console to properly generate URLs when using the
+    | Artisan command line tool. You should set this to the root of the
+    | application so that it's available within Artisan commands.
     |
     */
 
@@ -74,7 +74,7 @@ return [
     |
     | The application locale determines the default locale that will be used
     | by Laravel's translation / localization methods. This option can be
-    | set to any locale for which you plan to have translation strings.
+    | set to any locale for which you plan to offer translation strings.
     |
     */
 
@@ -89,9 +89,8 @@ return [
     | Encryption Key
     |--------------------------------------------------------------------------
     |
-    | This key is utilized by Laravel's encryption services and should be set
-    | to a random, 32 character string to ensure that all encrypted values
-    | are secure. You should do this prior to deploying the application.
+    | This key is utilized by Laravel's encryption services and should be a
+    | random, 32 character string to ensure encrypted values remain secure.
     |
     */
 
@@ -111,10 +110,7 @@ return [
     |--------------------------------------------------------------------------
     |
     | These configuration options determine the driver used to determine and
-    | manage Laravel's "maintenance mode" status. The "cache" driver will
-    | allow maintenance mode to be controlled across multiple machines.
-    |
-    | Supported drivers: "file", "cache"
+    | manage Laravel's maintenance mode.
     |
     */
 
