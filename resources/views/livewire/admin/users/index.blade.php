@@ -1,5 +1,5 @@
 <div>
-    <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-2">
         <div class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
             <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Total Users</p>
             <p class="mt-3 text-3xl font-bold text-slate-900">{{ $summary['total_users'] ?? 0 }}</p>
@@ -8,14 +8,8 @@
             <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Customers</p>
             <p class="mt-3 text-3xl font-bold text-blue-700">{{ $summary['customers'] ?? 0 }}</p>
         </div>
-        <div class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Vendors</p>
-            <p class="mt-3 text-3xl font-bold text-violet-700">{{ $summary['vendors'] ?? 0 }}</p>
-        </div>
-        <div class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Pending Vendors</p>
-            <p class="mt-3 text-3xl font-bold text-amber-600">{{ $summary['pending_vendors'] ?? 0 }}</p>
-        </div>
+
+
     </div>
 
     <!-- Search and Filters -->
@@ -31,8 +25,8 @@
                         </svg>
                     </div>
                     <input wire:model.live.debounce.850ms="search"
-                           type="search" 
-                           placeholder="Search users or stores..."
+                           type="search"
+                           placeholder="Search customers..."
                            class="pl-10 pr-4 py-3 border border-slate-200 rounded-2xl w-full focus:ring-2 focus:ring-red-500 focus:border-red-500">
                 </div>
             </div>
@@ -43,7 +37,7 @@
                     <select wire:model.change="roleFilter" class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm">
                         <option value="">All Users</option>
                         <option value="customer">Customers</option>
-                        <option value="vendor">Vendors</option>
+
                     </select>
                 </div>
                 <div>
@@ -52,8 +46,8 @@
                         <option value="">Any Status</option>
                         <option value="verified">Verified</option>
                         <option value="unverified">Needs Review</option>
-                        <option value="pending_vendor">Pending Vendors</option>
-                        <option value="inactive_vendor">Inactive Vendors</option>
+
+
                     </select>
                 </div>
                 <div class="flex items-end">
@@ -64,12 +58,7 @@
                         >
                             Export Current View
                         </a>
-                        <a
-                            href="{{ route('admin.users.export', ['role' => 'vendor']) }}"
-                            class="inline-flex w-full items-center justify-center rounded-2xl border border-violet-200 bg-violet-50 px-4 py-3 text-sm font-semibold text-violet-700 transition hover:bg-violet-100"
-                        >
-                            Export Vendors
-                        </a>
+
                     </div>
                 </div>
 
@@ -103,7 +92,7 @@
                     <tr>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             <div class="flex items-center">
-                                <input type="checkbox" 
+                                <input type="checkbox"
                                        wire:model.change="selectAll"
                                        @isset($selectAll) @if($selectAll) checked @endif @endisset
                                        class="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded">
@@ -155,7 +144,7 @@
                         <tr class="hover:bg-gray-50">
                             <!-- Checkbox -->
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <input type="checkbox" 
+                                <input type="checkbox"
                                        wire:model.change="selectedUsers"
                                        value="{{ $user->id }}"
                                        class="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded">
@@ -173,36 +162,17 @@
                                     </div>
                                     <div class="ml-4">
                                         <div class="text-sm font-medium text-gray-900">
-                                            <a href="{{ route('admin.users.show', $user) }}" 
+                                            <a href="{{ route('admin.users.show', $user) }}"
                                                class="text-gray-900 hover:text-red-600">
                                                 {{ $user->name }}
                                             </a>
                                         </div>
                                         <div class="mt-1 flex items-center gap-2">
-                                            @if($user->isVendor())
-                                                <span class="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">Vendor</span>
-                                                <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {{ $user->verification_status === 'approved' ? 'bg-green-100 text-green-800' : ($user->verification_status === 'rejected' ? 'bg-red-100 text-red-800' : 'bg-amber-100 text-amber-800') }}">
-                                                    {{ ucfirst($user->verification_status ?? 'pending') }}
-                                                </span>
-                                                <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {{ $user->isVendorActive() ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800' }}">
-                                                    {{ $user->isVendorActive() ? 'Active' : 'Inactive' }}
-                                                </span>
-                                                @if($user->bank_account_number && $user->bank_verification_status !== 'verified')
-                                                    <span class="inline-flex items-center rounded-full bg-violet-100 px-2.5 py-0.5 text-xs font-medium text-violet-800">
-                                                        {{ $user->bank_verification_status === 'rejected' ? '⚠ Bank Rejected' : '⏳ Bank Pending' }}
-                                                    </span>
-                                                @elseif($user->bank_verification_status === 'verified')
-                                                    <span class="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
-                                                        ✓ Bank Verified
-                                                    </span>
-                                                @endif
-                                            @else
+
                                                 <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-700">Customer</span>
-                                            @endif
+
                                         </div>
-                                        @if($user->isVendor() && $user->store_name)
-                                            <div class="text-sm text-gray-500">{{ $user->store_name }}</div>
-                                        @elseif($user->phone)
+                                        @if($user->phone)
                                             <div class="text-sm text-gray-500">{{ $user->phone }}</div>
                                         @endif
                                     </div>
@@ -216,8 +186,8 @@
 
                             <!-- Orders -->
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-gray-900">{{ $user->isVendor() ? $user->products_count : $user->orders_count }}</div>
-                                <div class="text-xs text-gray-500">{{ $user->isVendor() ? 'products' : 'orders' }}</div>
+                                <div class="text-sm text-gray-900">{{ $user->orders_count }}</div>
+                                <div class="text-xs text-gray-500">{{ 'orders' }}</div>
                             </td>
 
                             <!-- Joined Date -->
@@ -227,15 +197,7 @@
 
                             <!-- Status -->
                             <td class="px-6 py-4 whitespace-nowrap">
-                                @if($user->isVendor())
-                                    @php($vendorStatus = $user->verification_status ?? 'pending')
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $vendorStatus === 'approved' ? 'bg-green-100 text-green-800' : ($vendorStatus === 'rejected' ? 'bg-red-100 text-red-800' : 'bg-amber-100 text-amber-800') }}">
-                                        <svg class="mr-1.5 h-2 w-2 {{ $vendorStatus === 'approved' ? 'text-green-400' : ($vendorStatus === 'rejected' ? 'text-red-400' : 'text-amber-400') }}" fill="currentColor" viewBox="0 0 8 8">
-                                            <circle cx="4" cy="4" r="3" />
-                                        </svg>
-                                        {{ $vendorStatus === 'approved' ? 'Verified Vendor' : ($vendorStatus === 'rejected' ? 'Declined' : 'Pending Review') }}
-                                    </span>
-                                @elseif($user->email_verified_at)
+                                @if($user->email_verified_at)
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                         <svg class="mr-1.5 h-2 w-2 text-green-400" fill="currentColor" viewBox="0 0 8 8">
                                             <circle cx="4" cy="4" r="3" />
@@ -256,16 +218,16 @@
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                 <div class="flex items-center justify-end space-x-2">
                                     <!-- View -->
-                                    <a href="{{ route('admin.users.show', $user) }}" 
+                                    <a href="{{ route('admin.users.show', $user) }}"
                                        class="text-gray-600 hover:text-gray-900 p-1">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                         </svg>
                                     </a>
-                                    
+
                                     <!-- Edit -->
-                                    <a href="{{ route('admin.users.edit', $user) }}" 
+                                    <a href="{{ route('admin.users.edit', $user) }}"
                                        class="text-blue-600 hover:text-blue-900 p-1">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -281,25 +243,9 @@
                                         </svg>
                                     </button>
 
-                                    @if($user->isVendor() && $user->verification_status !== 'approved')
-                                        <button wire:click="updateVendorVerification({{ $user->id }}, 'approved')"
-                                                class="text-green-600 hover:text-green-900 p-1"
-                                                title="Approve vendor">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                            </svg>
-                                        </button>
-                                    @endif
 
-                                    @if($user->isVendor() && $user->verification_status !== 'rejected')
-                                        <button wire:click="updateVendorVerification({{ $user->id }}, 'rejected')"
-                                                class="text-amber-600 hover:text-amber-900 p-1"
-                                                title="Reject vendor">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                            </svg>
-                                        </button>
-                                    @endif
+
+
 
                                     <!-- Delete -->
                                     <button wire:click="$dispatch('confirm-delete', { id: {{ $user->id }} })"
@@ -374,19 +320,19 @@
                     </div>
                     <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
                         @if($userIdToDelete)
-                            <button type="button" 
+                            <button type="button"
                                     wire:click="deleteUser"
                                     class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm">
                                 Delete
                             </button>
                         @else
-                            <button type="button" 
+                            <button type="button"
                                     wire:click="deleteSelected"
                                     class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm">
                                 Delete
                             </button>
                         @endif
-                        <button type="button" 
+                        <button type="button"
                                 wire:click="$set('showDeleteModal', false); $set('userIdToDelete', null)"
                                 class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
                             Cancel

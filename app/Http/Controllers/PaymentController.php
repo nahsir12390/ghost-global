@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Order;
 use App\Helpers\SettingsHelper;
+use App\Models\Order;
 use App\Models\WalletTransaction;
 use App\Services\ReferralService;
 use App\Services\WalletService;
@@ -19,9 +19,7 @@ class PaymentController extends Controller
     public function __construct(
         private readonly WalletService $walletService,
         private readonly ReferralService $referralService
-    )
-    {
-    }
+    ) {}
 
     /**
      * Display payment method selection page.
@@ -40,9 +38,9 @@ class PaymentController extends Controller
         }
 
         $paymentMethods = $this->getAvailablePaymentMethods($order);
-        
-        Log::info('Payment methods available: ' . json_encode($paymentMethods));
-        Log::info('Payment methods type: ' . gettype($paymentMethods));
+
+        Log::info('Payment methods available: '.json_encode($paymentMethods));
+        Log::info('Payment methods type: '.gettype($paymentMethods));
 
         return view('payment.select', compact('order', 'paymentMethods'));
     }
@@ -56,21 +54,26 @@ class PaymentController extends Controller
             abort(403);
         }
 
-        Log::info('Payment process initiated for order: ' . $order->order_number);
-        Log::info('Payment method: ' . $request->input('payment_method'));
+        Log::info('Payment process initiated for order: '.$order->order_number);
+        Log::info('Payment method: '.$request->input('payment_method'));
 
         $request->validate([
             'payment_method' => 'required|in:paystack,cash_on_delivery,wallet',
         ]);
 
+        abort_unless(array_key_exists($request->payment_method, $this->getAvailablePaymentMethods($order)), 422, 'This payment method is not available for this order.');
+
         if ($request->payment_method === 'paystack') {
             Log::info('Processing Paystack payment');
+
             return $this->payWithPaystack($order);
         } elseif ($request->payment_method === 'wallet') {
             Log::info('Processing wallet payment');
+
             return $this->payWithWallet($order);
         } elseif ($request->payment_method === 'cash_on_delivery') {
             Log::info('Processing COD payment');
+
             return $this->payWithCOD($order);
         }
 
@@ -84,26 +87,27 @@ class PaymentController extends Controller
     {
         try {
             $publicKey = SettingsHelper::paystackPublicKey();
-            
-            if (!$publicKey) {
+
+            if (! $publicKey) {
                 throw new \Exception('Paystack is not configured.');
             }
 
             // Generate payment reference
-            $reference = 'ORD-' . $order->id . '-' . time();
+            $reference = 'ORD-'.$order->id.'-'.time();
             $order->update(['payment_reference' => $reference]);
 
-            Log::info('Paystack payment initiated for order: ' . $order->order_number);
+            Log::info('Paystack payment initiated for order: '.$order->order_number);
 
             return view('payment.paystack', [
                 'order' => $order,
                 'publicKey' => $publicKey,
-                'amount' => (int)($order->total * 100),
+                'amount' => (int) ($order->total * 100),
                 'reference' => $reference,
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Paystack setup failed: ' . $e->getMessage());
+            Log::error('Paystack setup failed: '.$e->getMessage());
+
             return back()->with('error', $e->getMessage());
         }
     }
@@ -121,7 +125,7 @@ class PaymentController extends Controller
 
         $this->sendConfirmationEmail($order);
 
-        Log::info('COD order confirmed: ' . $order->order_number);
+        Log::info('COD order confirmed: '.$order->order_number);
 
         return redirect()->route('payment.success', $order)
             ->with('success', 'Order confirmed! You will pay upon delivery.');
@@ -145,8 +149,8 @@ class PaymentController extends Controller
                 Auth::user(),
                 (float) $order->total,
                 WalletTransaction::TYPE_ORDER_PAYMENT,
-                'Wallet payment for order ' . $order->order_number,
-                'WLT-ORDER-' . $order->id,
+                'Wallet payment for order '.$order->order_number,
+                'WLT-ORDER-'.$order->id,
                 ['order_id' => $order->id]
             );
 
@@ -164,9 +168,9 @@ class PaymentController extends Controller
             return redirect()->route('payment.success', $order)
                 ->with('success', 'Order paid successfully from your wallet.');
         } catch (\Throwable $e) {
-            Log::error('Wallet payment failed: ' . $e->getMessage(), ['order_id' => $order->id, 'exception' => $e]);
+            Log::error('Wallet payment failed: '.$e->getMessage(), ['order_id' => $order->id, 'exception' => $e]);
 
-            return back()->with('error', 'Wallet payment failed: ' . $e->getMessage());
+            return back()->with('error', 'Wallet payment failed: '.$e->getMessage());
         }
     }
 
@@ -177,7 +181,7 @@ class PaymentController extends Controller
     {
         $reference = $request->query('reference');
 
-        if (!$reference) {
+        if (! $reference) {
             return redirect()->route('payment.failed')
                 ->with('error', 'No payment reference found.');
         }
@@ -185,14 +189,14 @@ class PaymentController extends Controller
         try {
             $secretKey = SettingsHelper::paystackSecretKey();
 
-            if (!$secretKey) {
+            if (! $secretKey) {
                 throw new \Exception('Paystack not configured.');
             }
 
             // Verify payment with Paystack
             $response = Http::withToken($secretKey)
                 ->timeout(10)
-                ->get('https://api.paystack.co/transaction/verify/' . urlencode($reference));
+                ->get('https://api.paystack.co/transaction/verify/'.urlencode($reference));
 
             $data = $response->json();
 
@@ -214,31 +218,32 @@ class PaymentController extends Controller
                 $this->referralService->rewardReferrerForFirstPaidOrder($order);
                 $this->sendConfirmationEmail($order);
 
-                Log::info('Payment confirmed for order: ' . $order->order_number);
+                Log::info('Payment confirmed for order: '.$order->order_number);
 
                 return redirect()->route('payment.success', $order)
                     ->with('success', 'Payment successful!');
             } else {
                 // Payment failed
                 $order = Order::where('payment_reference', $reference)->first();
-                
+
                 if ($order) {
                     $order->update([
                         'payment_status' => 'failed',
-                        'status' => 'failed'
+                        'status' => 'failed',
                     ]);
                 }
 
-                Log::error('Payment verification failed: ' . $reference);
+                Log::error('Payment verification failed: '.$reference);
 
                 return redirect()->route('payment.failed')
                     ->with('error', 'Payment could not be verified.');
             }
 
         } catch (\Exception $e) {
-            Log::error('Payment callback error: ' . $e->getMessage());
+            Log::error('Payment callback error: '.$e->getMessage());
+
             return redirect()->route('payment.failed')
-                ->with('error', 'Payment error: ' . $e->getMessage());
+                ->with('error', 'Payment error: '.$e->getMessage());
         }
     }
 
@@ -274,7 +279,7 @@ class PaymentController extends Controller
             $methods['paystack'] = 'Paystack';
         }
 
-        if (SettingsHelper::isCashOnDeliveryEnabled()) {
+        if (SettingsHelper::isCashOnDeliveryEnabled() && ! $order?->buyer_email) {
             $methods['cash_on_delivery'] = 'Cash on Delivery';
         }
 
@@ -296,11 +301,12 @@ class PaymentController extends Controller
     {
         try {
             if (config('mail.default') === 'log') {
-                Log::info('Confirmation email for order: ' . $order->order_number);
+                Log::info('Confirmation email for order: '.$order->order_number);
+
                 return;
             }
 
-            Mail::to($order->shipping_email)->send(new \App\Mail\OrderConfirmationMail($order));
+            Mail::to($order->contact_email)->send(new \App\Mail\OrderConfirmationMail($order));
 
             $adminEmail = SettingsHelper::get('site_email', config('mail.from.address'));
             if ($adminEmail) {
@@ -308,7 +314,7 @@ class PaymentController extends Controller
             }
 
         } catch (\Exception $e) {
-            Log::error('Email send failed: ' . $e->getMessage());
+            Log::error('Email send failed: '.$e->getMessage());
         }
     }
 
@@ -325,29 +331,30 @@ class PaymentController extends Controller
         try {
             $reference = $request->input('reference');
             $orderId = $request->input('order_id');
-            
+
             Log::info('Checking payment status', ['reference' => $reference, 'order_id' => $orderId]);
-            
+
             $secretKey = SettingsHelper::paystackSecretKey();
 
-            if (!$secretKey) {
+            if (! $secretKey) {
                 Log::error('Paystack secret key not configured');
+
                 return response()->json([
                     'success' => false,
-                    'message' => 'Paystack is not configured.'
+                    'message' => 'Paystack is not configured.',
                 ], 400);
             }
 
             // Check payment status with Paystack
             $response = Http::withToken($secretKey)
                 ->timeout(10)
-                ->get('https://api.paystack.co/transaction/verify/' . urlencode($reference));
+                ->get('https://api.paystack.co/transaction/verify/'.urlencode($reference));
 
             $data = $response->json();
-            
+
             Log::info('Paystack status check response', [
                 'status_code' => $response->status(),
-                'transaction_status' => $data['data']['status'] ?? null
+                'transaction_status' => $data['data']['status'] ?? null,
             ]);
 
             // If payment is successful, return true
@@ -356,7 +363,7 @@ class PaymentController extends Controller
             if (! $order || $order->user_id !== Auth::id()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Unauthorized'
+                    'message' => 'Unauthorized',
                 ], 403);
             }
 
@@ -367,23 +374,26 @@ class PaymentController extends Controller
                 && $this->isValidSuccessfulPayment($order, $reference, $data)
             ) {
                 Log::info('Payment status check: SUCCESS', ['reference' => $reference]);
+
                 return response()->json([
                     'success' => true,
-                    'message' => 'Payment completed'
+                    'message' => 'Payment completed',
                 ]);
             } else {
                 Log::info('Payment status check: NOT SUCCESSFUL', ['reference' => $reference, 'status' => $data['data']['status'] ?? 'unknown']);
+
                 return response()->json([
                     'success' => false,
-                    'message' => 'Payment not completed'
+                    'message' => 'Payment not completed',
                 ]);
             }
 
         } catch (\Exception $e) {
-            Log::error('Payment status check error: ' . $e->getMessage());
+            Log::error('Payment status check error: '.$e->getMessage());
+
             return response()->json([
                 'success' => false,
-                'message' => 'Status check error'
+                'message' => 'Status check error',
             ], 500);
         }
     }
@@ -401,29 +411,30 @@ class PaymentController extends Controller
         try {
             $reference = $request->input('reference');
             $orderId = $request->input('order_id');
-            
+
             Log::info('Payment verification started', ['reference' => $reference, 'order_id' => $orderId]);
-            
+
             $secretKey = SettingsHelper::paystackSecretKey();
 
-            if (!$secretKey) {
+            if (! $secretKey) {
                 Log::error('Paystack secret key not configured');
+
                 return response()->json([
                     'success' => false,
-                    'message' => 'Paystack is not configured.'
+                    'message' => 'Paystack is not configured.',
                 ], 400);
             }
 
             // Verify payment with Paystack
             $response = Http::withToken($secretKey)
                 ->timeout(10)
-                ->get('https://api.paystack.co/transaction/verify/' . urlencode($reference));
+                ->get('https://api.paystack.co/transaction/verify/'.urlencode($reference));
 
             $data = $response->json();
-            
+
             Log::info('Paystack API response', [
                 'status_code' => $response->status(),
-                'data' => $data
+                'data' => $data,
             ]);
 
             $order = Order::findOrFail($orderId);
@@ -434,9 +445,10 @@ class PaymentController extends Controller
                 // Verify user owns this order
                 if ($order->user_id !== Auth::id()) {
                     Log::warning('Unauthorized payment verification attempt', ['order_id' => $orderId]);
+
                     return response()->json([
                         'success' => false,
-                        'message' => 'Unauthorized'
+                        'message' => 'Unauthorized',
                     ], 403);
                 }
 
@@ -448,7 +460,7 @@ class PaymentController extends Controller
 
                     return response()->json([
                         'success' => false,
-                        'message' => 'Payment details did not match this order.'
+                        'message' => 'Payment details did not match this order.',
                     ], 422);
                 }
 
@@ -457,35 +469,36 @@ class PaymentController extends Controller
                 $this->referralService->rewardReferrerForFirstPaidOrder($order);
                 $this->sendConfirmationEmail($order);
 
-                Log::info('Payment confirmed for order: ' . $order->order_number);
+                Log::info('Payment confirmed for order: '.$order->order_number);
 
                 return response()->json([
                     'success' => true,
                     'message' => 'Payment verified successfully',
-                    'redirect' => route('payment.success', $order)
+                    'redirect' => route('payment.success', $order),
                 ]);
             } else {
                 // Payment failed
                 if ($order->user_id === Auth::id()) {
                     $order->update([
                         'payment_status' => 'failed',
-                        'status' => 'failed'
+                        'status' => 'failed',
                     ]);
                 }
 
-                Log::error('Payment verification failed: ' . $reference, ['response' => $data]);
+                Log::error('Payment verification failed: '.$reference, ['response' => $data]);
 
                 return response()->json([
                     'success' => false,
-                    'message' => 'Payment could not be verified.'
+                    'message' => 'Payment could not be verified.',
                 ], 400);
             }
 
         } catch (Throwable $e) {
-            Log::error('Payment verification error: ' . $e->getMessage(), ['exception' => $e]);
+            Log::error('Payment verification error: '.$e->getMessage(), ['exception' => $e]);
+
             return response()->json([
                 'success' => false,
-                'message' => 'Payment verification error: ' . $e->getMessage()
+                'message' => 'Payment verification error: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -501,7 +514,8 @@ class PaymentController extends Controller
             && ! empty($order->payment_reference)
             && hash_equals((string) $order->payment_reference, $reference)
             && hash_equals((string) $order->payment_reference, $transactionReference)
-            && $paidAmount === $expectedAmount;
+            && $paidAmount === $expectedAmount
+            && strtoupper((string) ($transaction['currency'] ?? '')) === ($order->buyer_email ? 'NGN' : SettingsHelper::currencyCode());
     }
 
     private function markOrderAsPaid(Order $order, string $reference, array $payload): void

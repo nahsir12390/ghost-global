@@ -112,7 +112,6 @@ class Home extends Component
             ->where('is_active', true)
             ->with([
                 'category:id,name,slug',
-                'vendor:id,name,role,store_name,store_slug,vendor_is_active,verified_at,verification_status',
             ]);
     }
 }

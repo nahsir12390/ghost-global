@@ -14,10 +14,6 @@ new #[Layout('layouts.guest')] class extends Component
 {
     public string $name = '';
     public string $email = '';
-    public string $account_type = 'customer';
-    public string $store_name = '';
-    public string $phone = '';
-    public string $address = '';
     public string $password = '';
     public string $password_confirmation = '';
     public string $referralCode = '';
@@ -27,19 +23,7 @@ new #[Layout('layouts.guest')] class extends Component
         $this->referralCode = (string) session(ReferralService::SESSION_KEY, '');
     }
 
-    protected function makeStoreSlug(string $storeName): string
-    {
-        $baseSlug = Str::slug($storeName);
-        $slug = $baseSlug;
-        $counter = 1;
 
-        while (User::where('store_slug', $slug)->exists()) {
-            $slug = $baseSlug.'-'.$counter;
-            $counter++;
-        }
-
-        return $slug;
-    }
 
     public function register(): void
     {
@@ -48,25 +32,11 @@ new #[Layout('layouts.guest')] class extends Component
         $validated = $this->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
-            'account_type' => ['required', 'in:customer,vendor'],
-            'store_name' => ['nullable', 'string', 'max:255', 'required_if:account_type,vendor'],
-            'phone' => ['nullable', 'string', 'max:20'],
-            'address' => ['nullable', 'string', 'max:1000'],
             'referralCode' => ['nullable', 'string', 'max:32', 'exists:users,referral_code'],
             'password' => ['required', 'string', 'confirmed', Rules\Password::defaults()],
         ]);
 
-        $validated['role'] = $validated['account_type'];
-        unset($validated['account_type']);
-
-        if ($validated['role'] === 'vendor') {
-            $validated['store_slug'] = $this->makeStoreSlug($validated['store_name']);
-            $validated['verification_status'] = 'pending';
-        } else {
-            $validated['store_name'] = null;
-            $validated['phone'] = null;
-            $validated['address'] = null;
-        }
+        $validated['role'] = 'customer';
 
         $validated['password'] = Hash::make($validated['password']);
         $validated['referral_code'] = User::generateUniqueReferralCode();
@@ -77,7 +47,7 @@ new #[Layout('layouts.guest')] class extends Component
 
         Auth::login($user);
 
-        $destination = $user->isVendor() || $user->isAdmin()
+        $destination = $user->isAdmin()
             ? route('admin.dashboard', absolute: false)
             : route('dashboard', absolute: false);
 
@@ -89,7 +59,7 @@ new #[Layout('layouts.guest')] class extends Component
     $siteName = \App\Helpers\SettingsHelper::get('site_name', config('app.name', 'E-Commerce'));
 @endphp
 
-<div class="space-y-5" x-data="{ accountType: @entangle('account_type'), showReferral: @js((bool) $referralCode) }">
+<div class="space-y-5" x-data="{ showReferral: @js((bool) $referralCode) }">
     <div class="overflow-hidden rounded-[1.6rem] border border-red-100 bg-white shadow-sm">
         <div class="bg-gradient-to-br from-red-600 via-red-700 to-slate-950 px-4 py-5 text-white sm:px-6 sm:py-6">
             <div class="flex flex-wrap items-center justify-between gap-3">
@@ -115,63 +85,10 @@ new #[Layout('layouts.guest')] class extends Component
                 <div class="h-px flex-1 bg-gray-200"></div>
             </div>
 
-            <div class="rounded-2xl border border-gray-200 bg-gray-50 p-3.5 sm:p-4">
-                <div class="flex items-center justify-between gap-3">
-                    <div>
-                        <p class="text-[11px] font-semibold uppercase tracking-[0.2em] text-red-500">Account type</p>
-                        <p class="mt-1 text-sm text-gray-500">Choose how you want to start.</p>
-                    </div>
-                    <button type="button" @click="showReferral = !showReferral" class="text-xs font-semibold text-gray-500 transition hover:text-red-600">
-                        Referral code
-                    </button>
-                </div>
-
-                <div class="mt-4 grid grid-cols-2 gap-3">
-                    <label class="cursor-pointer rounded-2xl border p-3 transition"
-                           :class="accountType === 'customer' ? 'border-red-500 bg-white shadow-sm' : 'border-gray-200 bg-white hover:border-red-200'">
-                        <input type="radio" wire:model.defer="account_type" x-model="accountType" value="customer" class="sr-only">
-                        <div class="flex items-start gap-3">
-                            <span class="mt-1 flex h-5 w-5 items-center justify-center rounded-full border"
-                                  :class="accountType === 'customer' ? 'border-red-500' : 'border-gray-300'">
-                                <span x-cloak x-show="accountType === 'customer'" class="h-2.5 w-2.5 rounded-full bg-red-500"></span>
-                            </span>
-                            <span>
-                                <span class="block text-sm font-semibold text-gray-900">Customer</span>
-                                <span class="mt-1 block text-xs leading-5 text-gray-500">Shop and track orders.</span>
-                            </span>
-                        </div>
-                    </label>
-
-                    <label class="cursor-pointer rounded-2xl border p-3 transition"
-                           :class="accountType === 'vendor' ? 'border-red-500 bg-white shadow-sm' : 'border-gray-200 bg-white hover:border-red-200'">
-                        <input type="radio" wire:model.defer="account_type" x-model="accountType" value="vendor" class="sr-only">
-                        <div class="flex items-start gap-3">
-                            <span class="mt-1 flex h-5 w-5 items-center justify-center rounded-full border"
-                                  :class="accountType === 'vendor' ? 'border-red-500' : 'border-gray-300'">
-                                <span x-cloak x-show="accountType === 'vendor'" class="h-2.5 w-2.5 rounded-full bg-red-500"></span>
-                            </span>
-                            <span>
-                                <span class="block text-sm font-semibold text-gray-900">Vendor</span>
-                                <span class="mt-1 block text-xs leading-5 text-gray-500">Open a store profile.</span>
-                            </span>
-                        </div>
-                    </label>
-                </div>
-
-                <div x-cloak x-show="showReferral" x-transition.opacity.duration.150ms class="mt-4 rounded-2xl border border-emerald-100 bg-white p-3.5">
-                    <label for="referralCode" class="form-label mb-2 text-emerald-900">Referral Code</label>
-                    <input wire:model.defer="referralCode"
-                           id="referralCode"
-                           class="form-input bg-white @error('referralCode') form-input-error @enderror"
-                           type="text"
-                           name="referralCode"
-                           placeholder="Enter referral code if you have one">
-                    @error('referralCode')
-                        <p class="error-message">{{ $message }}</p>
-                    @else
-                        <p class="mt-2 text-xs leading-5 text-emerald-700">Optional. Leave empty if nobody referred you.</p>
-                    @enderror
-                </div>
+            <div>
+                <label for="referralCode" class="form-label">Referral code (optional)</label>
+                <input wire:model.defer="referralCode" id="referralCode" class="form-input" type="text" autocomplete="off">
+                @error('referralCode')<p class="error-message">{{ $message }}</p>@enderror
             </div>
 
             <div class="grid gap-4 sm:grid-cols-2">
@@ -187,40 +104,6 @@ new #[Layout('layouts.guest')] class extends Component
                     <label for="email" class="form-label">Email Address</label>
                     <input wire:model.defer="email" id="email" class="form-input @error('email') form-input-error @enderror" type="email" name="email" required autocomplete="username" placeholder="you@example.com">
                     @error('email')
-                        <p class="error-message">{{ $message }}</p>
-                    @enderror
-                </div>
-            </div>
-
-            <div x-cloak
-                 x-show="accountType === 'vendor'"
-                 x-transition.opacity.duration.150ms
-                 class="grid gap-4 rounded-2xl border border-red-100 bg-red-50/50 p-4 sm:grid-cols-2">
-                <div class="sm:col-span-2">
-                    <p class="text-[11px] font-semibold uppercase tracking-[0.2em] text-red-500">Vendor setup</p>
-                    <p class="mt-1 text-sm text-gray-500">Only the essentials for now.</p>
-                </div>
-
-                <div class="sm:col-span-2">
-                    <label for="store_name" class="form-label">Store Name</label>
-                    <input wire:model.defer="store_name" id="store_name" class="form-input @error('store_name') form-input-error @enderror" type="text" name="store_name" placeholder="e.g. Your Fashion Hub">
-                    @error('store_name')
-                        <p class="error-message">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <div>
-                    <label for="phone" class="form-label">Phone Number</label>
-                    <input wire:model.defer="phone" id="phone" class="form-input @error('phone') form-input-error @enderror" type="text" name="phone" placeholder="+234...">
-                    @error('phone')
-                        <p class="error-message">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <div>
-                    <label for="address" class="form-label">Business Address</label>
-                    <input wire:model.defer="address" id="address" class="form-input @error('address') form-input-error @enderror" type="text" name="address" placeholder="Store or pickup address">
-                    @error('address')
                         <p class="error-message">{{ $message }}</p>
                     @enderror
                 </div>
@@ -255,19 +138,13 @@ new #[Layout('layouts.guest')] class extends Component
             </div>
 
             <div class="rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-xs leading-6 text-gray-600 sm:text-sm">
-                <span x-show="accountType === 'vendor'">
-                    Vendor accounts can enter the dashboard after signup, but store approval still happens from admin review.
-                </span>
-                <span x-show="accountType !== 'vendor'">
-                    Customer accounts are ready immediately, and vendor access can be requested later from your account.
-                </span>
+                Your account lets you shop, save favourites, and track orders.
             </div>
 
             <div class="flex flex-col gap-4 pt-1">
                 <button type="submit" class="btn-primary" wire:loading.attr="disabled" wire:loading.class="opacity-75">
                     <span wire:loading.remove wire:target="register">
-                        <span x-show="accountType === 'vendor'">Create Vendor Account</span>
-                        <span x-show="accountType !== 'vendor'">Create Account</span>
+                        Create Account
                     </span>
                     <span wire:loading wire:target="register" class="flex items-center justify-center">
                         <svg class="-ml-1 mr-3 h-5 w-5 animate-spin text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

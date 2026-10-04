@@ -39,15 +39,15 @@ new class extends Component
                     <x-nav-link :href="route('cart')" :active="request()->routeIs('cart')" wire:navigate>
                         {{ __('Cart') }}
                     </x-nav-link>
-                    
+
                     @auth
                         <!-- Show Dashboard link only for authenticated users -->
                         @if(auth()->user()->canAccessBackoffice())
                             <x-nav-link :href="route(auth()->user()->dashboardRouteName())" :active="request()->routeIs('admin.*') || request()->routeIs('admin.staff.*')" wire:navigate>
-                                {{ auth()->user()->isStaff() ? __('Staff Dashboard') : (auth()->user()->isVendor() ? __('Vendor Dashboard') : __('Admin')) }}
+                                {{ auth()->user()->isStaff() ? __('Staff Dashboard') : __('Admin') }}
                             </x-nav-link>
                         @endif
-                        
+
                         <x-nav-link :href="route('my.orders')" :active="request()->routeIs('my.orders*')" wire:navigate>
                             {{ __('My Orders') }}
                         </x-nav-link>
@@ -76,20 +76,16 @@ new class extends Component
                             <x-dropdown-link :href="route('profile')" wire:navigate>
                                 {{ __('Profile') }}
                             </x-dropdown-link>
-                            
+
                             <x-dropdown-link :href="route('my.orders')" wire:navigate>
                                 {{ __('My Orders') }}
                             </x-dropdown-link>
 
-                            @if(!auth()->user()->isVendor())
-                                <x-dropdown-link :href="route('vendor-upgrade.create')" wire:navigate>
-                                    {{ __('Become a Vendor') }}
-                                </x-dropdown-link>
-                            @endif
-                            
+
+
                             @if(auth()->user()->canAccessBackoffice())
                                 <x-dropdown-link :href="route(auth()->user()->dashboardRouteName())" wire:navigate>
-                                    {{ auth()->user()->isStaff() ? __('Staff Dashboard') : (auth()->user()->isVendor() ? __('Vendor Dashboard') : __('Admin Dashboard')) }}
+                                    {{ auth()->user()->isStaff() ? __('Staff Dashboard') : __('Admin Dashboard') }}
                                 </x-dropdown-link>
                             @endif
 
@@ -138,14 +134,14 @@ new class extends Component
             <x-responsive-nav-link :href="route('cart')" :active="request()->routeIs('cart')" wire:navigate>
                 {{ __('Cart') }}
             </x-responsive-nav-link>
-            
+
             @auth
                 @if(auth()->user()->canAccessBackoffice())
                     <x-responsive-nav-link :href="route(auth()->user()->dashboardRouteName())" :active="request()->routeIs('admin.*') || request()->routeIs('admin.staff.*')" wire:navigate>
-                        {{ auth()->user()->isStaff() ? __('Staff Dashboard') : (auth()->user()->isVendor() ? __('Vendor Dashboard') : __('Admin')) }}
+                        {{ auth()->user()->isStaff() ? __('Staff Dashboard') : __('Admin') }}
                     </x-responsive-nav-link>
                 @endif
-                
+
                 <x-responsive-nav-link :href="route('my.orders')" :active="request()->routeIs('my.orders*')" wire:navigate>
                     {{ __('My Orders') }}
                 </x-responsive-nav-link>
@@ -164,20 +160,16 @@ new class extends Component
                     <x-responsive-nav-link :href="route('profile')" wire:navigate>
                         {{ __('Profile') }}
                     </x-responsive-nav-link>
-                    
+
                     <x-responsive-nav-link :href="route('my.orders')" wire:navigate>
                         {{ __('My Orders') }}
                     </x-responsive-nav-link>
 
-                    @if(!auth()->user()->isVendor())
-                        <x-responsive-nav-link :href="route('vendor-upgrade.create')" wire:navigate>
-                            {{ __('Become a Vendor') }}
-                        </x-responsive-nav-link>
-                    @endif
-                    
+
+
                     @if(auth()->user()->canAccessBackoffice())
                         <x-responsive-nav-link :href="route(auth()->user()->dashboardRouteName())" wire:navigate>
-                            {{ auth()->user()->isStaff() ? __('Staff Dashboard') : (auth()->user()->isVendor() ? __('Vendor Dashboard') : __('Admin Dashboard')) }}
+                            {{ auth()->user()->isStaff() ? __('Staff Dashboard') : __('Admin Dashboard') }}
                         </x-responsive-nav-link>
                     @endif
 

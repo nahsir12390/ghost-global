@@ -3,6 +3,7 @@
 @section('title', 'Order Details - ' . $order->order_number)
 
 @section('content')
+<div class="mx-auto max-w-5xl px-4">@include('partials.order-shipments')</div>
 @php
     $statusTone = match ($order->status) {
         'pending', 'ordered' => 'bg-yellow-100 text-yellow-800',
@@ -22,9 +23,9 @@
     $progressStatuses = ['ordered', 'confirmed', 'picked_up', 'on_the_way', 'delivered'];
     $progressLabels = [
         'ordered' => 'Ordered',
-        'confirmed' => 'Confirmed',
-        'picked_up' => 'Picked Up',
-        'on_the_way' => 'On The Way',
+        'confirmed' => 'Preparing your order',
+        'picked_up' => 'Shipped',
+        'on_the_way' => 'In transit',
         'delivered' => 'Delivered',
     ];
     $currentIndex = array_search($order->status, $progressStatuses, true);
@@ -124,14 +125,7 @@
                                     @endif
                                 </h3>
                                 <p class="mt-1 text-sm text-gray-500">Quantity: {{ $item->quantity }}</p>
-                                @if($item->product?->vendor && $item->product->vendor->storefrontUrl())
-                                    <p class="mt-1 text-xs text-gray-500">
-                                        Store:
-                                        <a href="{{ $item->product->vendor->storefrontUrl() }}" class="font-medium text-red-600 transition hover:text-red-700">
-                                            {{ $item->product->vendor->publicStoreName() }}
-                                        </a>
-                                    </p>
-                                @endif
+
                             </div>
 
                             <div class="text-right">

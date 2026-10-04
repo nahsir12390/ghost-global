@@ -226,19 +226,7 @@
                         </div>
                     </a>
 
-                    @if(! $currentUser->isVendor())
-                        <a href="{{ route('vendor-upgrade.create') }}" class="flex items-center rounded-lg border border-gray-200 p-4 transition-colors hover:border-red-200 hover:bg-red-50">
-                            <div class="rounded-md bg-amber-100 p-3">
-                                <svg class="h-6 w-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M5 7l1 12h12l1-12M8 7V5a4 4 0 018 0v2M9 12h6" />
-                                </svg>
-                            </div>
-                            <div class="ml-4">
-                                <p class="text-sm font-medium text-gray-900">Become a Vendor</p>
-                                <p class="text-xs text-gray-500">Submit your store details for admin approval</p>
-                            </div>
-                        </a>
-                    @endif
+
 
                     <a href="{{ route('cart') }}" class="flex items-center rounded-lg border border-gray-200 p-4 transition-colors hover:border-red-200 hover:bg-red-50">
                         <div class="rounded-md bg-green-100 p-3">

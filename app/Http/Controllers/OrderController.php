@@ -9,8 +9,8 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\WalletTransaction;
 use App\Services\WalletService;
-use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -18,14 +18,12 @@ use Illuminate\Support\Facades\Storage;
 
 class OrderController extends Controller
 {
-    public function __construct(private readonly WalletService $walletService)
-    {
-    }
+    public function __construct(private readonly WalletService $walletService) {}
 
     public function index(Request $request)
     {
         $orders = $request->user()->orders()
-            ->with(['items.product.vendor'])
+            ->with(['shipments.items', 'items.product'])
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
@@ -39,7 +37,7 @@ class OrderController extends Controller
             abort(403);
         }
 
-        $order->load(['items.product.vendor']);
+        $order->load(['shipments.items', 'items.product']);
 
         return view('order-details', compact('order'));
     }
@@ -72,8 +70,8 @@ class OrderController extends Controller
                     $request->user(),
                     (float) $order->total,
                     WalletTransaction::TYPE_REFUND,
-                    'Wallet refund for cancelled order ' . $order->order_number,
-                    'WLT-REFUND-' . $order->id,
+                    'Wallet refund for cancelled order '.$order->order_number,
+                    'WLT-REFUND-'.$order->id,
                     ['order_id' => $order->id]
                 );
 
@@ -115,7 +113,7 @@ class OrderController extends Controller
                 Mail::to($adminEmail)->send(new WalletRefundAdminMail($user, $order, $transaction));
             }
         } catch (\Throwable $e) {
-            Log::error('Failed to send wallet refund emails: ' . $e->getMessage(), [
+            Log::error('Failed to send wallet refund emails: '.$e->getMessage(), [
                 'order_id' => $order->id,
                 'transaction_id' => $transaction->id,
             ]);

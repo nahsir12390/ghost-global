@@ -2,16 +2,16 @@
 
 namespace App\Models;
 
-use Illuminate\Support\Str;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class Product extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'vendor_id',
+        'delivery_countries', 'processing_min_days', 'processing_max_days',
         'category_id',
         'name',
         'slug',
@@ -27,18 +27,21 @@ class Product extends Model
         'course_access_url',
         'access_instructions',
         'is_featured',
-        'is_active'
+        'is_active',
     ];
 
     protected $casts = [
+        'delivery_countries' => 'array', 'processing_min_days' => 'integer', 'processing_max_days' => 'integer',
         'price' => 'decimal:2',
         'compare_price' => 'decimal:2',
         'is_featured' => 'boolean',
-        'is_active' => 'boolean'
+        'is_active' => 'boolean',
     ];
 
     public const TYPE_PHYSICAL = 'physical';
+
     public const TYPE_DIGITAL = 'digital';
+
     public const TYPE_COURSE = 'course';
 
     public function getImagesAttribute($value)
@@ -46,6 +49,7 @@ class Product extends Model
         if (is_string($value)) {
             return json_decode($value, true) ?? [];
         }
+
         return $value ?? [];
     }
 
@@ -66,10 +70,10 @@ class Product extends Model
             if (blank($product->slug)) {
                 $product->slug = Str::slug($product->name);
             }
-            
+
             // Generate SKU if not provided
             if (empty($product->sku)) {
-                $product->sku = 'PROD-' . strtoupper(Str::random(8));
+                $product->sku = 'PROD-'.strtoupper(Str::random(8));
             }
         });
 
@@ -88,11 +92,6 @@ class Product extends Model
     public function vendor()
     {
         return $this->belongsTo(User::class, 'vendor_id');
-    }
-
-    public function vendorIsAvailable(): bool
-    {
-        return ! $this->vendor || $this->vendor->isVendorActive();
     }
 
     public function isPhysical(): bool
@@ -140,7 +139,7 @@ class Product extends Model
 
     public function isPurchasable(): bool
     {
-        if (! $this->is_active || ! $this->vendorIsAvailable()) {
+        if (! $this->is_active) {
             return false;
         }
 
@@ -159,10 +158,6 @@ class Product extends Model
 
         if ($this->tracksInventory() && $this->quantity <= 0) {
             return 'This product is out of stock.';
-        }
-
-        if (! $this->vendorIsAvailable()) {
-            return ($this->vendor?->store_name ?: 'This vendor').' is currently unavailable.';
         }
 
         if (! $this->tracksInventory() && ! $this->hasDigitalFulfillment()) {
@@ -187,13 +182,15 @@ class Product extends Model
         if ($this->compare_price && $this->compare_price > $this->price) {
             return round((($this->compare_price - $this->price) / $this->compare_price) * 100);
         }
+
         return 0;
     }
 
     public function getMainImageAttribute()
     {
         $images = $this->images ?? [];
-        return !empty($images) ? $images[0] : null;
+
+        return ! empty($images) ? $images[0] : null;
     }
 
     public function wishlists()
@@ -208,16 +205,12 @@ class Product extends Model
 
     public function scopeForManager($query, ?User $user)
     {
-        if (!$user) {
+        if (! $user) {
             return $query->whereRaw('1 = 0');
         }
 
         if ($user->isAdmin()) {
             return $query;
-        }
-
-        if ($user->isVendor()) {
-            return $query->where('vendor_id', $user->id);
         }
 
         // Staff with product manager permission sees all products
@@ -230,16 +223,12 @@ class Product extends Model
 
     public function canBeManagedBy(?User $user): bool
     {
-        if (!$user) {
+        if (! $user) {
             return false;
         }
 
         if ($user->isAdmin()) {
             return true;
-        }
-
-        if ($user->isVendor()) {
-            return (int) $this->vendor_id === (int) $user->id;
         }
 
         // Allow staff with product manager permission

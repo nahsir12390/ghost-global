@@ -87,7 +87,7 @@
                     </div>
                     <div class="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm">
                         <p class="text-xs font-semibold uppercase tracking-[0.18em] text-gray-400">Faster product actions</p>
-                        <p class="mt-3 text-sm leading-6 text-gray-600">Add items to cart and open vendor stores without unnecessary page friction.</p>
+                        <p class="mt-3 text-sm leading-6 text-gray-600">Add your favourites to the cart and check out with ease.</p>
                     </div>
                     <div class="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm">
                         <p class="text-xs font-semibold uppercase tracking-[0.18em] text-gray-400">Secure checkout flow</p>
@@ -242,7 +242,7 @@
                             <div class="mt-4 space-y-3">
                                 <div class="rounded-2xl border border-gray-200 bg-gray-50 p-4">
                                     <p class="text-sm font-semibold text-gray-900">Verified sellers</p>
-                                    <p class="mt-1 text-xs leading-5 text-gray-600">Vendor storefronts make it easier to inspect who is selling each product.</p>
+                                    <p class="mt-1 text-xs leading-5 text-gray-600">View product details and availability before placing your order.</p>
                                 </div>
                                 <div class="rounded-2xl border border-gray-200 bg-gray-50 p-4">
                                     <p class="text-sm font-semibold text-gray-900">Fast discovery</p>

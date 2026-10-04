@@ -18,15 +18,11 @@
                     Thank you for joining <strong>{{ $siteName }}</strong>. We are excited to have you here.
                 </p>
 
-                @if($user->isVendor())
-                    <p style="margin:0 0 16px; font-size:16px; line-height:1.7;">
-                        Your vendor account has been created successfully. You can now sign in to manage your store, add products, track orders, and monitor your sales from your dashboard.
-                    </p>
-                @else
+
                     <p style="margin:0 0 16px; font-size:16px; line-height:1.7;">
                         Your customer account has been created successfully. You can now browse products, place orders, track purchases, and manage your account anytime.
                     </p>
-                @endif
+
 
                 <p style="margin:24px 0 0; font-size:16px; line-height:1.7;">
                     Regards,<br>

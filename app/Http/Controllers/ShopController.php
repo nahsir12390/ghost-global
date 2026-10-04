@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Product;
 use App\Models\Category;
+use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 
@@ -34,11 +34,10 @@ class ShopController extends Controller
             ])
             ->with([
                 'category:id,name,slug',
-                'vendor:id,name,role,store_name,store_slug,vendor_is_active,verified_at,verification_status',
             ])
             ->where('is_active', true)
             ->when($search !== '', function ($productQuery) use ($search) {
-                $term = '%' . $search . '%';
+                $term = '%'.$search.'%';
 
                 $productQuery->where(function ($searchQuery) use ($term) {
                     $searchQuery->where('name', 'like', $term)
@@ -74,7 +73,7 @@ class ShopController extends Controller
      */
     public function show(Product $product)
     {
-        if (!$product->is_active) {
+        if (! $product->is_active) {
             abort(404);
         }
 
@@ -96,7 +95,7 @@ class ShopController extends Controller
      */
     public function category(Category $category)
     {
-        if (!$category->is_active) {
+        if (! $category->is_active) {
             abort(404);
         }
 

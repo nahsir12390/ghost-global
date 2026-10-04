@@ -42,9 +42,7 @@
                                                 <a :href="productUrl(item.slug)" class="hover:text-red-600 transition-colors" x-text="item.name"></a>
                                             </h3>
                                             <p class="text-sm text-gray-500" x-text="money(item.price) + ' each'"></p>
-                                            <template x-if="item.vendor_name">
-                                                <p class="mt-1 text-xs" :class="item.vendor_is_active ? 'text-green-600' : 'text-red-600'" x-text="item.vendor_name + ' · ' + (item.vendor_is_active ? 'Vendor active' : 'Vendor inactive')"></p>
-                                            </template>
+
                                             <template x-if="item.unavailable_reason">
                                                 <p class="mt-1 rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-700" x-text="item.unavailable_reason"></p>
                                             </template>
@@ -143,7 +141,7 @@
 
                     <template x-if="summary.unavailable_count > 0">
                         <div class="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-                            Remove unavailable vendor items before checkout.
+                            Remove unavailable items before checkout.
                         </div>
                     </template>
 

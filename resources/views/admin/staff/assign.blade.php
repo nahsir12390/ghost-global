@@ -102,7 +102,7 @@
                                                     <p class="text-sm font-semibold text-gray-900" x-text="user.name"></p>
                                                     <div class="flex items-center space-x-2">
                                                         <p class="text-xs text-gray-500 truncate" x-text="user.email"></p>
-                                                        <span :class="user.role === 'customer' ? 'bg-blue-100 text-blue-800' : user.role === 'vendor' ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'" class="text-xs font-medium px-2 py-0.5 rounded-full whitespace-nowrap" x-text="user.role.charAt(0).toUpperCase() + user.role.slice(1)"></span>
+                                                        <span :class="user.role === 'customer' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'" class="text-xs font-medium px-2 py-0.5 rounded-full whitespace-nowrap" x-text="user.role.charAt(0).toUpperCase() + user.role.slice(1)"></span>
                                                     </div>
                                                 </div>
                                             </div>

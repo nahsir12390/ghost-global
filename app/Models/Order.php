@@ -2,15 +2,17 @@
 
 namespace App\Models;
 
-use Illuminate\Support\Str;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class Order extends Model
 {
     use HasFactory;
 
     protected $fillable = [
+        'buyer_email', 'buyer_whatsapp', 'terms_accepted_at', 'marketing_consent',
+        'estimated_delivery_from', 'estimated_delivery_to', 'delivery_import_charges',
         'order_number',
         'user_id',
         'subtotal',
@@ -43,10 +45,12 @@ class Order extends Model
         'billing_city',
         'billing_state',
         'billing_country',
-        'billing_postal_code'
+        'billing_postal_code',
     ];
 
-     protected $casts = [
+    protected $casts = [
+        'terms_accepted_at' => 'datetime', 'marketing_consent' => 'boolean',
+        'estimated_delivery_from' => 'date', 'estimated_delivery_to' => 'date',
         'user_id' => 'integer',
         'subtotal' => 'decimal:2',
         'tax' => 'decimal:2',
@@ -56,14 +60,25 @@ class Order extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
     protected static function boot()
     {
         parent::boot();
 
         static::creating(function ($order) {
             // Generate unique order number
-            $order->order_number = 'ORD-' . strtoupper(Str::random(10));
+            $order->order_number = 'ORD-'.strtoupper(Str::random(10));
         });
+    }
+
+    public function shipments(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Shipment::class);
+    }
+
+    public function getContactEmailAttribute(): ?string
+    {
+        return $this->buyer_email ?: $this->shipping_email ?: $this->user?->email;
     }
 
     public function user()
@@ -83,20 +98,21 @@ class Order extends Model
 
     public function getShippingFullNameAttribute()
     {
-        return $this->shipping_first_name . ' ' . $this->shipping_last_name;
+        return $this->shipping_first_name.' '.$this->shipping_last_name;
     }
 
     public function getBillingFullNameAttribute()
     {
         if ($this->same_as_shipping) {
-            return $this->shipping_first_name . ' ' . $this->shipping_last_name;
+            return $this->shipping_first_name.' '.$this->shipping_last_name;
         }
-        return $this->billing_first_name . ' ' . $this->billing_last_name;
+
+        return $this->billing_first_name.' '.$this->billing_last_name;
     }
 
     public function getFormattedTotalAttribute()
     {
-        return '₦' . number_format($this->total, 2);
+        return '₦'.number_format($this->total, 2);
     }
 
     public function getStatusBadgeAttribute()
@@ -115,29 +131,23 @@ class Order extends Model
             'pending' => 'bg-yellow-100 text-yellow-800',
             'paid' => 'bg-green-100 text-green-800',
             'failed' => 'bg-red-100 text-red-800',
-            'refunded' => 'bg-purple-100 text-purple-800'
+            'refunded' => 'bg-purple-100 text-purple-800',
         ];
 
         return [
             'status' => $badges[$this->status] ?? 'bg-gray-100 text-gray-800',
-            'payment' => $paymentBadges[$this->payment_status] ?? 'bg-gray-100 text-gray-800'
+            'payment' => $paymentBadges[$this->payment_status] ?? 'bg-gray-100 text-gray-800',
         ];
     }
 
     public function scopeVisibleTo($query, ?User $user)
     {
-        if (!$user) {
+        if (! $user) {
             return $query->whereRaw('1 = 0');
         }
 
         if ($user->isAdmin()) {
             return $query;
-        }
-
-        if ($user->isVendor()) {
-            return $query->whereHas('items', function ($itemQuery) use ($user) {
-                $itemQuery->where('vendor_id', $user->id);
-            });
         }
 
         // Staff with order manager permission sees all orders
@@ -150,16 +160,12 @@ class Order extends Model
 
     public function canBeManagedBy(?User $user): bool
     {
-        if (!$user) {
+        if (! $user) {
             return false;
         }
 
         if ($user->isAdmin()) {
             return true;
-        }
-
-        if ($user->isVendor()) {
-            return $this->items()->where('vendor_id', $user->id)->exists();
         }
 
         // Allow staff with order manager permission
@@ -172,7 +178,7 @@ class Order extends Model
 
     public function canBeCancelledByCustomer(?User $user): bool
     {
-        if (!$user || (int) $this->user_id !== (int) $user->id) {
+        if (! $user || (int) $this->user_id !== (int) $user->id) {
             return false;
         }
 

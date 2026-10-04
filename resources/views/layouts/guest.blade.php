@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     @php
-        $siteName = \App\Helpers\SettingsHelper::get('site_name', config('app.name', 'Laravel'));
+        $siteName = \App\Helpers\SettingsHelper::siteName();
+        $siteLogo = \App\Helpers\SettingsHelper::logoUrl();
     @endphp
 
     <title>@yield('title', 'Login') - {{ $siteName }}</title>
@@ -16,7 +17,7 @@
     <meta name="apple-mobile-web-app-title" content="{{ $siteName }}">
     <link rel="manifest" href="{{ route('pwa.manifest') }}">
     <link rel="apple-touch-icon" href="{{ route('pwa.icon', ['size' => 192]) }}">
-    <link rel="icon" type="image/png" href="{{ route('pwa.icon', ['size' => 192]) }}">
+    <link rel="icon" href="{{ \App\Helpers\SettingsHelper::faviconUrl() }}">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -482,8 +483,8 @@
                 <!-- Logo & Header -->
                 <div class="mb-6 text-center sm:mb-8">
                     <a href="{{ route('home') }}" class="inline-block group">
-                        <img src="{{ asset('images/keffi-cart-logo.svg') }}"
-                             alt="{{ \App\Helpers\SettingsHelper::get('site_name', config('app.name', 'E-Commerce')) }}"
+                        <img src="{{ $siteLogo }}"
+                             alt="{{ $siteName }}"
                              class="mx-auto h-12 w-12 transition-transform group-hover:scale-105 sm:h-16 sm:w-16">
                     </a>
                     <h1 class="mt-4 bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-xl font-bold text-transparent sm:mt-6 sm:text-2xl">

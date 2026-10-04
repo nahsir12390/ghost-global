@@ -21,10 +21,10 @@ it('renders core customer pages for an authenticated customer', function () {
     $this->actingAs($customer)->get('/user-dashboard')->assertRedirect(route('dashboard'));
     $this->actingAs($customer)->get('/wallet')->assertOk();
     $this->actingAs($customer)->get('/my-orders')->assertOk();
-    $this->actingAs($customer)->get('/become-a-vendor')->assertOk();
+    $this->actingAs($customer)->get('/become-a-vendor')->assertNotFound();
 });
 
-it('renders core vendor backoffice pages for an approved vendor', function () {
+it('denies legacy vendor access to backoffice pages', function () {
     $vendor = systemSmokeUser([
         'role' => 'vendor',
         'store_name' => 'Smoke Vendor Store',
@@ -41,7 +41,7 @@ it('renders core vendor backoffice pages for an approved vendor', function () {
         '/admin/orders',
         '/admin/profile',
     ] as $route) {
-        $this->actingAs($vendor)->get($route)->assertOk();
+        $this->actingAs($vendor)->get($route)->assertForbidden();
     }
 });
 

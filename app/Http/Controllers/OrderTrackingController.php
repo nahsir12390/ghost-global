@@ -40,13 +40,17 @@ class OrderTrackingController extends Controller
         // Search for order
         $order = Order::where('order_number', $orderNumber)
             ->where(function ($query) use ($emailOrPhone) {
-                $query->where('shipping_email', $emailOrPhone)
-                      ->orWhere('shipping_phone', $emailOrPhone)
-                      ->orWhere('billing_email', $emailOrPhone);
+                $query->where('buyer_email', $emailOrPhone)
+                    ->orWhere('buyer_whatsapp', $emailOrPhone)
+                    ->orWhere(function ($legacy) use ($emailOrPhone) {
+                        $legacy->whereNull('buyer_email')->where(function ($contact) use ($emailOrPhone) {
+                            $contact->where('shipping_email', $emailOrPhone)->orWhere('shipping_phone', $emailOrPhone)->orWhere('billing_email', $emailOrPhone);
+                        });
+                    });
             })
             ->first();
 
-        if (!$order) {
+        if (! $order) {
             Log::warning('Order not found for tracking', [
                 'order_number' => $orderNumber,
                 'email_or_phone' => $emailOrPhone,
@@ -58,7 +62,7 @@ class OrderTrackingController extends Controller
         }
 
         // Load related data for display
-        $order->load(['items.product.vendor', 'statusHistory']);
+        $order->load(['items.product', 'statusHistory', 'shipments.items']);
 
         Log::info('Order found for tracking', [
             'order_id' => $order->id,
@@ -74,8 +78,8 @@ class OrderTrackingController extends Controller
     public function show(Order $order)
     {
         // This allows direct access to tracking if you have the order
-        $order->load(['items.product.vendor', 'statusHistory']);
-        
+        $order->load(['items.product', 'statusHistory', 'shipments.items']);
+
         return view('tracking.show', compact('order'));
     }
 }

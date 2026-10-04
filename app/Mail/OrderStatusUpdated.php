@@ -9,7 +9,6 @@ use Illuminate\Mail\Mailables\Envelope;
 
 class OrderStatusUpdated extends Mailable
 {
-
     /**
      * Create a new message instance.
      */
@@ -25,9 +24,8 @@ class OrderStatusUpdated extends Mailable
     public function envelope(): Envelope
     {
         $siteName = \App\Helpers\SettingsHelper::get('site_name', config('app.name', 'Our Store'));
-        
+
         return new Envelope(
-            to: $this->order->user->email,
             subject: "Order {$this->order->order_number} Status Updated - {$siteName}",
         );
     }

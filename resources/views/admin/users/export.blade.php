@@ -5,14 +5,11 @@
         '' => 'All statuses',
         'verified' => 'Verified',
         'unverified' => 'Needs review',
-        'pending_vendor' => 'Pending vendors',
-        'inactive_vendor' => 'Inactive vendors',
     ];
 
     $roleLabels = [
         '' => 'All users',
         'customer' => 'Customers',
-        'vendor' => 'Vendors',
     ];
 @endphp
 <!DOCTYPE html>
@@ -103,7 +100,7 @@
     </style>
 </head>
 <body>
-    <div class="sheet-title">{{ $siteName }} User & Vendor Report</div>
+    <div class="sheet-title">{{ $siteName }} Customer Report</div>
     <div class="sheet-subtitle">
         Generated on {{ $generatedAt->format('F j, Y \a\t g:i A') }}
     </div>
@@ -130,12 +127,7 @@
             <td class="summary-label">Customers</td>
             <td class="summary-value">{{ $summary['customers'] }}</td>
         </tr>
-        <tr>
-            <td class="summary-label">Vendors</td>
-            <td class="summary-value">{{ $summary['vendors'] }}</td>
-            <td class="summary-label">Active Vendors</td>
-            <td class="summary-value">{{ $summary['active_vendors'] }}</td>
-        </tr>
+
     </table>
 
     <div class="section-title">Contact Export</div>
@@ -146,15 +138,7 @@
                 <th>Email</th>
                 <th>Phone</th>
                 <th>Role</th>
-                <th>Store Name</th>
                 <th>Address</th>
-                <th>Verification Status</th>
-                <th>Vendor Active</th>
-                <th>Verification Email</th>
-                <th>Verification Phone</th>
-                <th>Bank Name</th>
-                <th>Account Name</th>
-                <th>Account Number</th>
                 <th>Joined At</th>
             </tr>
         </thead>
@@ -165,20 +149,12 @@
                     <td>{{ $user->email }}</td>
                     <td>{{ $user->phone ?: 'N/A' }}</td>
                     <td>{{ ucfirst((string) $user->role) }}</td>
-                    <td>{{ $user->store_name ?: 'N/A' }}</td>
                     <td>{{ $user->address ?: 'N/A' }}</td>
-                    <td>{{ $user->verification_status ?: 'N/A' }}</td>
-                    <td>{{ $user->role === 'vendor' ? ($user->vendor_is_active ? 'Yes' : 'No') : 'N/A' }}</td>
-                    <td>{{ $user->verification_email ?: 'N/A' }}</td>
-                    <td>{{ $user->verification_phone ?: 'N/A' }}</td>
-                    <td>{{ $user->bank_name ?: 'N/A' }}</td>
-                    <td>{{ $user->bank_account_name ?: 'N/A' }}</td>
-                    <td>{{ $user->bank_account_number ?: 'N/A' }}</td>
                     <td>{{ optional($user->created_at)->format('Y-m-d H:i:s') }}</td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="14" class="muted">No records found for this export.</td>
+                    <td colspan="6" class="muted">No records found for this export.</td>
                 </tr>
             @endforelse
         </tbody>

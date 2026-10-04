@@ -12,7 +12,7 @@
                     Users Management
                 </h2>
                 <p class="mt-1 text-sm text-gray-500">
-                    Review customers, vendors, and verification requests
+                    Manage customer accounts and contact information
                 </p>
             </div>
         </div>

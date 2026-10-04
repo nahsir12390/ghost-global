@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Product;
 use App\Models\Category;
+use App\Models\Product;
 use App\Services\ImageUploadService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -18,7 +18,7 @@ class ProductController extends Controller
     public function index()
     {
         $products = Product::forManager(request()->user())
-            ->with(['category', 'vendor'])
+            ->with(['category'])
             ->latest()
             ->paginate(15);
 
@@ -31,6 +31,7 @@ class ProductController extends Controller
     public function create()
     {
         $categories = Category::where('is_active', true)->get();
+
         return view('admin.products.create', compact('categories'));
     }
 
@@ -56,12 +57,11 @@ class ProductController extends Controller
         // Handle image uploads with compression
         $imagePaths = [];
         if ($request->hasFile('images')) {
-            $imageService = new ImageUploadService();
+            $imageService = new ImageUploadService;
             $imagePaths = $imageService->uploadAndCompressMultiple($request->file('images'), 'products');
         }
 
         $product = Product::create([
-            'vendor_id' => $request->user()->isVendor() ? $request->user()->id : null,
             'category_id' => $validated['category_id'],
             'name' => $validated['name'],
             'slug' => Str::slug($validated['name']),
@@ -70,7 +70,7 @@ class ProductController extends Controller
             'compare_price' => $validated['compare_price'],
             'quantity' => $validated['quantity'],
             'sku' => $validated['sku'],
-            'images' => !empty($imagePaths) ? $imagePaths : null,
+            'images' => ! empty($imagePaths) ? $imagePaths : null,
             'is_featured' => $request->boolean('is_featured'),
             'is_active' => $request->boolean('is_active'),
         ]);
@@ -86,6 +86,7 @@ class ProductController extends Controller
     {
         abort_unless($product->canBeManagedBy(request()->user()), 403);
         $product->load('category', 'orderItems');
+
         return view('admin.products.show', compact('product'));
     }
 
@@ -96,6 +97,7 @@ class ProductController extends Controller
     {
         abort_unless($product->canBeManagedBy(request()->user()), 403);
         $categories = Category::where('is_active', true)->get();
+
         return view('admin.products.edit', compact('product', 'categories'));
     }
 
@@ -113,7 +115,7 @@ class ProductController extends Controller
             'price' => 'required|numeric|min:0',
             'compare_price' => 'nullable|numeric|min:0',
             'quantity' => 'required|integer|min:0',
-            'sku' => 'nullable|string|max:100|unique:products,sku,' . $product->id,
+            'sku' => 'nullable|string|max:100|unique:products,sku,'.$product->id,
             'images' => 'nullable|array',
             'images.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:10240',
             'existing_images' => 'nullable|array',
@@ -128,15 +130,15 @@ class ProductController extends Controller
 
         // Handle new image uploads with compression
         if ($request->hasFile('images')) {
-            $imageService = new ImageUploadService();
+            $imageService = new ImageUploadService;
             $newImages = $imageService->uploadAndCompressMultiple($request->file('images'), 'products');
             $imagePaths = array_merge($imagePaths, $newImages);
         }
 
         // Remove deleted images from storage
         $imagesToDelete = array_diff($currentImages, $existingImages);
-        if (!empty($imagesToDelete)) {
-            $imageService = new ImageUploadService();
+        if (! empty($imagesToDelete)) {
+            $imageService = new ImageUploadService;
             $imageService->deleteImages($imagesToDelete);
         }
 
@@ -149,7 +151,7 @@ class ProductController extends Controller
             'compare_price' => $validated['compare_price'],
             'quantity' => $validated['quantity'],
             'sku' => $validated['sku'],
-            'images' => !empty($imagePaths) ? $imagePaths : null,
+            'images' => ! empty($imagePaths) ? $imagePaths : null,
             'is_featured' => $request->boolean('is_featured'),
             'is_active' => $request->boolean('is_active'),
         ]);
@@ -167,7 +169,7 @@ class ProductController extends Controller
 
         // Delete product images from storage
         if ($product->images) {
-            $imageService = new ImageUploadService();
+            $imageService = new ImageUploadService;
             $images = $product->images ?? [];
             $imageService->deleteImages($images);
         }
@@ -193,7 +195,7 @@ class ProductController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Product status updated successfully.'
+            'message' => 'Product status updated successfully.',
         ]);
     }
 
@@ -212,7 +214,7 @@ class ProductController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Product featured status updated successfully.'
+            'message' => 'Product featured status updated successfully.',
         ]);
     }
 }

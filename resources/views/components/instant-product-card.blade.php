@@ -25,7 +25,7 @@
         quantity: {{ $initialQuantity }},
         busy: false,
         maxStock: {{ max((int) $product->quantity, 0) }},
-        vendorAvailable: @js($product->vendorIsAvailable()),
+        productAvailable: @js($product->isPurchasable()),
         productData: {{ json_encode($productData) }},
 
         init() {
@@ -37,7 +37,7 @@
         },
 
         async addToCart() {
-            if (this.busy || this.quantity > 0 || !this.vendorAvailable || this.maxStock < 1) {
+            if (this.busy || this.quantity > 0 || !this.productAvailable || this.maxStock < 1) {
                 return;
             }
 
@@ -141,43 +141,7 @@
                 </h3>
             </a>
 
-            @if($product->vendor && $product->vendor->store_name)
-                @if($product->vendor->storefrontUrl())
-                    <a
-                        href="{{ $product->vendor->storefrontUrl() }}"
-                        class="mt-2 flex min-w-0 items-center justify-between gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-2 py-1.5 transition hover:border-red-200 hover:bg-red-50/70 sm:gap-3 sm:rounded-2xl sm:px-3 sm:py-2"
-                        title="Visit {{ $product->vendor->store_name }} store"
-                    >
-                        <span class="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden sm:gap-2">
-                            <span class="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm sm:h-7 sm:w-7">
-                                <svg class="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7l1.664 9.152A2 2 0 006.632 18h10.736a2 2 0 001.968-1.848L21 7M7 7V5a5 5 0 0110 0v2M5 7h14" />
-                                </svg>
-                            </span>
-                            <span class="min-w-0 flex-1 overflow-hidden">
-                                <span class="block truncate text-[9px] font-semibold leading-tight text-red-600 sm:text-xs">{{ $product->vendor->store_name }}</span>
-                                <span class="block truncate text-[8px] leading-tight text-slate-400 sm:text-[11px]">View store</span>
-                            </span>
-                        </span>
 
-                        <span class="flex shrink-0 items-center gap-1 sm:gap-2">
-                            <span class="shrink-0 rounded-full px-1 py-0.5 text-[8px] font-semibold leading-none {{ $product->vendorIsAvailable() ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700' }} sm:px-2 sm:text-[10px]">
-                                {{ $product->vendorIsAvailable() ? 'Active' : 'Inactive' }}
-                            </span>
-                            <svg class="h-3 w-3 shrink-0 text-slate-400 transition group-hover:text-red-500 sm:h-4 sm:w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                            </svg>
-                        </span>
-                    </a>
-                @else
-                    <div class="mt-2 flex min-w-0 items-center justify-between gap-2">
-                        <p class="truncate text-[11px] text-gray-500 sm:text-xs">{{ $product->vendor->store_name }}</p>
-                        <span class="shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-semibold {{ $product->vendorIsAvailable() ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700' }} sm:px-2 sm:text-[10px]">
-                            {{ $product->vendorIsAvailable() ? 'Active' : 'Inactive' }}
-                        </span>
-                    </div>
-                @endif
-            @endif
         </div>
 
         <div class="flex min-w-0 items-end gap-1.5 sm:gap-2">
@@ -191,12 +155,12 @@
             <button
                 type="button"
                 x-on:click="addToCart"
-                x-bind:disabled="busy || !vendorAvailable || maxStock < 1"
+                x-bind:disabled="busy || !productAvailable || maxStock < 1"
                 class="w-full rounded-xl bg-gradient-to-r from-gray-900 to-gray-800 px-2.5 py-2 text-[11px] font-semibold leading-none text-white transition hover:from-red-600 hover:to-rose-600 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:py-3 sm:text-sm"
             >
-                <span x-show="!busy && vendorAvailable && maxStock > 0">Add to Cart</span>
-                <span x-show="!vendorAvailable">Vendor Unavailable</span>
-                <span x-show="vendorAvailable && maxStock < 1">Out of Stock</span>
+                <span x-show="!busy && productAvailable && maxStock > 0">Add to Cart</span>
+                <span x-show="!productAvailable">Unavailable</span>
+                <span x-show="productAvailable && maxStock < 1">Out of Stock</span>
                 <span x-show="busy">Adding...</span>
             </button>
         </template>

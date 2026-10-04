@@ -2,46 +2,70 @@
 
 namespace App\Livewire\Admin\Products;
 
-use App\Models\Product;
-use Livewire\Component;
 use App\Models\Category;
-use App\Models\User;
+use App\Models\Product;
 use App\Services\ImageUploadService;
-use Illuminate\Support\Str;
-use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Livewire\Component;
+use Livewire\WithFileUploads;
 
 class Edit extends Component
 {
     use WithFileUploads;
 
     public $product;
+
     public $productId;
+
     public $categories = [];
-    public $vendors = [];
+
     public $name;
-    public $vendor_id;
+
     public $category_id;
+
+    public array $delivery_countries = [];
+
+    public int $processing_min_days = 0;
+
+    public int $processing_max_days = 0;
+
     public $description;
+
     public $product_type = Product::TYPE_PHYSICAL;
+
     public $price;
+
     public $compare_price;
+
     public $quantity;
+
     public $sku;
+
     public $existingImages = [];
+
     public $newImages = [];
+
     public $digital_file;
+
     public $download_link;
+
     public $course_access_url;
+
     public $access_instructions;
+
     public $is_featured = false;
+
     public $is_active = true;
 
     protected function rules(): array
     {
         return [
             'name' => 'required|string|max:255',
-            'vendor_id' => 'nullable|exists:users,id',
+            'delivery_countries' => ['array'],
+            'delivery_countries.*' => [\Illuminate\Validation\Rule::in(array_keys(config('countries')))],
+            'processing_min_days' => 'required|integer|min:0|max:365',
+            'processing_max_days' => 'required|integer|gte:processing_min_days|max:365',
             'category_id' => 'required|exists:categories,id',
             'description' => 'nullable|string',
             'product_type' => 'required|in:physical,digital,course',
@@ -61,7 +85,6 @@ class Edit extends Component
 
     protected $messages = [
         'name.required' => 'Product name is required.',
-        'vendor_id.exists' => 'Please choose a valid vendor account.',
         'category_id.required' => 'Please select a category.',
         'price.required' => 'Regular price is required.',
         'price.numeric' => 'Price must be a valid number.',
@@ -75,16 +98,19 @@ class Edit extends Component
     {
         $user = auth()->user()?->fresh();
 
-        abort_if($user?->isVendor() && !$user->isVendorVerified(), 403);
+        abort_unless($user?->canManageProducts(), 403);
+
         abort_unless($product->canBeManagedBy($user), 403);
 
         $this->product = $product;
         $this->productId = $product->id;
-        
+
         // Load product data
         $this->name = $product->name;
-        $this->vendor_id = $product->vendor_id;
         $this->category_id = $product->category_id;
+        $this->delivery_countries = $product->delivery_countries ?? [];
+        $this->processing_min_days = $product->processing_min_days ?? 0;
+        $this->processing_max_days = $product->processing_max_days ?? 0;
         $this->description = $product->description;
         $this->product_type = $product->product_type ?: Product::TYPE_PHYSICAL;
         $this->price = $product->price;
@@ -100,13 +126,12 @@ class Edit extends Component
         $this->categories = Category::where('is_active', true)
             ->orderBy('name')
             ->get();
-        $this->vendors = $this->availableVendors();
     }
 
     public function regenerateSku()
     {
-        $this->sku = 'PROD-' . strtoupper(Str::random(8));
-        session()->flash('success', 'New SKU generated: ' . $this->sku);
+        $this->sku = 'PROD-'.strtoupper(Str::random(8));
+        session()->flash('success', 'New SKU generated: '.$this->sku);
     }
 
     public function updatedProductType($value): void
@@ -150,27 +175,30 @@ class Edit extends Component
 
     public function update()
     {
+        abort_unless($this->product->canBeManagedBy(auth()->user()), 403);
         $user = auth()->user()?->fresh();
+
+        abort_unless($user?->canManageProducts(), 403);
 
         $this->prepareFieldsForSelectedType();
 
         $this->validate();
-        $assignedVendorId = $this->resolveVendorId($user);
         $this->validateProductTypeConfiguration();
         $this->validatePricingConfiguration();
 
         // Combine existing and new images
         $allImages = $this->existingImages;
-        
+
         // Handle new image uploads with compression
-        if (!empty($this->newImages)) {
-            $imageService = new ImageUploadService();
+        if (! empty($this->newImages)) {
+            $imageService = new ImageUploadService;
             $uploadedPaths = $imageService->uploadAndCompressMultiple($this->newImages, 'products');
-            
-            if (!empty($uploadedPaths)) {
+
+            if (! empty($uploadedPaths)) {
                 $allImages = array_merge($allImages, $uploadedPaths);
             } else {
                 session()->flash('error', 'Failed to upload and compress one or more images.');
+
                 return;
             }
         }
@@ -192,7 +220,9 @@ class Edit extends Component
         $slug = $this->generateUniqueSlug($this->name);
 
         $this->product->update([
-            'vendor_id' => $assignedVendorId,
+            'delivery_countries' => $this->delivery_countries,
+            'processing_min_days' => $this->processing_min_days,
+            'processing_max_days' => $this->processing_max_days,
             'category_id' => $this->category_id,
             'name' => $this->name,
             'slug' => $slug,
@@ -201,8 +231,8 @@ class Edit extends Component
             'price' => $this->price,
             'compare_price' => $this->compare_price,
             'quantity' => $this->product_type === Product::TYPE_PHYSICAL ? (int) $this->quantity : 0,
-            'sku' => $this->sku ?? 'PROD-' . strtoupper(Str::random(8)),
-            'images' => !empty($allImages) ? $allImages : null,
+            'sku' => $this->sku ?? 'PROD-'.strtoupper(Str::random(8)),
+            'images' => ! empty($allImages) ? $allImages : null,
             'download_file_path' => $this->product_type === Product::TYPE_DIGITAL ? $digitalFilePath : null,
             'download_link' => $this->product_type === Product::TYPE_DIGITAL ? $this->download_link : null,
             'course_access_url' => $this->product_type === Product::TYPE_COURSE ? $this->course_access_url : null,
@@ -212,7 +242,7 @@ class Edit extends Component
         ]);
 
         session()->flash('message', 'Product updated successfully.');
-        
+
         return redirect()->route('admin.products.index');
     }
 
@@ -221,7 +251,7 @@ class Edit extends Component
         // Delete image from storage
         $imagePath = $this->existingImages[$index];
         Storage::disk('public')->delete($imagePath);
-        
+
         // Remove from array
         unset($this->existingImages[$index]);
         $this->existingImages = array_values($this->existingImages);
@@ -263,58 +293,6 @@ class Edit extends Component
                 'compare_price' => 'Compare at price should be greater than or equal to the regular price.',
             ]);
         }
-    }
-
-    private function resolveVendorId(?User $user): int
-    {
-        if (! $user) {
-            abort(403);
-        }
-
-        if ($user->isVendor()) {
-            return (int) $user->id;
-        }
-
-        if (! $user->canManageProducts()) {
-            abort(403);
-        }
-
-        $vendorId = (int) $this->vendor_id;
-
-        if ($vendorId <= 0) {
-            throw \Illuminate\Validation\ValidationException::withMessages([
-                'vendor_id' => 'Select the vendor store this product belongs to.',
-            ]);
-        }
-
-        $vendorExists = User::query()
-            ->whereKey($vendorId)
-            ->where('role', 'vendor')
-            ->where(function ($query) {
-                $query->where('verification_status', 'approved')
-                    ->orWhereNotNull('verified_at');
-            })
-            ->exists();
-
-        if (! $vendorExists) {
-            throw \Illuminate\Validation\ValidationException::withMessages([
-                'vendor_id' => 'Choose an approved vendor so this product stays attached to a valid store.',
-            ]);
-        }
-
-        return $vendorId;
-    }
-
-    private function availableVendors()
-    {
-        return User::query()
-            ->where('role', 'vendor')
-            ->where(function ($query) {
-                $query->where('verification_status', 'approved')
-                    ->orWhereNotNull('verified_at');
-            })
-            ->orderByRaw('COALESCE(store_name, name)')
-            ->get(['id', 'name', 'store_name', 'email', 'vendor_is_active']);
     }
 
     private function prepareFieldsForSelectedType(): void
@@ -359,7 +337,6 @@ class Edit extends Component
     {
         return view('livewire.admin.products.edit', [
             'categories' => $this->categories,
-            'vendors' => $this->vendors,
         ]);
     }
 }

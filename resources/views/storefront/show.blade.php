@@ -471,7 +471,7 @@
 <script>
 function storefrontExperience(storeSlug, storeName, storeUrl) {
     return {
-        storageKey: 'keffi-followed-stores',
+        storageKey: @js(\App\Helpers\SettingsHelper::browserStorageKey('followed-stores')),
         isFollowing: false,
         init() {
             this.isFollowing = this.followedStores().includes(storeSlug);

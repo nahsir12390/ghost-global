@@ -32,13 +32,13 @@ class CartController extends Controller
             'quantity' => ['nullable', 'integer', 'min:1'],
         ]);
 
-        $product = Product::with('vendor')->find($validated['product_id']);
+        $product = Product::query()->find($validated['product_id']);
 
-        if (!$product || !$product->is_active) {
+        if (! $product || ! $product->is_active) {
             return $this->errorResponse('Product not found.', 404);
         }
 
-        if (! $product->vendorIsAvailable()) {
+        if (! $product->isPurchasable()) {
             return $this->errorResponse($product->unavailableReason(), 422);
         }
 
@@ -52,7 +52,7 @@ class CartController extends Controller
         $newQuantity = $currentQuantity + $quantityToAdd;
 
         if ($product->tracksInventory() && $newQuantity > $product->quantity) {
-            return $this->errorResponse('Only ' . $product->quantity . ' items in stock.', 422);
+            return $this->errorResponse('Only '.$product->quantity.' items in stock.', 422);
         }
 
         $cart[$product->id] = $this->makeCartItem($product, $newQuantity);
@@ -75,7 +75,7 @@ class CartController extends Controller
         $quantity = (int) $validated['quantity'];
         $cart = $this->getCart();
 
-        if (!isset($cart[$productId])) {
+        if (! isset($cart[$productId])) {
             return $this->errorResponse('Cart item not found.', 404);
         }
 
@@ -86,18 +86,18 @@ class CartController extends Controller
             return $this->successResponse('Item removed from cart!', $productId);
         }
 
-        $product = Product::with('vendor')->find($productId);
+        $product = Product::query()->find($productId);
 
-        if (!$product || !$product->is_active) {
+        if (! $product || ! $product->is_active) {
             return $this->errorResponse('Product not found.', 404);
         }
 
-        if (! $product->vendorIsAvailable()) {
+        if (! $product->isPurchasable()) {
             return $this->errorResponse($product->unavailableReason(), 422);
         }
 
         if ($product->tracksInventory() && $quantity > $product->quantity) {
-            return $this->errorResponse('Only ' . $product->quantity . ' items in stock.', 422);
+            return $this->errorResponse('Only '.$product->quantity.' items in stock.', 422);
         }
 
         $cart[$productId] = $this->makeCartItem($product, $quantity);
@@ -115,7 +115,7 @@ class CartController extends Controller
         $productId = (int) $validated['product_id'];
         $cart = $this->getCart();
 
-        if (!isset($cart[$productId])) {
+        if (! isset($cart[$productId])) {
             return $this->errorResponse('Cart item not found.', 404);
         }
 
@@ -161,7 +161,7 @@ class CartController extends Controller
         $cart = $this->getCart();
 
         foreach ($cart as $productId => $item) {
-            $product = Product::with('vendor')->find($productId);
+            $product = Product::query()->find($productId);
             $normalizedItem = $this->normalizeCartItem((int) $productId, $item, $product);
             $items[(string) $productId] = $normalizedItem;
             $cart[$productId] = $normalizedItem;
@@ -233,7 +233,7 @@ class CartController extends Controller
         $price = (float) ($product?->price ?? $item['price'] ?? 0);
         $image = $product?->main_image ?? $item['image'] ?? null;
 
-        if (!$image && $product && is_array($product->images) && isset($product->images[0])) {
+        if (! $image && $product && is_array($product->images) && isset($product->images[0])) {
             $image = $product->images[0];
         }
 
@@ -243,14 +243,12 @@ class CartController extends Controller
             'price' => $price,
             'quantity' => $quantity,
             'image' => $image,
-            'image_url' => $image ? asset('storage/' . $image) : null,
+            'image_url' => $image ? asset('storage/'.$image) : null,
             'slug' => $product?->slug ?? $item['slug'] ?? '#',
             'stock' => $product?->tracksInventory() ? (int) ($product?->quantity ?? $item['stock'] ?? $quantity) : 9999,
             'line_total' => round($price * $quantity, 2),
             'product_type' => $product?->product_type ?? $item['product_type'] ?? Product::TYPE_PHYSICAL,
             'requires_shipping' => $product?->requiresShipping() ?? ($item['requires_shipping'] ?? true),
-            'vendor_name' => $product?->vendor?->store_name ?: $product?->vendor?->name,
-            'vendor_is_active' => $product?->vendorIsAvailable() ?? true,
             'is_purchasable' => $product?->isPurchasable() ?? false,
             'unavailable_reason' => $product?->unavailableReason(),
         ];

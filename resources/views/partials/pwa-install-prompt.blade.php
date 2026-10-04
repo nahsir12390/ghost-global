@@ -1,5 +1,5 @@
 @php
-    $pwaSiteName = \App\Helpers\SettingsHelper::get('site_name', config('app.name', 'Keffi Cart'));
+    $pwaSiteName = \App\Helpers\SettingsHelper::siteName();
 @endphp
 
 <aside

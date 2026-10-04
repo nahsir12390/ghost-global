@@ -18,20 +18,20 @@
             <div class="space-y-3 mb-6">
                 <div class="flex justify-between">
                     <span class="text-gray-600">Subtotal</span>
-                    <span>₦{{ number_format($order->subtotal, 2) }}</span>
+                    <span>{{ \App\Helpers\SettingsHelper::currency($order->subtotal) }}</span>
                 </div>
                 <div class="flex justify-between">
                     <span class="text-gray-600">Platform Service Fee</span>
-                    <span>₦{{ number_format($order->tax, 2) }}</span>
+                    <span>{{ \App\Helpers\SettingsHelper::currency($order->tax) }}</span>
                 </div>
                 <div class="flex justify-between">
                     <span class="text-gray-600">Delivery Fee</span>
-                    <span>₦{{ number_format($order->shipping, 2) }}</span>
+                    <span>{{ \App\Helpers\SettingsHelper::currency($order->shipping) }}</span>
                 </div>
                 <div class="border-t border-gray-200 pt-3">
                     <div class="flex justify-between">
                         <span class="font-semibold">Total</span>
-                        <span class="font-bold text-lg text-red-600">₦{{ number_format($order->total, 2) }}</span>
+                        <span class="font-bold text-lg text-red-600">{{ \App\Helpers\SettingsHelper::currency($order->total) }}</span>
                     </div>
                 </div>
             </div>

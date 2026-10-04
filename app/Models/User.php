@@ -2,10 +2,10 @@
 
 namespace App\Models;
 
-use Illuminate\Support\Str;
-use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Str;
 
 class User extends Authenticatable
 {
@@ -138,7 +138,7 @@ class User extends Authenticatable
             }
 
             // Handle staff role clearing when deactivated
-            if (!$user->is_staff && $user->isDirty('is_staff')) {
+            if (! $user->is_staff && $user->isDirty('is_staff')) {
                 $user->staff_role = null;
                 $user->staff_assigned_at = null;
                 $user->staff_deactivated_at = now();
@@ -158,12 +158,12 @@ class User extends Authenticatable
 
     public function isCustomer(): bool
     {
-        return !$this->isAdmin() && !$this->isVendor();
+        return ! $this->isAdmin() && ! $this->isVendor();
     }
 
     public function canAccessBackoffice(): bool
     {
-        return $this->isAdmin() || $this->isVendor() || $this->isStaff();
+        return $this->isAdmin() || $this->isStaff();
     }
 
     public function dashboardRouteName(): string
@@ -172,7 +172,7 @@ class User extends Authenticatable
             return 'admin.staff.dashboard';
         }
 
-        if ($this->isAdmin() || $this->isVendor()) {
+        if ($this->isAdmin()) {
             return 'admin.dashboard';
         }
 
@@ -181,7 +181,7 @@ class User extends Authenticatable
 
     public function isVendorVerified(): bool
     {
-        if (!$this->isVendor()) {
+        if (! $this->isVendor()) {
             return false;
         }
 
@@ -222,13 +222,7 @@ class User extends Authenticatable
 
     public function storefrontUrl(): ?string
     {
-        $storeSlug = $this->ensureStoreSlug();
-
-        if (! $this->isVendor() || blank($storeSlug) || ! $this->isVendorVerified() || ! $this->isVendorActive()) {
-            return null;
-        }
-
-        return route('stores.show', $storeSlug);
+        return null;
     }
 
     public function ensureStoreSlug(): ?string
@@ -254,19 +248,19 @@ class User extends Authenticatable
 
     public function storefrontLogoUrl(): ?string
     {
-        return $this->profile_photo_path ? asset('storage/' . $this->profile_photo_path) : null;
+        return $this->profile_photo_path ? asset('storage/'.$this->profile_photo_path) : null;
     }
 
     public function storefrontBannerUrl(): ?string
     {
-        return $this->store_banner_path ? asset('storage/' . $this->store_banner_path) : null;
+        return $this->store_banner_path ? asset('storage/'.$this->store_banner_path) : null;
     }
 
     public function storefrontWhatsAppUrl(): ?string
     {
         $number = preg_replace('/\D+/', '', (string) $this->store_whatsapp);
 
-        return $number ? 'https://wa.me/' . $number : null;
+        return $number ? 'https://wa.me/'.$number : null;
     }
 
     public function storefrontInstagramUrl(): ?string
@@ -291,7 +285,7 @@ class User extends Authenticatable
             return $website;
         }
 
-        return 'https://' . ltrim($website, '/');
+        return 'https://'.ltrim($website, '/');
     }
 
     protected function normalizeSocialUrl(?string $value, string $baseUrl): ?string
@@ -306,7 +300,7 @@ class User extends Authenticatable
             return $value;
         }
 
-        return $baseUrl . ltrim($value, '@/');
+        return $baseUrl.ltrim($value, '@/');
     }
 
     public function isStaff(): bool
@@ -341,10 +335,10 @@ class User extends Authenticatable
 
     public function assignAsStaff(string $role): void
     {
-        if (!in_array($role, ['order_manager', 'product_manager', 'all'])) {
+        if (! in_array($role, ['order_manager', 'product_manager', 'all'])) {
             throw new \InvalidArgumentException('Invalid staff role');
         }
-        
+
         $this->update([
             'is_staff' => true,
             'staff_role' => $role,
@@ -409,7 +403,7 @@ class User extends Authenticatable
     public static function generateUniqueReferralCode(): string
     {
         do {
-            $code = 'REF' . strtoupper(Str::random(8));
+            $code = 'REF'.strtoupper(Str::random(8));
         } while (static::query()->where('referral_code', $code)->exists());
 
         return $code;
@@ -427,7 +421,7 @@ class User extends Authenticatable
                 ->where('store_slug', $slug)
                 ->exists()
         ) {
-            $slug = ($baseSlug !== '' ? $baseSlug : 'store') . '-' . $counter;
+            $slug = ($baseSlug !== '' ? $baseSlug : 'store').'-'.$counter;
             $counter++;
         }
 

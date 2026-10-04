@@ -97,7 +97,7 @@
                 <div class="row"><span class="label">Previous status:</span> {{ ucfirst(str_replace('_', ' ', $previousStatus)) }}</div>
                 <div class="row"><span class="label">Current status:</span> {{ ucfirst(str_replace('_', ' ', $newStatus)) }}</div>
                 <div class="row"><span class="label">Order number:</span> {{ $order->order_number }}</div>
-                <div class="row"><span class="label">Order total:</span> NGN{{ number_format($order->total, 2) }}</div>
+                <div class="row"><span class="label">Order total:</span> {{ \App\Helpers\SettingsHelper::currency($order->total) }}</div>
                 @if($order->tracking_number)
                     <div class="row"><span class="label">Tracking number:</span> {{ $order->tracking_number }}</div>
                 @endif

@@ -3,13 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Mail\OrderStatusUpdated;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Services\ReferralService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
 
 class OrderController extends Controller
 {
@@ -29,7 +27,7 @@ class OrderController extends Controller
 
         // Stats
         $totalOrders = Order::visibleTo(request()->user())->count();
-        
+
         if (request()->user()->isVendor()) {
             $totalSales = OrderItem::where('vendor_id', request()->user()->id)
                 ->whereHas('order', fn ($query) => $query->where('payment_status', 'paid'))
@@ -38,7 +36,7 @@ class OrderController extends Controller
             // Admin and staff see total sales across all orders
             $totalSales = Order::where('payment_status', 'paid')->sum('total');
         }
-        
+
         $pendingOrders = Order::visibleTo(request()->user())->where('status', 'pending')->count();
         $todayOrders = Order::visibleTo(request()->user())->whereDate('created_at', today())->count();
 
@@ -52,8 +50,8 @@ class OrderController extends Controller
     {
         abort_unless($order->canBeManagedBy(request()->user()), 403);
 
-        $order->load(['user', 'items.product', 'items.vendor']);
-        
+        $order->load(['user', 'items.product']);
+
         // Calculate totals
         $subtotal = $order->items->sum('total');
         $shipping = $order->shipping;
@@ -89,7 +87,7 @@ class OrderController extends Controller
         ];
 
         $order->load(['user', 'items.product']);
-        
+
         return view('admin.orders.edit', compact('order', 'statuses', 'paymentStatuses'));
     }
 
@@ -113,15 +111,9 @@ class OrderController extends Controller
         $previousPaymentStatus = $order->payment_status;
         $order->update($validated);
 
-        // If status changed to delivered and payment wasn't marked paid, mark it as paid
-        if ($validated['status'] === 'delivered' && $order->payment_status !== 'paid') {
-            $order->update(['payment_status' => 'paid']);
-        }
-
         if ($previousPaymentStatus !== 'paid' && $order->fresh()->payment_status === 'paid') {
             app(ReferralService::class)->rewardReferrerForFirstPaidOrder($order);
         }
-
 
         return redirect()->route('admin.orders.show', $order)
             ->with('success', 'Order updated successfully.');
@@ -166,14 +158,13 @@ class OrderController extends Controller
         // Update order status
         $order->update(['status' => $newStatus]);
 
-
         // Add note to status history if provided
         if ($request->notes) {
             \App\Models\OrderStatusHistory::create([
                 'order_id' => $order->id,
                 'old_status' => $previousStatus,
                 'new_status' => $newStatus,
-                'notes' => $request->notes
+                'notes' => $request->notes,
             ]);
         }
 
@@ -217,7 +208,7 @@ class OrderController extends Controller
     {
         abort_unless($order->canBeManagedBy(request()->user()), 403);
         $order->load(['user', 'items.product']);
-        
+
         return view('admin.orders.invoice', compact('order'));
     }
 
@@ -228,10 +219,10 @@ class OrderController extends Controller
     {
         abort_unless($order->canBeManagedBy(request()->user()), 403);
         $order->load(['user', 'items.product']);
-        
+
         // For now, we'll return a view. You can implement PDF generation later.
         return view('admin.orders.invoice-pdf', compact('order'));
-        
+
         // For actual PDF generation, you can use:
         // $pdf = PDF::loadView('admin.orders.invoice-pdf', compact('order'));
         // return $pdf->download('invoice-' . $order->order_number . '.pdf');

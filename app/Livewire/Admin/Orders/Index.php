@@ -2,36 +2,43 @@
 
 namespace App\Livewire\Admin\Orders;
 
-use Livewire\Component;
-use Livewire\WithPagination;
 use App\Models\Order;
-use App\Models\OrderItem;
 use App\Models\User;
 use App\Services\ReferralService;
 use Illuminate\Support\Facades\DB;
+use Livewire\Component;
+use Livewire\WithPagination;
 
 class Index extends Component
 {
     use WithPagination;
 
     public $search = '';
+
     public $statusFilter = '';
+
     public $paymentStatusFilter = '';
-    public $vendorFilter = '';
+
     public $dateFrom = '';
+
     public $dateTo = '';
+
     public $sortField = 'created_at';
+
     public $sortDirection = 'desc';
+
     public $selectedOrders = [];
+
     public $selectAll = false;
+
     public $showDeleteModal = false;
+
     public $orderToDelete = null;
 
     protected $queryString = [
         'search' => ['except' => ''],
         'statusFilter' => ['except' => ''],
         'paymentStatusFilter' => ['except' => ''],
-        'vendorFilter' => ['except' => ''],
         'dateFrom' => ['except' => ''],
         'dateTo' => ['except' => ''],
     ];
@@ -53,11 +60,6 @@ class Index extends Component
         $this->resetPage();
     }
 
-    public function updatingVendorFilter()
-    {
-        $this->resetPage();
-    }
-
     public function updatingDateFrom()
     {
         $this->resetPage();
@@ -70,7 +72,8 @@ class Index extends Component
 
     public function mount()
     {
-        if (!$this->dateFrom && !$this->dateTo) {
+        abort_unless(auth()->user()?->canManageOrders(), 403);
+        if (! $this->dateFrom && ! $this->dateTo) {
             $this->dateFrom = now()->startOfMonth()->format('Y-m-d');
             $this->dateTo = now()->endOfMonth()->format('Y-m-d');
         }
@@ -97,18 +100,12 @@ class Index extends Component
 
     public function updateOrderStatus($orderId, $status)
     {
-        if (auth()->user()->isVendor()) {
-            return;
-        }
+        abort_unless(auth()->user()?->canManageOrders(), 403);
 
         $order = Order::visibleTo(auth()->user())->find($orderId);
         if ($order) {
             $previousPaymentStatus = $order->payment_status;
             $order->update(['status' => $status]);
-
-            if ($status === 'delivered' && $order->payment_status !== 'paid') {
-                $order->update(['payment_status' => 'paid']);
-            }
 
             if ($previousPaymentStatus !== 'paid' && $order->fresh()->payment_status === 'paid') {
                 app(ReferralService::class)->rewardReferrerForFirstPaidOrder($order);
@@ -118,16 +115,14 @@ class Index extends Component
 
             $this->dispatch('notify', [
                 'type' => 'success',
-                'message' => 'Order status updated successfully!'
+                'message' => 'Order status updated successfully!',
             ]);
         }
     }
 
     public function updatePaymentStatus($orderId, $paymentStatus)
     {
-        if (auth()->user()->isVendor()) {
-            return;
-        }
+        abort_unless(auth()->user()?->canManageOrders(), 403);
 
         $order = Order::visibleTo(auth()->user())->find($orderId);
         if ($order) {
@@ -142,26 +137,25 @@ class Index extends Component
 
             $this->dispatch('notify', [
                 'type' => 'success',
-                'message' => 'Payment status updated successfully!'
+                'message' => 'Payment status updated successfully!',
             ]);
         }
     }
 
     public function confirmDelete($orderId = null)
     {
-        if (auth()->user()->isVendor()) {
-            return;
-        }
+        abort_unless(auth()->user()?->canManageOrders(), 403);
 
         $this->orderToDelete = $orderId
             ? Order::visibleTo(auth()->user())->find($orderId)
             : null;
 
-        if ($orderId && !$this->orderToDelete) {
+        if ($orderId && ! $this->orderToDelete) {
             $this->dispatch('notify', [
                 'type' => 'error',
-                'message' => 'The selected order could not be found.'
+                'message' => 'The selected order could not be found.',
             ]);
+
             return;
         }
 
@@ -170,9 +164,7 @@ class Index extends Component
 
     public function deleteOrder()
     {
-        if (auth()->user()->isVendor()) {
-            return;
-        }
+        abort_unless(auth()->user()?->canManageOrders(), 403);
 
         if ($this->orderToDelete) {
             DB::transaction(function () {
@@ -182,9 +174,9 @@ class Index extends Component
 
             $this->dispatch('notify', [
                 'type' => 'success',
-                'message' => 'Order deleted successfully!'
+                'message' => 'Order deleted successfully!',
             ]);
-        } elseif (!empty($this->selectedOrders)) {
+        } elseif (! empty($this->selectedOrders)) {
             $orders = Order::visibleTo(auth()->user())
                 ->whereIn('id', $this->selectedOrders)
                 ->get();
@@ -198,7 +190,7 @@ class Index extends Component
 
             $this->dispatch('notify', [
                 'type' => 'success',
-                'message' => 'Selected orders deleted successfully!'
+                'message' => 'Selected orders deleted successfully!',
             ]);
         }
 
@@ -214,7 +206,6 @@ class Index extends Component
         $this->search = '';
         $this->statusFilter = '';
         $this->paymentStatusFilter = '';
-        $this->vendorFilter = '';
         $this->dateFrom = now()->startOfMonth()->format('Y-m-d');
         $this->dateTo = now()->endOfMonth()->format('Y-m-d');
         $this->resetPage();
@@ -234,32 +225,10 @@ class Index extends Component
         ];
 
         // Calculate total sales based on user role
-        if (auth()->user()->isVendor()) {
-            $stats['total_sales'] = OrderItem::where('vendor_id', auth()->id())
-                ->whereHas('order', function ($orderQuery) {
-                    $orderQuery
-                        ->when($this->dateFrom, fn ($q) => $q->whereDate('created_at', '>=', $this->dateFrom))
-                        ->when($this->dateTo, fn ($q) => $q->whereDate('created_at', '<=', $this->dateTo))
-                        ->where('payment_status', 'paid');
-                })
-                ->sum('total');
-        } else {
-            $stats['total_sales'] = (clone $query)->where('payment_status', 'paid')->sum('total');
-        }
+
+        $stats['total_sales'] = (clone $query)->where('payment_status', 'paid')->sum('total');
 
         return $stats;
-    }
-
-    public function getVendors()
-    {
-        if (auth()->user()->isVendor()) {
-            return collect();
-        }
-
-        return User::where('role', 'vendor')
-            ->whereNotNull('store_name')
-            ->orderBy('store_name')
-            ->get(['id', 'name', 'store_name']);
     }
 
     private function getBaseQuery()
@@ -277,25 +246,16 @@ class Index extends Component
     public function getQuery()
     {
         $query = $this->getBaseQuery()
-            ->with(['user', 'items' => function ($query) {
-                if (auth()->user()->isVendor()) {
-                    $query->where('vendor_id', auth()->id());
-                }
-                $query->with('vendor');
-            }])
+            ->with(['user', 'items'])
             ->when($this->search, function ($query) {
                 $query->where(function ($q) {
-                    $q->where('order_number', 'like', '%' . $this->search . '%')
-                      ->orWhere('shipping_email', 'like', '%' . $this->search . '%')
-                      ->orWhere('shipping_phone', 'like', '%' . $this->search . '%')
-                      ->orWhereHas('user', function ($userQuery) {
-                          $userQuery->where('name', 'like', '%' . $this->search . '%')
-                                   ->orWhere('email', 'like', '%' . $this->search . '%');
-                      })
-                      ->orWhereHas('items.vendor', function ($vendorQuery) {
-                          $vendorQuery->where('name', 'like', '%' . $this->search . '%')
-                                     ->orWhere('store_name', 'like', '%' . $this->search . '%');
-                      });
+                    $q->where('order_number', 'like', '%'.$this->search.'%')
+                        ->orWhere('shipping_email', 'like', '%'.$this->search.'%')
+                        ->orWhere('shipping_phone', 'like', '%'.$this->search.'%')
+                        ->orWhereHas('user', function ($userQuery) {
+                            $userQuery->where('name', 'like', '%'.$this->search.'%')
+                                ->orWhere('email', 'like', '%'.$this->search.'%');
+                        });
                 });
             })
             ->when($this->statusFilter, function ($query) {
@@ -304,11 +264,7 @@ class Index extends Component
             ->when($this->paymentStatusFilter, function ($query) {
                 $query->where('payment_status', $this->paymentStatusFilter);
             })
-            ->when($this->vendorFilter && !auth()->user()->isVendor(), function ($query) {
-                $query->whereHas('items', function ($q) {
-                    $q->where('vendor_id', $this->vendorFilter);
-                });
-            })
+
             ->orderBy($this->sortField, $this->sortDirection);
 
         return $query;
@@ -317,13 +273,11 @@ class Index extends Component
     public function render()
     {
         $stats = $this->getStats();
-        $vendors = $this->getVendors();
         $orders = $this->getQuery()->paginate(15);
 
         return view('livewire.admin.orders.index', [
             'orders' => $orders,
             'stats' => $stats,
-            'vendors' => $vendors,
         ]);
     }
 }

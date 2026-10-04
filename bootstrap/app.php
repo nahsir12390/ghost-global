@@ -1,14 +1,13 @@
 <?php
 
-use Illuminate\Foundation\Application;
 use App\Http\Middleware\AdminMiddleware;
-use App\Http\Middleware\EnsureVerifiedVendor;
+use App\Http\Middleware\CanManageOrders;
+use App\Http\Middleware\CanManageOrdersOrAdmin;
+use App\Http\Middleware\CanManageProducts;
+use App\Http\Middleware\CanManageProductsOrAdmin;
 use App\Http\Middleware\RoleMiddleware;
 use App\Http\Middleware\StaffOnly;
-use App\Http\Middleware\CanManageOrders;
-use App\Http\Middleware\CanManageProducts;
-use App\Http\Middleware\CanManageOrdersOrAdmin;
-use App\Http\Middleware\CanManageProductsOrAdmin;
+use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 
@@ -22,7 +21,6 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin' => AdminMiddleware::class,
             'role' => RoleMiddleware::class,
-            'verified.vendor' => EnsureVerifiedVendor::class,
             'staff.only' => StaffOnly::class,
             'staff.orders' => CanManageOrders::class,
             'staff.products' => CanManageProducts::class,

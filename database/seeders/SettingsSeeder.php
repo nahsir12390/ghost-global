@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use App\Helpers\SettingsHelper;
 use App\Models\Setting;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class SettingsSeeder extends Seeder
@@ -86,6 +85,15 @@ class SettingsSeeder extends Seeder
                 'group' => 'general',
                 'label' => 'Site Description',
                 'order' => 8,
+                'is_public' => true,
+            ],
+            [
+                'key' => 'site_tagline',
+                'value' => 'Shop smarter. Discover more.',
+                'type' => 'string',
+                'group' => 'general',
+                'label' => 'Site Tagline',
+                'order' => 9,
                 'is_public' => true,
             ],
             [

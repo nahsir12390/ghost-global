@@ -8,9 +8,9 @@ use App\Mail\OrderStatusUpdated;
 use App\Models\Order;
 use App\Models\OrderStatusHistory;
 use App\Services\WebPushService;
+use Illuminate\Contracts\Events\ShouldHandleEventsAfterCommit;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Contracts\Events\ShouldHandleEventsAfterCommit;
 
 class OrderObserver implements ShouldHandleEventsAfterCommit
 {
@@ -47,7 +47,7 @@ class OrderObserver implements ShouldHandleEventsAfterCommit
             app(WebPushService::class)->sendPaidOrderAlerts($order);
         }
 
-        if (!$statusChanged) {
+        if (! $statusChanged) {
             return;
         }
 
@@ -65,23 +65,23 @@ class OrderObserver implements ShouldHandleEventsAfterCommit
             'to' => $order->status,
         ]);
 
-        $recipientEmail = $order->shipping_email ?: $order->user?->email;
+        $recipientEmail = $order->contact_email;
 
         if ($recipientEmail) {
             try {
-                Log::info('Sending order status update email for order: ' . $order->order_number, [
+                Log::info('Sending order status update email for order: '.$order->order_number, [
                     'recipient' => $recipientEmail,
                 ]);
 
                 Mail::to($recipientEmail)->send(new OrderStatusUpdated(
-                    $order->fresh(['user', 'items.product', 'items.vendor']),
+                    $order->fresh(['user', 'items.product']),
                     $previousStatus,
                     $order->status
                 ));
 
-                Log::info('Order status update email sent successfully for order: ' . $order->order_number);
+                Log::info('Order status update email sent successfully for order: '.$order->order_number);
             } catch (\Exception $e) {
-                Log::error('Failed to send order status update email: ' . $e->getMessage(), [
+                Log::error('Failed to send order status update email: '.$e->getMessage(), [
                     'order_id' => $order->id,
                     'recipient' => $recipientEmail,
                 ]);
@@ -108,18 +108,18 @@ class OrderObserver implements ShouldHandleEventsAfterCommit
 
             if ($adminEmail) {
                 try {
-                    Log::info('Sending admin cancellation notification for order: ' . $order->order_number, [
+                    Log::info('Sending admin cancellation notification for order: '.$order->order_number, [
                         'recipient' => $adminEmail,
                     ]);
 
                     Mail::to($adminEmail)->send(new AdminOrderCancelledMail(
-                        $order->fresh(['user', 'items.product', 'items.vendor']),
+                        $order->fresh(['user', 'items.product']),
                         $previousStatus
                     ));
 
-                    Log::info('Admin cancellation notification sent successfully for order: ' . $order->order_number);
+                    Log::info('Admin cancellation notification sent successfully for order: '.$order->order_number);
                 } catch (\Exception $e) {
-                    Log::error('Failed to send admin cancellation notification: ' . $e->getMessage(), [
+                    Log::error('Failed to send admin cancellation notification: '.$e->getMessage(), [
                         'order_id' => $order->id,
                         'recipient' => $adminEmail,
                     ]);

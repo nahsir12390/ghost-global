@@ -228,6 +228,14 @@
         <div class="bg-white border border-gray-200 rounded-lg p-6">
             <h3 class="text-md font-medium text-gray-900 mb-4">Site Appearance</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="md:col-span-2">
+                    <label for="site_tagline" class="block text-sm font-medium text-gray-700 mb-1">Site Tagline</label>
+                    <input type="text" id="site_tagline" wire:model.defer="settings.site_tagline" maxlength="160"
+                           class="shadow-sm focus:ring-red-500 focus:border-red-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                           placeholder="A short reusable promise for this marketplace">
+                    <p class="mt-1 text-sm text-gray-500">Displayed in shared branding areas and reusable across deployments.</p>
+                    @error('settings.site_tagline')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                </div>
                 <!-- Site Description -->
                 <div class="md:col-span-2">
                     <label for="site_description" class="block text-sm font-medium text-gray-700 mb-1">

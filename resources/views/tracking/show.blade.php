@@ -3,9 +3,10 @@
 @section('title', 'Order Tracking - ' . $order->order_number)
 
 @section('content')
+<div class="mx-auto max-w-5xl px-4">@include('partials.order-shipments')</div>
 <div class="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 py-8">
     <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-        
+
         <!-- Back Button -->
         <a href="{{ route('tracking.index') }}" class="inline-flex items-center text-red-600 hover:text-red-700 mb-8 font-semibold transition-colors">
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -19,7 +20,7 @@
             <div class="px-6 py-10 sm:px-10 sm:py-12 bg-gradient-to-r from-red-600 to-red-700 text-white relative overflow-hidden">
                 <div class="absolute -top-20 -right-20 w-40 h-40 bg-red-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
                 <div class="absolute -bottom-20 -left-20 w-40 h-40 bg-red-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
-                
+
                 <div class="relative z-10">
                     <div class="flex items-center justify-between mb-6">
                         <div>
@@ -27,7 +28,7 @@
                             <p class="text-red-100">Placed on {{ $order->created_at->format('F d, Y') }}</p>
                         </div>
                         <div class="text-right">
-                            <div class="text-5xl font-bold">₦{{ number_format($order->total, 2) }}</div>
+                            <div class="text-5xl font-bold">{{ \App\Helpers\SettingsHelper::currency($order->total) }}</div>
                             <p class="text-red-100 text-sm mt-1">Total Amount</p>
                         </div>
                     </div>
@@ -155,7 +156,7 @@
                 <!-- Detailed Timeline -->
                 <div class="space-y-4 border-t border-gray-200 pt-10">
                     <h3 class="text-xl font-bold text-gray-900 mb-8">📋 Timeline Details</h3>
-                    
+
                     @forelse($order->statusHistory()->orderBy('created_at', 'desc')->get() as $history)
                         <div class="flex items-start pb-8 border-b border-gray-200 last:border-b-0">
                             <div class="flex-shrink-0 mr-5">
@@ -231,14 +232,7 @@
                                                         {{ $item->product_name }}
                                                     @endif
                                                 </p>
-                                                @if($item->product?->vendor && $item->product->vendor->storefrontUrl())
-                                                    <p class="mt-1 text-xs text-gray-600">
-                                                        Store:
-                                                        <a href="{{ $item->product->vendor->storefrontUrl() }}" class="font-semibold text-red-600 transition hover:text-red-700">
-                                                            {{ $item->product->vendor->publicStoreName() }}
-                                                        </a>
-                                                    </p>
-                                                @endif
+
                                                 <p class="text-xs text-gray-600 mt-1">SKU: {{ $item->product_sku ?? 'N/A' }}</p>
                                             </div>
                                         </div>
@@ -246,8 +240,8 @@
                                     <td class="px-6 py-5 text-center">
                                         <span class="inline-block px-3 py-1 rounded-full bg-red-100 text-red-700 font-bold text-sm">{{ $item->quantity }}</span>
                                     </td>
-                                    <td class="px-6 py-5 text-right font-semibold text-gray-900">₦{{ number_format($item->price, 2) }}</td>
-                                    <td class="px-6 py-5 text-right font-bold text-gray-900">₦{{ number_format($item->total, 2) }}</td>
+                                    <td class="px-6 py-5 text-right font-semibold text-gray-900">{{ \App\Helpers\SettingsHelper::currency($item->price) }}</td>
+                                    <td class="px-6 py-5 text-right font-bold text-gray-900">{{ \App\Helpers\SettingsHelper::currency($item->total) }}</td>
                                 </tr>
                             @empty
                                 <tr>
@@ -270,23 +264,23 @@
                     <div class="space-y-4">
                         <div class="flex justify-between items-center pb-4 border-b border-gray-200">
                             <span class="text-gray-700 font-medium">Subtotal:</span>
-                            <span class="font-bold text-gray-900">₦{{ number_format($order->subtotal, 2) }}</span>
+                            <span class="font-bold text-gray-900">{{ \App\Helpers\SettingsHelper::currency($order->subtotal) }}</span>
                         </div>
                         @if($order->tax > 0)
                             <div class="flex justify-between items-center pb-4 border-b border-gray-200">
                                 <span class="text-gray-700 font-medium">Platform Service Fee:</span>
-                                <span class="font-bold text-gray-900">₦{{ number_format($order->tax, 2) }}</span>
+                                <span class="font-bold text-gray-900">{{ \App\Helpers\SettingsHelper::currency($order->tax) }}</span>
                             </div>
                         @endif
                         @if($order->shipping > 0)
                             <div class="flex justify-between items-center pb-4 border-b border-gray-200">
                                 <span class="text-gray-700 font-medium">Delivery Fee:</span>
-                                <span class="font-bold text-gray-900">₦{{ number_format($order->shipping, 2) }}</span>
+                                <span class="font-bold text-gray-900">{{ \App\Helpers\SettingsHelper::currency($order->shipping) }}</span>
                             </div>
                         @endif
                         <div class="flex justify-between items-center pt-4 bg-gradient-to-r from-red-50 to-orange-50 px-4 py-3 rounded-lg">
                             <span class="text-lg font-bold text-gray-900">Total:</span>
-                            <span class="text-2xl font-bold text-red-600">₦{{ number_format($order->total, 2) }}</span>
+                            <span class="text-2xl font-bold text-red-600">{{ \App\Helpers\SettingsHelper::currency($order->total) }}</span>
                         </div>
                     </div>
                 </div>

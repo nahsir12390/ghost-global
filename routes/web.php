@@ -1,34 +1,30 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Auth;
-use App\Http\Controllers\HomeController;
-use App\Http\Controllers\ShopController;
+use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\DatabaseBackupController;
+use App\Http\Controllers\Admin\NewsletterSubscriberController;
+use App\Http\Controllers\Admin\OrderController as AdminOrderController;
+use App\Http\Controllers\Admin\ProductController as AdminProductController;
+use App\Http\Controllers\Admin\SettingsController;
+use App\Http\Controllers\Admin\StaffController;
+use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
-use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\ContactController;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\NewsletterController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\OrderTrackingController;
-use App\Http\Controllers\StorefrontController;
-use App\Http\Controllers\WalletController;
-use App\Http\Controllers\NewsletterController;
-use App\Http\Controllers\ReferralController;
-use App\Http\Controllers\SitemapController;
-use App\Http\Controllers\ContactController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PwaController;
+use App\Http\Controllers\ReferralController;
+use App\Http\Controllers\ShopController;
+use App\Http\Controllers\SitemapController;
+use App\Http\Controllers\WalletController;
 use App\Http\Controllers\WebPushSubscriptionController;
-use App\Http\Controllers\VendorUpgradeController;
-use App\Http\Controllers\Admin\{
-    DashboardController,
-    CategoryController,
-    ProductController as AdminProductController,
-    OrderController as AdminOrderController,
-    UserController as AdminUserController,
-    StaffController,
-    SettingsController,
-    NewsletterSubscriberController,
-    DatabaseBackupController
-};
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -38,16 +34,15 @@ use App\Http\Controllers\Admin\{
 
 // Public Routes
 // Public Routes
-Route::get('/test-payment', function() {
+Route::get('/test-payment', function () {
     return response()->json([
         'message' => 'Payment route is accessible',
-        'csrf_token' => csrf_token()
+        'csrf_token' => csrf_token(),
     ]);
 });
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/r/{code}', [ReferralController::class, 'capture'])->name('referrals.capture');
 Route::get('/shop', [ShopController::class, 'index'])->name('shop');
-Route::get('/stores/{storeSlug}', [StorefrontController::class, 'show'])->name('stores.show');
 Route::get('/category/{category:slug}', [ShopController::class, 'category'])->name('category.show');
 Route::get('/product/{product:slug}', [ShopController::class, 'show'])->name('product.show');
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
@@ -62,7 +57,7 @@ Route::middleware('auth')->group(function () {
 });
 // Order Tracking Routes (PUBLIC - No auth required)
 Route::get('/track-order', [OrderTrackingController::class, 'index'])->name('tracking.index');
-Route::post('/track-order', [OrderTrackingController::class, 'search'])->name('tracking.search');
+Route::post('/track-order', [OrderTrackingController::class, 'search'])->middleware('throttle:10,1')->name('tracking.search');
 
 // Newsletter Routes (PUBLIC - No auth required)
 Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe'])->name('newsletter.subscribe');
@@ -80,13 +75,15 @@ Route::view('/wishlist', 'wishlist')->name('wishlist')->middleware('auth');
 Route::delete('/wishlist/clear', function () {
     \App\Models\Wishlist::where('user_id', Auth::id())->delete();
     session()->flash('success', 'Wishlist cleared successfully.');
+
     return redirect()->route('wishlist');
 })->name('wishlist.clear')->middleware('auth');
 
+Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
+Route::post('/checkout', [CheckoutController::class, 'store'])->middleware('throttle:10,1')->name('checkout.store');
+
 // Checkout Routes
 Route::middleware(['auth'])->group(function () {
-    Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
-    Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
     Route::get('/checkout/{order}/success', [CheckoutController::class, 'success'])->name('checkout.success');
     Route::get('/wallet', [WalletController::class, 'index'])->name('wallet.index');
     Route::post('/wallet/top-up', [WalletController::class, 'topUp'])->name('wallet.top-up');
@@ -113,10 +110,7 @@ Route::post('/my-orders/{order}/cancel', [OrderController::class, 'cancel'])->na
 Route::get('/my-downloads', [OrderController::class, 'downloads'])->name('my.downloads')->middleware('auth');
 Route::get('/my-courses', [OrderController::class, 'courses'])->name('my.courses')->middleware('auth');
 Route::get('/my-downloads/{product}', [OrderController::class, 'downloadProduct'])->name('my.downloads.product')->middleware('auth');
-Route::middleware('auth')->group(function () {
-    Route::get('/become-a-vendor', [VendorUpgradeController::class, 'create'])->name('vendor-upgrade.create');
-    Route::post('/become-a-vendor', [VendorUpgradeController::class, 'store'])->name('vendor-upgrade.store');
-});
+Route::middleware('auth')->group(function () {});
 
 // About/Contact Pages
 Route::view('/about', 'about')->name('about');
@@ -130,37 +124,36 @@ Route::view('/terms', 'terms')->name('terms');
 | Admin Routes
 |--------------------------------------------------------------------------
 */
-Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin,vendor,staff'])->group(function () {
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin,staff'])->group(function () {
     // Admin Dashboard (Controller + Livewire)
-    Route::middleware('role:admin,vendor')->group(function () {
+    Route::middleware('role:admin')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-        Route::post('/vendor/verification', [DashboardController::class, 'submitVendorVerification'])->name('vendor.verification.submit');
         Route::get('/dashboard/stats', [DashboardController::class, 'getStats'])->name('dashboard.stats');
         Route::get('/dashboard/chart-data', [DashboardController::class, 'getSalesChartData'])->name('dashboard.chart-data');
         Route::get('/dashboard/order-status-summary', [DashboardController::class, 'getOrderStatusSummary'])->name('dashboard.order-status-summary');
         Route::get('/dashboard/top-products', [DashboardController::class, 'getTopProducts'])->name('dashboard.top-products');
         Route::get('/dashboard/recent-orders', [DashboardController::class, 'getRecentOrders'])->name('dashboard.recent-orders');
         Route::post('/dashboard/refresh-cache', [DashboardController::class, 'refreshCache'])->name('dashboard.refresh-cache');
-        
+
         // New Modern Dashboard
         Route::get('/dashboard/modern', [DashboardController::class, 'modern'])->name('dashboard.modern');
     });
-    
+
     // Products Management
     Route::get('/products', function () {
         return view('admin.products.index');
     })->middleware('can.manage.products.or.admin')->name('products.index');
 
     // Product creation/edit routes - require product manager permission for staff
-    Route::middleware(['verified.vendor', 'can.manage.products.or.admin'])->group(function () {
+    Route::middleware(['can.manage.products.or.admin'])->group(function () {
         Route::get('/products/create', function () {
             return view('admin.products.create');
         })->name('products.create');
-        
+
         Route::get('/products/{product}/edit', function (\App\Models\Product $product) {
             return view('admin.products.edit', ['product' => $product]);
         })->name('products.edit');
-        
+
         // Product API Routes
         Route::post('/products', [AdminProductController::class, 'store'])->name('products.store');
         Route::put('/products/{product}', [AdminProductController::class, 'update'])->name('products.update');
@@ -170,25 +163,25 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin,vendor,s
     });
 
     Route::get('/products/{product}', [AdminProductController::class, 'show'])->name('products.show');
-    
+
     // Orders Management - Using Livewire Components
     Route::get('/orders', function () {
         $user = request()->user();
-        abort_unless($user->isAdmin() || $user->isVendor() || ($user->isStaff() && $user->isOrderManager()), 403);
+        abort_unless($user->isAdmin() || ($user->isStaff() && $user->isOrderManager()), 403);
 
         return view('admin.orders.index');
     })->name('orders.index');
-    
+
     Route::get('/orders/{order}', function (\App\Models\Order $order) {
         $user = request()->user();
-        abort_unless($user->isAdmin() || $user->isVendor() || ($user->isStaff() && $user->isOrderManager()), 403);
+        abort_unless($user->isAdmin() || ($user->isStaff() && $user->isOrderManager()), 403);
 
         return view('admin.orders.show', ['order' => $order]);
     })->name('orders.show');
-    
+
     Route::middleware('can.manage.orders.or.admin')->group(function () {
         Route::get('/orders/{order}/edit', [AdminOrderController::class, 'edit'])->name('orders.edit');
-        
+
         // Order API Routes
         Route::put('/orders/{order}', [AdminOrderController::class, 'update'])->name('orders.update');
         Route::post('/orders/{order}/status', [AdminOrderController::class, 'updateStatus'])->name('orders.status.update');
@@ -199,7 +192,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin,vendor,s
     Route::get('/orders/{order}/invoice', [AdminOrderController::class, 'invoice'])->name('orders.invoice');
     Route::get('/orders/{order}/invoice/download', [AdminOrderController::class, 'downloadInvoice'])->name('orders.invoice.download');
     Route::get('/orders/filter', [AdminOrderController::class, 'filter'])->name('orders.filter');
-    
+
     // Admin Profile
     Route::get('/profile', function () {
         return view('admin.profile');
@@ -210,17 +203,17 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin,vendor,s
         Route::get('/categories', function () {
             return view('admin.categories.index');
         })->name('categories.index');
-        
+
         Route::get('/categories/create', function () {
             return view('admin.categories.create');
         })->name('categories.create');
-        
+
         Route::get('/categories/{category}/edit', function (\App\Models\Category $category) {
             return view('admin.categories.edit', ['category' => $category]);
         })->name('categories.edit');
-        
+
         Route::get('/categories/{category}', [CategoryController::class, 'show'])->name('categories.show');
-        
+
         // Category API Routes
         Route::post('/categories', [CategoryController::class, 'store'])->name('categories.store');
         Route::put('/categories/{category}', [CategoryController::class, 'update'])->name('categories.update');
@@ -233,20 +226,20 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin,vendor,s
         Route::get('/customers/{user}', [AdminUserController::class, 'show'])->name('users.show');
         Route::get('/customers/{user}/edit', [AdminUserController::class, 'edit'])->name('users.edit');
         Route::get('/customers/{user}/orders', [AdminUserController::class, 'orders'])->name('users.orders');
-        
+
         // User API Routes
         Route::put('/customers/{user}', [AdminUserController::class, 'update'])->name('users.update');
         Route::delete('/customers/{user}', [AdminUserController::class, 'destroy'])->name('users.destroy');
         Route::post('/customers/{user}/status', [AdminUserController::class, 'toggleStatus'])->name('users.status');
-        Route::post('/customers/{user}/verification', [AdminUserController::class, 'updateVerification'])->name('users.verification');
-        
+
         // Staff Management
         Route::get('/staff', [StaffController::class, 'index'])->name('staff.index');
         Route::get('/staff/assign', [StaffController::class, 'assign'])->name('staff.assign');
         Route::post('/staff/assign', [StaffController::class, 'storeAssignment'])->name('staff.store');
         Route::post('/staff/{user}/deactivate', [StaffController::class, 'deactivate'])->name('staff.deactivate');
-        
+
         // Settings
+        Route::view('/settings/delivery', 'admin.settings.delivery')->name('settings.delivery');
         Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
         Route::get('/settings/general', function () {
             return view('admin.settings.general');
@@ -263,12 +256,12 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin,vendor,s
         // Update route for settings
         Route::put('/settings/update', [SettingsController::class, 'updateGeneral'])
             ->name('settings.update');
-        
+
         // Reports
         Route::get('/reports/sales', function () {
             return view('admin.reports.sales');
         })->name('reports.sales');
-        
+
         Route::get('/reports/products', function () {
             return view('admin.reports.products');
         })->name('reports.products');
@@ -291,24 +284,24 @@ Route::middleware(['auth', 'staff.only'])->prefix('staff')->name('admin.staff.')
     Route::get('/dashboard', function () {
         return view('staff.dashboard');
     })->name('dashboard');
-    
+
     // Staff Orders (if order manager or all role)
     Route::middleware('staff.orders')->group(function () {
         Route::get('/orders', function () {
             return view('staff.orders.index');
         })->name('orders.index');
-        
+
         Route::get('/orders/{order}', function (\App\Models\Order $order) {
             return view('staff.orders.show', ['order' => $order]);
         })->name('orders.show');
     });
-    
+
     // Staff Products (if product manager or all role)
     Route::middleware('staff.products')->group(function () {
         Route::get('/products', function () {
             return view('staff.products.index');
         })->name('products.index');
-        
+
         Route::get('/products/{product}', function (\App\Models\Product $product) {
             return view('staff.products.show', ['product' => $product]);
         })->name('products.show');
@@ -343,19 +336,19 @@ Route::post('/logout', function () {
 // Dashboard entry point for authenticated users
 Route::get('/dashboard', function () {
     $user = auth()->user();
-    
+
     if ($user) {
         // Redirect staff members to staff dashboard
         if ($user->isStaff()) {
             return redirect()->route('admin.staff.dashboard');
         }
-        
-        // Redirect admin and vendor to admin dashboard
+
+        // Redirect admin to admin dashboard
         if ($user->canAccessBackoffice()) {
             return redirect()->route('admin.dashboard');
         }
     }
-    
+
     return view('dashboard');
 })->middleware(['auth'])->name('dashboard');
 
@@ -378,6 +371,3 @@ Route::view('profile', 'profile')
     ->name('profile');
 
 require __DIR__.'/auth.php';
-
-
-

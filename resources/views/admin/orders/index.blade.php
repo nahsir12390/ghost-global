@@ -10,15 +10,13 @@
             <div>
                 <div class="inline-flex items-center gap-2 rounded-full border border-red-200 bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-red-700">
                     <span class="inline-block h-2 w-2 rounded-full bg-red-500"></span>
-                    {{ auth()->user()->isVendor() ? 'Vendor Orders' : 'Order Operations' }}
+                    {{ 'Order Operations' }}
                 </div>
                 <h1 class="mt-4 text-3xl font-semibold tracking-tight text-slate-900">
-                    {{ auth()->user()->isVendor() ? 'Track and fulfill your customer orders' : 'Manage customer orders from one workspace' }}
+                    {{ 'Manage customer orders from one workspace' }}
                 </h1>
                 <p class="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
-                    {{ auth()->user()->isVendor()
-                        ? 'Review incoming orders, update delivery progress, and keep your customers informed without digging through multiple screens.'
-                        : 'Filter, review, update, and manage order activity across the marketplace with a cleaner workflow.' }}
+                    {{ 'Filter, review, update, and manage order activity across the marketplace with a cleaner workflow.' }}
                 </p>
             </div>
 
@@ -30,12 +28,12 @@
                     </svg>
                     Back to Dashboard
                 </a>
-                @if(!auth()->user()->isVendor())
+
                     <a href="{{ route('admin.reports.sales') }}"
                        class="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800">
                         View Sales Report
                     </a>
-                @endif
+
             </div>
         </div>
     </section>

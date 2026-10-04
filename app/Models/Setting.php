@@ -30,6 +30,7 @@ class Setting extends Model
     public static function getValue($key, $default = null)
     {
         $setting = static::where('key', $key)->first();
+
         return $setting ? $setting->value : $default;
     }
 
@@ -38,10 +39,22 @@ class Setting extends Model
      */
     public static function setValue($key, $value)
     {
-        return static::updateOrCreate(
-            ['key' => $key],
-            ['value' => $value]
-        );
+        $setting = static::firstOrNew(['key' => $key]);
+        $setting->value = $value;
+
+        if (! $setting->exists) {
+            $setting->fill([
+                'type' => 'string',
+                'group' => 'general',
+                'label' => ucwords(str_replace('_', ' ', $key)),
+                'order' => 999,
+                'is_public' => false,
+            ]);
+        }
+
+        $setting->save();
+
+        return $setting;
     }
 
     /**

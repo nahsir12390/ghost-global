@@ -2,18 +2,24 @@
 
 namespace App\Livewire\Admin\Orders;
 
-use Livewire\Component;
 use App\Models\Order;
 use App\Services\ReferralService;
+use Livewire\Component;
 
 class Show extends Component
 {
     public $order;
+
     public $orderId;
+
     public $status;
+
     public $payment_status;
+
     public $notes;
+
     public $tracking_number;
+
     public $shipping_carrier;
 
     protected $rules = [
@@ -30,7 +36,7 @@ class Show extends Component
 
         $this->order = $order;
         $this->orderId = $order->id;
-        
+
         $this->status = $order->status;
         $this->payment_status = $order->payment_status;
         $this->notes = $order->notes;
@@ -38,11 +44,17 @@ class Show extends Component
         $this->shipping_carrier = $order->shipping_carrier;
     }
 
+    #[\Livewire\Attributes\On('shipment-saved')]
+    public function refreshShipmentStatus(): void
+    {
+        abort_unless(auth()->user()?->canManageOrders(), 403);
+        $this->order->refresh();
+        $this->status = $this->order->status;
+    }
+
     public function update()
     {
-        if (auth()->user()->isVendor()) {
-            return;
-        }
+        abort_unless(auth()->user()?->canManageOrders(), 403);
 
         $this->validate();
 
@@ -57,32 +69,26 @@ class Show extends Component
             'shipping_carrier' => $this->shipping_carrier,
         ]);
 
-        // If status changed to delivered and payment wasn't marked paid, mark it as paid
-        if ($this->status === 'delivered' && $this->payment_status !== 'paid') {
-            $this->order->update(['payment_status' => 'paid']);
-            $this->payment_status = 'paid';
-        }
-
         if ($previousPaymentStatus !== 'paid' && $this->order->fresh()->payment_status === 'paid') {
             app(ReferralService::class)->rewardReferrerForFirstPaidOrder($this->order);
         }
 
         // Refresh the order from database to show updated values
         $this->order = $this->order->fresh();
-        
+
         // Show success notification
         session()->flash('success', 'Order updated successfully!');
-        
+
         $this->dispatch('notify', [
             'type' => 'success',
-            'message' => 'Order updated successfully!'
+            'message' => 'Order updated successfully!',
         ]);
     }
 
     public function render()
     {
-        $this->order->load(['user', 'items.product', 'items.vendor']);
-        
+        $this->order->load(['user', 'items.product']);
+
         $statuses = [
             'ordered' => 'Ordered',
             'confirmed' => 'Confirmed',
@@ -100,16 +106,10 @@ class Show extends Component
             'refunded' => 'Refunded',
         ];
 
-        // Group items by vendor for better display
-        $itemsByVendor = $this->order->items->groupBy(function ($item) {
-            return $item->vendor_id ?: 'unknown';
-        });
-
         return view('livewire.admin.orders.show', [
             'order' => $this->order,
             'statuses' => $statuses,
             'paymentStatuses' => $paymentStatuses,
-            'itemsByVendor' => $itemsByVendor,
         ]);
     }
 }

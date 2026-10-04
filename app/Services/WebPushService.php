@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
-use App\Models\User;
 use App\Models\Order;
+use App\Models\User;
 use App\Models\WebPushSubscription;
 use Illuminate\Support\Facades\Log;
 use Minishlink\WebPush\Subscription;
@@ -91,7 +91,6 @@ class WebPushService
 
     public function sendPaidOrderAlerts(Order $order): void
     {
-        $order->loadMissing('items.vendor');
         $orderUrl = route('admin.orders.show', $order);
         $total = number_format((float) $order->total, 2);
 
@@ -104,15 +103,5 @@ class WebPushService
                 $orderUrl
             ));
 
-        $order->items
-            ->pluck('vendor')
-            ->filter()
-            ->unique('id')
-            ->each(fn (User $vendor) => $this->sendToUser(
-                $vendor,
-                'New order for your store',
-                "Order {$order->order_number} includes one or more of your products.",
-                $orderUrl
-            ));
     }
 }

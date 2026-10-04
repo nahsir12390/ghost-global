@@ -36,7 +36,7 @@ it('allows admins to access admin sidebar routes', function () {
     }
 });
 
-it('keeps vendors out of admin only routes while allowing vendor routes', function () {
+it('keeps legacy vendors out of all backoffice routes', function () {
     $vendor = backofficeUser([
         'role' => 'vendor',
         'store_name' => 'Vendor Store',
@@ -45,7 +45,7 @@ it('keeps vendors out of admin only routes while allowing vendor routes', functi
     ]);
 
     foreach (['/admin/dashboard', '/admin/products', '/admin/products/create', '/admin/orders'] as $route) {
-        $this->actingAs($vendor)->get($route)->assertOk();
+        $this->actingAs($vendor)->get($route)->assertForbidden();
     }
 
     foreach ([

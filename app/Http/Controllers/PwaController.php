@@ -12,11 +12,8 @@ class PwaController extends Controller
 {
     public function manifest(): Response
     {
-        $siteName = SettingsHelper::get('site_name', config('app.name', 'E-Commerce'));
-        $siteDescription = SettingsHelper::get(
-            'site_description',
-            'Your trusted online shopping destination. Quality products at affordable prices.'
-        );
+        $siteName = SettingsHelper::siteName();
+        $siteDescription = SettingsHelper::siteDescription();
 
         return response()->json([
             'id' => '/',
@@ -103,7 +100,7 @@ class PwaController extends Controller
             filemtime(resource_path('views/pwa/service-worker.blade.php')),
             filemtime(resource_path('js/app.js')),
         ]);
-        $siteName = SettingsHelper::get('site_name', config('app.name', 'E-Commerce'));
+        $siteName = SettingsHelper::siteName();
         $cachePrefix = Str::slug($siteName ?: 'storefront');
 
         $script = view('pwa.service-worker', [
@@ -124,8 +121,8 @@ class PwaController extends Controller
     {
         $size = in_array($size, [192, 512], true) ? $size : 192;
         $variant = $request->string('variant')->toString() === 'maskable' ? 'maskable' : 'any';
-        $siteName = (string) SettingsHelper::get('site_name', config('app.name', 'E-Commerce'));
-        $logoPath = public_path('storage/logo.png');
+        $siteName = SettingsHelper::siteName();
+        $logoPath = $this->localLogoPath();
 
         if (function_exists('imagecreatetruecolor')) {
             $icon = $this->buildDynamicPngIcon($siteName, $size, $variant, $logoPath);
@@ -142,6 +139,21 @@ class PwaController extends Controller
             'Content-Type' => 'image/svg+xml',
             'Cache-Control' => 'no-cache, no-store, must-revalidate',
         ]);
+    }
+
+    protected function localLogoPath(): string
+    {
+        $configuredLogo = trim((string) SettingsHelper::get('site_logo', ''));
+
+        if ($configuredLogo !== '' && ! Str::startsWith($configuredLogo, ['http://', 'https://'])) {
+            $candidate = public_path(ltrim($configuredLogo, '/'));
+
+            if (is_file($candidate)) {
+                return $candidate;
+            }
+        }
+
+        return public_path('storage/logo.png');
     }
 
     protected function buildDynamicPngIcon(string $siteName, int $size, string $variant, string $logoPath): ?string

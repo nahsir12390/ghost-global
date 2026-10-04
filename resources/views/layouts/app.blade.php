@@ -6,8 +6,10 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     @php
-        $siteName = \App\Helpers\SettingsHelper::get('site_name', config('app.name', 'E-Commerce'));
-        $siteDescription = \App\Helpers\SettingsHelper::get('site_description', 'Your trusted online shopping destination. Quality products at affordable prices.');
+        $siteName = \App\Helpers\SettingsHelper::siteName();
+        $siteDescription = \App\Helpers\SettingsHelper::siteDescription();
+        $siteLogo = \App\Helpers\SettingsHelper::logoUrl();
+        $currencyCode = \App\Helpers\SettingsHelper::currencyCode();
         $pageTitle = trim($__env->yieldContent('title', 'Home'));
         $metaTitle = trim($__env->yieldContent('meta_title', $pageTitle . ' - ' . $siteName));
         $metaDescription = trim($__env->yieldContent('meta_description', $siteDescription));
@@ -35,7 +37,7 @@
     <meta name="apple-mobile-web-app-title" content="{{ $siteName }}">
     <link rel="manifest" href="{{ route('pwa.manifest') }}">
     <link rel="apple-touch-icon" href="{{ route('pwa.icon', ['size' => 192]) }}">
-    <link rel="icon" type="image/png" href="{{ route('pwa.icon', ['size' => 192]) }}">
+    <link rel="icon" href="{{ \App\Helpers\SettingsHelper::faviconUrl() }}">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -49,14 +51,14 @@
 
     <style>
         [x-cloak] { display: none !important; }
-        
+
         /* Custom red theme */
         .bg-red-theme { background-color: #dc2626; }
         .text-red-theme { color: #dc2626; }
         .border-red-theme { border-color: #dc2626; }
         .hover\:bg-red-theme:hover { background-color: #dc2626; }
         .hover\:text-red-theme:hover { color: #dc2626; }
-        
+
         /* Button styles - Fixed CSS */
         .btn-primary {
             background-color: #dc2626;
@@ -66,17 +68,17 @@
             font-weight: 500;
             transition: background-color 0.2s ease-in-out;
         }
-        
+
         .btn-primary:hover {
             background-color: #b91c1c;
         }
-        
+
         .btn-primary:focus {
             outline: 2px solid transparent;
             outline-offset: 2px;
             box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.5);
         }
-        
+
         .btn-secondary {
             background-color: white;
             color: #374151;
@@ -86,17 +88,17 @@
             font-weight: 500;
             transition: background-color 0.2s ease-in-out;
         }
-        
+
         .btn-secondary:hover {
             background-color: #f9fafb;
         }
-        
+
         .btn-secondary:focus {
             outline: 2px solid transparent;
             outline-offset: 2px;
             box-shadow: 0 0 0 2px rgba(209, 213, 219, 0.5);
         }
-        
+
         .badge-red {
             background-color: #fee2e2;
             color: #991b1b;
@@ -105,7 +107,7 @@
             padding: 0.25rem 0.5rem;
             border-radius: 0.25rem;
         }
-        
+
         .badge-green {
             background-color: #d1fae5;
             color: #065f46;
@@ -114,7 +116,7 @@
             padding: 0.25rem 0.5rem;
             border-radius: 0.25rem;
         }
-        
+
         .badge-yellow {
             background-color: #fef3c7;
             color: #92400e;
@@ -123,7 +125,7 @@
             padding: 0.25rem 0.5rem;
             border-radius: 0.25rem;
         }
-        
+
         .badge-blue {
             background-color: #dbeafe;
             color: #1e40af;
@@ -132,7 +134,7 @@
             padding: 0.25rem 0.5rem;
             border-radius: 0.25rem;
         }
-        
+
         /* Cart badge */
         .cart-badge {
             position: absolute;
@@ -149,7 +151,7 @@
             font-size: 12px;
             font-weight: bold;
         }
-        
+
         /* Wishlist badge */
         .wishlist-badge {
             position: absolute;
@@ -184,7 +186,7 @@
             font-weight: 700;
             box-shadow: 0 0 0 2px white;
         }
-        
+
         /* Quantity controls */
         .quantity-btn {
             width: 2.5rem;
@@ -197,21 +199,21 @@
             cursor: pointer;
             transition: all 0.2s ease;
         }
-        
+
         .quantity-btn:hover {
             background-color: #f9fafb;
         }
-        
+
         .quantity-btn.decrement {
             border-radius: 0.375rem 0 0 0.375rem;
             border-right: none;
         }
-        
+
         .quantity-btn.increment {
             border-radius: 0 0.375rem 0.375rem 0;
             border-left: none;
         }
-        
+
         .quantity-input {
             width: 3rem;
             height: 2.5rem;
@@ -221,7 +223,7 @@
             border-right: none;
             outline: none;
         }
-        
+
         /* Cart controls in product cards */
         .cart-controls {
             display: flex;
@@ -229,7 +231,7 @@
             justify-content: center;
             gap: 0.5rem;
         }
-        
+
         .cart-quantity {
             font-weight: 600;
             font-size: 1.125rem;
@@ -248,7 +250,7 @@
                 opacity: 0;
             }
         }
-        
+
         .whatsapp-pulse {
             animation: pulse-ring 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
         }
@@ -279,36 +281,32 @@
                     <!-- Logo -->
                     <div class="min-w-0 flex-1 md:flex-none">
                         <a href="{{ route('home') }}" class="group flex min-w-0 items-center">
-                            @if(file_exists(public_path('storage/logo.png')))
-                                <img src="{{ asset('storage/logo.png') }}" alt="Logo" class="h-8 w-auto">
-                            @else
-                                <span class="flex min-w-0 items-center gap-2">
-                                    <img src="{{ asset('images/keffi-cart-logo.svg') }}" alt="Logo" class="h-10 w-10 shrink-0 transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-105">
-                                    <span class="truncate text-base font-bold tracking-[-.025em] text-slate-950 sm:text-xl">{{ \App\Helpers\SettingsHelper::get('site_name', config('app.name', 'E-Commerce')) }}</span>
-                                </span>
-                            @endif
+                            <span class="flex min-w-0 items-center gap-2">
+                                <img src="{{ $siteLogo }}" alt="{{ $siteName }} logo" class="h-10 w-10 shrink-0 object-contain transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-105">
+                                <span class="truncate text-base font-bold tracking-[-.025em] text-slate-950 sm:text-xl">{{ $siteName }}</span>
+                            </span>
                         </a>
                     </div>
 
                     <!-- Desktop Navigation -->
                     <nav class="hidden items-center rounded-full bg-[#101010] p-1.5 shadow-xl shadow-slate-900/10 xl:flex">
-                        <a href="{{ route('home') }}" 
+                        <a href="{{ route('home') }}"
                            class="rounded-full px-4 py-2 text-sm font-semibold transition {{ request()->routeIs('home') ? 'bg-white text-slate-950 shadow-sm' : 'text-white/60 hover:bg-white/10 hover:text-white' }}">
                             Home
                         </a>
-                        <a href="{{ route('shop') }}" 
+                        <a href="{{ route('shop') }}"
                            class="rounded-full px-4 py-2 text-sm font-semibold transition {{ request()->routeIs('shop') ? 'bg-white text-slate-950 shadow-sm' : 'text-white/60 hover:bg-white/10 hover:text-white' }}">
                             Shop
                         </a>
-                        <a href="{{ route('tracking.index') }}" 
+                        <a href="{{ route('tracking.index') }}"
                            class="rounded-full px-4 py-2 text-sm font-semibold transition {{ request()->routeIs('tracking.*') ? 'bg-white text-slate-950 shadow-sm' : 'text-white/60 hover:bg-white/10 hover:text-white' }}">
                             Track Order
                         </a>
-                        <a href="{{ route('about') }}" 
+                        <a href="{{ route('about') }}"
                            class="rounded-full px-4 py-2 text-sm font-semibold transition {{ request()->routeIs('about') ? 'bg-white text-slate-950 shadow-sm' : 'text-white/60 hover:bg-white/10 hover:text-white' }}">
                             About
                         </a>
-                        <a href="{{ route('contact') }}" 
+                        <a href="{{ route('contact') }}"
                            class="rounded-full px-4 py-2 text-sm font-semibold transition {{ request()->routeIs('contact') ? 'bg-white text-slate-950 shadow-sm' : 'text-white/60 hover:bg-white/10 hover:text-white' }}">
                             Contact
                         </a>
@@ -319,7 +317,7 @@
                         <!-- Cart (visible for all users) -->
                         <a href="{{ route('cart') }}" aria-label="Shopping cart" class="relative inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:-translate-y-0.5 hover:border-red-200 hover:text-red-600 hover:shadow-lg">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                       d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                             </svg>
                             <span data-cart-count class="cart-badge">{{ collect(session('cart', []))->sum('quantity') }}</span>
@@ -338,8 +336,7 @@
                                 $activeOrderStatuses = ['pending', 'processing', 'packed', 'shipped', 'on_the_way'];
                                 $activeOrdersCount = $navUser->orders()->whereIn('status', $activeOrderStatuses)->count();
                                 $recentUserOrders = $navUser->orders()->latest()->take(3)->get();
-                                $vendorNotificationCount = $navUser->isVendor() && !$navUser->isVendorVerified() ? 1 : 0;
-                                $notificationCount = $activeOrdersCount + $vendorNotificationCount;
+                                $notificationCount = $activeOrdersCount;
                             @endphp
 
                             <div class="hidden items-center gap-2 xl:flex">
@@ -354,7 +351,7 @@
                                 @if($navUser->canAccessBackoffice())
                                     <a href="{{ route($navUser->dashboardRouteName()) }}"
                                        class="rounded-full bg-gray-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-black">
-                                        {{ $navUser->isStaff() ? 'Staff' : ($navUser->isVendor() ? 'Vendor' : 'Dashboard') }}
+                                        {{ $navUser->isStaff() ? 'Staff' : 'Dashboard' }}
                                     </a>
                                 @else
                                     <a href="{{ route('dashboard') }}"
@@ -398,12 +395,7 @@
                                     </div>
 
                                     <div class="max-h-96 overflow-y-auto px-4 py-3 space-y-3">
-                                        @if($navUser->isVendor() && !$navUser->isVendorVerified())
-                                            <a href="{{ route($navUser->dashboardRouteName()) }}" class="block rounded-xl border border-amber-200 bg-amber-50 p-3 transition hover:bg-amber-100">
-                                                <p class="text-sm font-semibold text-amber-900">Vendor verification pending</p>
-                                                <p class="mt-1 text-xs text-amber-700">Complete or review your verification details from the vendor dashboard.</p>
-                                            </a>
-                                        @endif
+
 
                                         @forelse($recentUserOrders as $order)
                                             <a href="{{ route('my.orders') }}" class="block rounded-xl border border-gray-200 p-3 transition hover:border-red-200 hover:bg-red-50/60">
@@ -421,12 +413,12 @@
                                                 </p>
                                             </a>
                                         @empty
-                                            @if(!$navUser->isVendor() || $navUser->isVendorVerified())
+
                                                 <div class="rounded-xl border border-dashed border-gray-200 px-4 py-8 text-center">
                                                     <p class="text-sm font-medium text-gray-700">No new notifications</p>
                                                     <p class="mt-1 text-xs text-gray-500">Your account updates will appear here.</p>
                                                 </div>
-                                            @endif
+
                                         @endforelse
                                     </div>
 
@@ -440,10 +432,10 @@
 
                         <!-- User Dropdown -->
                             <div x-data="{ open: false }" class="relative hidden sm:block">
-                                <button @click="open = !open" 
+                                <button @click="open = !open"
                                         class="flex items-center space-x-2 p-1 rounded-md hover:bg-gray-100 focus:outline-none">
                                     @if(Auth::user()->profile_photo_path)
-                                        <img src="{{ asset('storage/' . Auth::user()->profile_photo_path) }}" 
+                                        <img src="{{ asset('storage/' . Auth::user()->profile_photo_path) }}"
                                              alt="{{ Auth::user()->name }}"
                                              class="w-8 h-8 rounded-full object-cover border border-red-200">
                                     @else
@@ -455,7 +447,7 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                                     </svg>
                                 </button>
-                                <div x-show="open" @click.away="open = false" 
+                                <div x-show="open" @click.away="open = false"
                                      x-transition:enter="transition ease-out duration-100"
                                      x-transition:enter-start="transform opacity-0 scale-95"
                                      x-transition:enter-end="transform opacity-100 scale-100"
@@ -480,11 +472,11 @@
                                             </div>
                                         </div>
                                         <div class="px-2 py-2">
-                                        <a href="{{ route('profile') }}" 
+                                        <a href="{{ route('profile') }}"
                                            class="block rounded-xl px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                             Profile Settings
                                         </a>
-                                        <a href="{{ route('my.orders') }}" 
+                                        <a href="{{ route('my.orders') }}"
                                            class="block rounded-xl px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                             My Orders
                                         </a>
@@ -492,41 +484,31 @@
                                            class="block rounded-xl px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                             My Wallet
                                         </a>
-                                        <a href="{{ route('my.downloads') }}" 
+                                        <a href="{{ route('my.downloads') }}"
                                            class="block rounded-xl px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                             My Downloads
                                         </a>
-                                        <a href="{{ route('my.courses') }}" 
+                                        <a href="{{ route('my.courses') }}"
                                            class="block rounded-xl px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                             My Courses
                                         </a>
-                                        <a href="{{ route('wishlist') }}" 
+                                        <a href="{{ route('wishlist') }}"
                                            class="block rounded-xl px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                             My Wishlist
                                         </a>
-                                        @if(auth()->user()->storefrontUrl())
-                                            <a href="{{ auth()->user()->storefrontUrl() }}"
-                                               class="block rounded-xl px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                                View My Store
-                                            </a>
-                                        @endif
-                                        @if(!auth()->user()->isVendor())
-                                            <a href="{{ route('vendor-upgrade.create') }}"
-                                               class="block rounded-xl px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                                Become a Vendor
-                                            </a>
-                                        @endif
+
+
                                         @if(auth()->user()->canAccessBackoffice())
-                                            <a href="{{ route(auth()->user()->dashboardRouteName()) }}" 
+                                            <a href="{{ route(auth()->user()->dashboardRouteName()) }}"
                                                class="block rounded-xl px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                                {{ auth()->user()->isStaff() ? 'Staff Dashboard' : (auth()->user()->isVendor() ? 'Vendor Dashboard' : 'Admin Dashboard') }}
+                                                {{ auth()->user()->isStaff() ? 'Staff Dashboard' : 'Admin Dashboard' }}
                                             </a>
                                         @endif
                                         </div>
                                         <div class="border-t border-gray-100 bg-white px-2 py-2">
                                         <form method="POST" action="{{ route('logout') }}">
                                             @csrf
-                                            <button type="submit" 
+                                            <button type="submit"
                                                     class="block w-full rounded-xl px-3 py-2 text-left text-sm font-medium text-red-600 hover:bg-red-50">
                                                 Log Out
                                             </button>
@@ -536,19 +518,19 @@
                                 </div>
                             </div>
                         @else
-                            <a href="{{ route('login') }}" 
+                            <a href="{{ route('login') }}"
                                class="hidden text-sm font-semibold text-gray-700 hover:text-red-600 md:inline-flex">
                                 Login
                             </a>
-                            <a href="{{ route('register') }}" 
+                            <a href="{{ route('register') }}"
                                class="hidden btn-primary text-sm md:inline-flex">
                                 Register
                             </a>
                         @endauth
-                         
+
                         <!-- Mobile menu button -->
                        <div class="xl:hidden">
-    <button @click="mobileMenuOpen = !mobileMenuOpen" 
+    <button @click="mobileMenuOpen = !mobileMenuOpen"
             :aria-label="mobileMenuOpen ? 'Close navigation' : 'Open navigation'"
             class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#101010] text-white transition hover:bg-red-600">
         <svg x-show="!mobileMenuOpen" x-cloak class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -570,7 +552,7 @@
          style="display: none;"></div>
 
     <!-- Mobile menu panel -->
-    <div x-show="mobileMenuOpen" 
+    <div x-show="mobileMenuOpen"
          x-cloak
           x-transition:enter="transition ease-out duration-200"
           x-transition:enter-start="opacity-0 scale-95"
@@ -582,34 +564,34 @@
          class="fixed bottom-3 left-3 right-3 top-[5.25rem] z-50 overflow-hidden rounded-[2rem] border border-white/70 bg-white/95 shadow-2xl backdrop-blur-xl xl:hidden"
           style="display: none;">
         <div class="h-full space-y-2 overflow-y-auto overscroll-contain px-4 pb-8 pt-5">
-            <a href="{{ route('home') }}" 
+            <a href="{{ route('home') }}"
                class="block rounded-xl px-4 py-3 text-gray-700 hover:text-red-600 hover:bg-gray-50 font-medium {{ request()->routeIs('home') ? 'text-red-600 bg-red-50' : '' }}"
                @click="mobileMenuOpen = false">
                 Home
             </a>
-            <a href="{{ route('shop') }}" 
+            <a href="{{ route('shop') }}"
                class="block rounded-xl px-4 py-3 text-gray-700 hover:text-red-600 hover:bg-gray-50 font-medium {{ request()->routeIs('shop') ? 'text-red-600 bg-red-50' : '' }}"
                @click="mobileMenuOpen = false">
                 Shop
             </a>
-            <a href="{{ route('tracking.index') }}" 
+            <a href="{{ route('tracking.index') }}"
                class="block rounded-xl px-4 py-3 text-gray-700 hover:text-red-600 hover:bg-gray-50 font-medium {{ request()->routeIs('tracking.*') ? 'text-red-600 bg-red-50' : '' }}"
                @click="mobileMenuOpen = false">
                 Track Order
             </a>
-                <a href="{{ route('about') }}" 
+                <a href="{{ route('about') }}"
                    class="block rounded-xl px-4 py-3 text-gray-700 hover:text-red-600 hover:bg-gray-50 font-medium {{ request()->routeIs('about') ? 'text-red-600 bg-red-50' : '' }}"
                    @click="mobileMenuOpen = false">
                      About
                  </a>
-                <a href="{{ route('contact') }}" 
+                <a href="{{ route('contact') }}"
                    class="block rounded-xl px-4 py-3 text-gray-700 hover:text-red-600 hover:bg-gray-50 font-medium {{ request()->routeIs('contact') ? 'text-red-600 bg-red-50' : '' }}"
                    @click="mobileMenuOpen = false">
                      Contact
                  </a>
-            
 
-            <a href="{{ route('cart') }}" 
+
+            <a href="{{ route('cart') }}"
                class="block rounded-xl px-4 py-3 text-gray-700 hover:text-red-600 hover:bg-gray-50 font-medium {{ request()->routeIs('cart') ? 'text-red-600 bg-red-50' : '' }}"
                @click="mobileMenuOpen = false">
                  Cart
@@ -641,14 +623,14 @@
                         </div>
                     </div>
                 </div>
-            
-                <a href="{{ route('wishlist') }}" 
+
+                <a href="{{ route('wishlist') }}"
                    class="block rounded-xl px-4 py-3 text-gray-700 hover:text-red-600 hover:bg-gray-50 font-medium {{ request()->routeIs('wishlist') ? 'text-red-600 bg-red-50' : '' }}"
                    @click="mobileMenuOpen = false">
                      Wishlist
                  </a>
-             
-                <a href="{{ route('my.orders') }}" 
+
+                <a href="{{ route('my.orders') }}"
                    class="block rounded-xl px-4 py-3 text-gray-700 hover:text-red-600 hover:bg-gray-50 font-medium {{ request()->routeIs('my.orders*') ? 'text-red-600 bg-red-50' : '' }}"
                    @click="mobileMenuOpen = false">
                      My Orders
@@ -663,12 +645,12 @@
                    @click="mobileMenuOpen = false">
                      Referral Dashboard
                  </a>
-                <a href="{{ route('my.downloads') }}" 
+                <a href="{{ route('my.downloads') }}"
                    class="block rounded-xl px-4 py-3 text-gray-700 hover:text-red-600 hover:bg-gray-50 font-medium {{ request()->routeIs('my.downloads*') ? 'text-red-600 bg-red-50' : '' }}"
                    @click="mobileMenuOpen = false">
                      My Downloads
                  </a>
-                <a href="{{ route('my.courses') }}" 
+                <a href="{{ route('my.courses') }}"
                    class="block rounded-xl px-4 py-3 text-gray-700 hover:text-red-600 hover:bg-gray-50 font-medium {{ request()->routeIs('my.courses*') ? 'text-red-600 bg-red-50' : '' }}"
                    @click="mobileMenuOpen = false">
                      My Courses
@@ -685,13 +667,7 @@
                     </div>
 
                     <div class="mt-3 space-y-2">
-                        @if(auth()->user()->isVendor() && !auth()->user()->isVendorVerified())
-                            <a href="{{ route(auth()->user()->dashboardRouteName()) }}"
-                               class="block rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800"
-                               @click="mobileMenuOpen = false">
-                                Vendor verification is still pending.
-                            </a>
-                        @endif
+
 
                         @forelse($recentUserOrders as $order)
                             <a href="{{ route('my.orders') }}"
@@ -700,42 +676,30 @@
                                 {{ $order->order_number }}: {{ ucfirst(str_replace('_', ' ', $order->status)) }}
                             </a>
                         @empty
-                            @if(!auth()->user()->isVendor() || auth()->user()->isVendorVerified())
+
                                 <p class="rounded-lg bg-white px-3 py-2 text-sm text-gray-500">No new notifications right now.</p>
-                            @endif
+
                         @endforelse
                     </div>
                 </div>
                 @if(auth()->user()->canAccessBackoffice())
-                    <a href="{{ route(auth()->user()->dashboardRouteName()) }}" 
+                    <a href="{{ route(auth()->user()->dashboardRouteName()) }}"
                        class="block rounded-xl px-4 py-3 text-gray-700 hover:text-red-600 hover:bg-gray-50 font-medium {{ request()->routeIs('admin.*') ? 'text-red-600 bg-red-50' : '' }}"
                        @click="mobileMenuOpen = false">
-                        {{ auth()->user()->isStaff() ? 'Staff Dashboard' : (auth()->user()->isVendor() ? 'Vendor Dashboard' : 'Admin Dashboard') }}
+                        {{ auth()->user()->isStaff() ? 'Staff Dashboard' : 'Admin Dashboard' }}
                     </a>
                 @endif
-                @if(auth()->user()->storefrontUrl())
-                    <a href="{{ auth()->user()->storefrontUrl() }}"
-                       class="block rounded-xl px-4 py-3 text-gray-700 hover:text-red-600 hover:bg-gray-50 font-medium"
-                       @click="mobileMenuOpen = false">
-                        View My Store
-                    </a>
-                @endif
+
                 <div class="sticky bottom-0 border-t border-gray-200 bg-white pt-3">
-                    <a href="{{ route('profile') }}" 
+                    <a href="{{ route('profile') }}"
                        class="block rounded-xl px-4 py-3 text-gray-700 hover:text-red-600 hover:bg-gray-50 font-medium"
                        @click="mobileMenuOpen = false">
                         Profile
                     </a>
-                    @if(!auth()->user()->isVendor())
-                        <a href="{{ route('vendor-upgrade.create') }}"
-                           class="block rounded-xl px-4 py-3 text-gray-700 hover:text-red-600 hover:bg-gray-50 font-medium"
-                           @click="mobileMenuOpen = false">
-                            Become a Vendor
-                        </a>
-                    @endif
+
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
-                        <button type="submit" 
+                        <button type="submit"
                                 class="block w-full rounded-xl px-4 py-3 text-left text-gray-700 hover:text-red-600 hover:bg-gray-50 font-medium"
                                 @click="mobileMenuOpen = false">
                             Log Out
@@ -744,12 +708,12 @@
                 </div>
             @else
                 <div class="border-t border-gray-200 pt-3">
-                    <a href="{{ route('login') }}" 
+                    <a href="{{ route('login') }}"
                        class="block rounded-xl px-4 py-3 text-gray-700 hover:text-red-600 hover:bg-gray-50 font-medium"
                        @click="mobileMenuOpen = false">
                         Login
                     </a>
-                    <a href="{{ route('register') }}" 
+                    <a href="{{ route('register') }}"
                        class="mt-2 block rounded-xl bg-red-600 px-4 py-3 text-center text-sm font-medium text-white transition hover:bg-red-700"
                        @click="mobileMenuOpen = false">
                         Register
@@ -780,11 +744,11 @@
         <!-- Footer -->
         <footer class="mt-16 overflow-hidden bg-slate-950 text-white">
             @php
-                $footerSiteName = \App\Helpers\SettingsHelper::get('site_name', config('app.name', 'E-Commerce'));
-                $footerDescription = \App\Helpers\SettingsHelper::get('site_description', 'Your trusted online shopping destination. Quality products at affordable prices.');
-                $footerAddress = \App\Helpers\SettingsHelper::get('site_address', '123 Street, City, Country');
-                $footerPhone = \App\Helpers\SettingsHelper::get('site_phone', '+234 800 000 0000');
-                $footerEmail = \App\Helpers\SettingsHelper::get('site_email', 'contact@example.com');
+                $footerSiteName = \App\Helpers\SettingsHelper::siteName();
+                $footerDescription = \App\Helpers\SettingsHelper::siteDescription();
+                $footerAddress = \App\Helpers\SettingsHelper::get('site_address', 'Available online');
+                $footerPhone = \App\Helpers\SettingsHelper::get('site_phone', '');
+                $footerEmail = \App\Helpers\SettingsHelper::get('site_email', config('mail.from.address'));
                 $storeShareUrl = route('home');
                 $storeShareText = 'Shop with ' . $footerSiteName;
             @endphp
@@ -867,7 +831,7 @@
 
                             <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
                                 <p class="font-medium text-white">Contact</p>
-                                <a href="tel:{{ preg_replace('/\s+/', '', $footerPhone) }}" class="mt-2 block transition hover:text-white">{{ $footerPhone }}</a>
+                                @if($footerPhone)<a href="tel:{{ preg_replace('/\s+/', '', $footerPhone) }}" class="mt-2 block transition hover:text-white">{{ $footerPhone }}</a>@endif
                                 <a href="mailto:{{ $footerEmail }}" class="mt-1 block transition hover:text-white">{{ $footerEmail }}</a>
                             </div>
 
@@ -920,7 +884,7 @@
 
                 <div class="mt-8 flex flex-col gap-3 border-t border-white/10 pt-6 text-sm text-slate-400 sm:flex-row sm:items-center sm:justify-between">
                     <p>&copy; {{ date('Y') }} {{ $footerSiteName }}. All rights reserved.</p>
-                    <p>Optimized for responsive shopping, simpler discovery, and better vendor growth.</p>
+                    <p>Optimized for responsive shopping, simpler discovery, and easier order tracking.</p>
                 </div>
             </div>
         </footer>
@@ -930,7 +894,7 @@
 
     {{-- Livewire 3 ships with Alpine. Loading the CDN copy as well reinitializes Alpine
          and prevents Livewire controls such as pagination from receiving clicks. --}}
-    
+
     <script>
         window.KeffiCart = {
             routes: {
@@ -945,7 +909,7 @@
                 const value = Number(amount || 0);
                 return new Intl.NumberFormat('en-NG', {
                     style: 'currency',
-                    currency: 'NGN',
+                    currency: @js($currencyCode),
                     minimumFractionDigits: 2,
                 }).format(value);
             },
@@ -1212,7 +1176,7 @@
             });
         });
     </script>
-    
+
     <script>
     document.addEventListener('livewire:initialized', () => {
         // Listen for cart events from related products
@@ -1235,7 +1199,7 @@
             const { productId } = event.detail;
             Livewire.dispatch('cart-remove', { productId });
         });
-        
+
         // Handle cart updated events
         Livewire.on('cartUpdated', () => {
             // Dispatch event to update cart counter
@@ -1243,7 +1207,7 @@
         });
     });
     </script>
-    
+
     <script>
     document.addEventListener('livewire:initialized', () => {
         // Listen for wishlist events from product cards
@@ -1251,7 +1215,7 @@
             const { productId } = event.detail;
             Livewire.dispatch('toggleWishlist', { productId });
         });
-        
+
         // Listen for wishlist updated events
         Livewire.on('wishlist-updated', () => {
             // This will trigger the wishlist-counter to update
@@ -1262,7 +1226,7 @@
 
     @php
         $supportWhatsAppNumber = \App\Helpers\SettingsHelper::supportWhatsAppNumber();
-        $supportSiteName = \App\Helpers\SettingsHelper::get('site_name', config('app.name', 'E-Commerce'));
+        $supportSiteName = \App\Helpers\SettingsHelper::siteName();
         $supportContext = match (true) {
             request()->routeIs('product.show') => [
                 'label' => 'Product assistance',
@@ -1308,11 +1272,6 @@
                 'question' => 'What payment methods can I use?',
                 'answer' => 'Available payment methods depend on the current settings. You may see Wallet, Paystack, or Cash on Delivery if they are enabled for checkout.',
                 'message' => 'Hi! I have a question about payment methods.',
-            ],
-            [
-                'question' => 'How do I become a vendor?',
-                'answer' => 'Create or log in to your account, then open your profile or dashboard and choose "Become a Vendor". Fill in your store details and submit them for review.',
-                'message' => 'Hi! I want to become a vendor.',
             ],
             [
                 'question' => 'What should I do if something is wrong?',
@@ -1546,7 +1505,7 @@
 
     @guest
         @php
-            $guestPromptSiteName = \App\Helpers\SettingsHelper::get('site_name', config('app.name', 'E-Commerce'));
+            $guestPromptSiteName = \App\Helpers\SettingsHelper::siteName();
             $guestPromptBenefits = [
                 ['title' => 'Faster checkout', 'text' => 'Save your details for next time.'],
                 ['title' => 'Track orders', 'text' => 'Check order updates anytime.'],

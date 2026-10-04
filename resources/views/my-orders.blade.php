@@ -92,7 +92,7 @@
                                             <span class="text-sm font-medium text-gray-500">Total</span>
                                             <div class="mt-1">
                                                 <span class="text-lg font-bold text-gray-900">
-                                                    ₦{{ number_format($order->total, 2) }}
+                                                    {{ \App\Helpers\SettingsHelper::currency($order->total) }}
                                                 </span>
                                             </div>
                                         </div>

@@ -41,10 +41,10 @@
                                                 {{ $item['name'] }}
                                             </a>
                                         </h3>
-                                        <p class="text-xs sm:text-sm text-gray-500">₦{{ number_format($item['price'], 2) }} each</p>
+                                        <p class="text-xs sm:text-sm text-gray-500">{{ \App\Helpers\SettingsHelper::currency($item['price']) }} each</p>
                                         <div class="mt-1 sm:mt-2">
                                             <p class="text-base sm:text-lg font-semibold text-red-600">
-                                                ₦{{ number_format($item['price'] * $item['quantity'], 2) }}
+                                                {{ \App\Helpers\SettingsHelper::currency($item['price'] * $item['quantity']) }}
                                             </p>
                                         </div>
                                     </div>
@@ -150,11 +150,11 @@
                         <div class="space-y-3 mb-6">
                             <div class="flex justify-between text-xs sm:text-sm">
                                 <span class="text-gray-600">Subtotal</span>
-                                <span class="text-gray-900">₦{{ number_format($subtotal, 2) }}</span>
+                                <span class="text-gray-900">{{ \App\Helpers\SettingsHelper::currency($subtotal) }}</span>
                             </div>
                             <div class="flex justify-between text-xs sm:text-sm">
                                 <span class="text-gray-600">Platform Service Fee ({{ \App\Helpers\SettingsHelper::platformServiceFeeRate($subtotal) }}%)</span>
-                                <span class="text-gray-900">₦{{ number_format($tax, 2) }}</span>
+                                <span class="text-gray-900">{{ \App\Helpers\SettingsHelper::currency($tax) }}</span>
                             </div>
                             <div class="flex justify-between text-xs sm:text-sm">
                                 <span class="text-gray-600">Delivery Fee</span>
@@ -162,13 +162,13 @@
                                     @if($shipping == 0)
                                         <span class="text-green-600 font-medium">Free</span>
                                     @else
-                                        ₦{{ number_format($shipping, 2) }}
+                                        {{ \App\Helpers\SettingsHelper::currency($shipping) }}
                                     @endif
                                 </span>
                             </div>
                             <div class="border-t border-gray-200 pt-3 flex justify-between text-base sm:text-lg font-semibold">
                                 <span class="text-gray-900">Total</span>
-                                <span class="text-red-600">₦{{ number_format($total, 2) }}</span>
+                                <span class="text-red-600">{{ \App\Helpers\SettingsHelper::currency($total) }}</span>
                             </div>
                         </div>
 
@@ -182,7 +182,7 @@
                                     @if($shipping == 0)
                                         Free delivery applied!
                                     @else
-                                        Add ₦{{ number_format(\App\Helpers\SettingsHelper::freeShippingThreshold() - $subtotal, 2) }} more for free delivery
+                                        Add {{ \App\Helpers\SettingsHelper::currency(\App\Helpers\SettingsHelper::freeShippingThreshold() - $subtotal) }} more for free delivery
                                     @endif
                                 </span>
                             </div>
@@ -268,7 +268,7 @@
                                         </h3>
                                         <p class="mt-1 text-xs sm:text-sm text-gray-500">{{ $product->category->name ?? 'N/A' }}</p>
                                         <p class="mt-1 text-sm sm:text-lg font-medium text-gray-900">
-                                            ₦{{ number_format($product->price, 2) }}
+                                            {{ \App\Helpers\SettingsHelper::currency($product->price) }}
                                         </p>
                                     </div>
                                 </a>

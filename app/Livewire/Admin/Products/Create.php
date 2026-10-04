@@ -2,12 +2,11 @@
 
 namespace App\Livewire\Admin\Products;
 
-use Livewire\Component;
-use App\Models\Product;
 use App\Models\Category;
-use App\Models\User;
+use App\Models\Product;
 use App\Services\ImageUploadService;
 use Illuminate\Support\Str;
+use Livewire\Component;
 use Livewire\WithFileUploads;
 
 class Create extends Component
@@ -15,29 +14,51 @@ class Create extends Component
     use WithFileUploads;
 
     public $categories = [];
-    public $vendors = [];
+
     public $name;
-    public $vendor_id;
+
     public $category_id;
+
+    public array $delivery_countries = [];
+
+    public int $processing_min_days = 0;
+
+    public int $processing_max_days = 0;
+
     public $description;
+
     public $product_type = Product::TYPE_PHYSICAL;
+
     public $price;
+
     public $compare_price;
+
     public $quantity;
+
     public $sku;
+
     public $images = [];
+
     public $digital_file;
+
     public $download_link;
+
     public $course_access_url;
+
     public $access_instructions;
+
     public $is_featured = false;
+
     public $is_active = true;
 
     protected function rules(): array
     {
         return [
             'name' => 'required|string|max:255',
-            'vendor_id' => 'nullable|exists:users,id',
+            'delivery_countries' => ['array'],
+            'delivery_countries.*' => [\Illuminate\Validation\Rule::in(array_keys(config('countries')))],
+            'processing_min_days' => 'required|integer|min:0|max:365',
+            'processing_max_days' => 'required|integer|gte:processing_min_days|max:365',
             'category_id' => 'required|exists:categories,id',
             'description' => 'nullable|string',
             'product_type' => 'required|in:physical,digital,course',
@@ -57,7 +78,6 @@ class Create extends Component
 
     protected $messages = [
         'name.required' => 'Product name is required.',
-        'vendor_id.exists' => 'Please choose a valid vendor account.',
         'category_id.required' => 'Please select a category.',
         'price.required' => 'Regular price is required.',
         'price.numeric' => 'Price must be a valid number.',
@@ -71,19 +91,12 @@ class Create extends Component
     {
         $user = auth()->user()?->fresh();
 
-        if ($user?->isVendor() && !$user->isVendorVerified()) {
-            abort(403, 'Your vendor account is not verified yet.');
-        }
+        abort_unless($user?->canManageProducts(), 403);
 
         $this->categories = Category::where('is_active', true)
             ->orderBy('name')
             ->get();
 
-        $this->vendors = $this->availableVendors();
-
-        if ($user?->isVendor()) {
-            $this->vendor_id = $user->id;
-        }
     }
 
     public function updatedProductType($value): void
@@ -129,14 +142,11 @@ class Create extends Component
     {
         $user = auth()->user()?->fresh();
 
-        if ($user?->isVendor() && !$user->isVendorVerified()) {
-            abort(403, 'Your vendor account is not verified yet.');
-        }
+        abort_unless($user?->canManageProducts(), 403);
 
         $this->prepareFieldsForSelectedType();
 
         $validated = $this->validate();
-        $assignedVendorId = $this->resolveVendorId($user);
 
         $this->validateProductTypeConfiguration();
         $this->validatePricingConfiguration();
@@ -144,25 +154,27 @@ class Create extends Component
         $slug = $this->generateUniqueSlug($this->name);
 
         $imagePaths = [];
-        if (!empty($this->images) && is_array($this->images)) {
-            $imageService = new ImageUploadService();
+        if (! empty($this->images) && is_array($this->images)) {
+            $imageService = new ImageUploadService;
             $uploadedPaths = $imageService->uploadAndCompressMultiple($this->images, 'products');
-            
+
             if (empty($uploadedPaths)) {
                 session()->flash('error', 'Failed to upload and compress images.');
+
                 return;
             }
-            
+
             $imagePaths = $uploadedPaths;
         }
 
         $sku = $this->sku;
         if (empty($sku)) {
-            $sku = 'PROD-' . strtoupper(Str::random(8));
+            $sku = 'PROD-'.strtoupper(Str::random(8));
         } else {
             $existingSku = Product::where('sku', $sku)->first();
             if ($existingSku) {
                 $this->addError('sku', 'This SKU already exists. Please use a different SKU.');
+
                 return;
             }
         }
@@ -173,7 +185,9 @@ class Create extends Component
 
         try {
             $product = Product::create([
-                'vendor_id' => $assignedVendorId,
+                'delivery_countries' => $this->delivery_countries,
+                'processing_min_days' => $this->processing_min_days,
+                'processing_max_days' => $this->processing_max_days,
                 'category_id' => $this->category_id,
                 'name' => $this->name,
                 'slug' => $slug,
@@ -183,7 +197,7 @@ class Create extends Component
                 'compare_price' => $this->compare_price,
                 'quantity' => $this->product_type === Product::TYPE_PHYSICAL ? (int) $this->quantity : 0,
                 'sku' => $sku,
-                'images' => !empty($imagePaths) ? json_encode($imagePaths) : null,
+                'images' => ! empty($imagePaths) ? json_encode($imagePaths) : null,
                 'download_file_path' => $digitalFilePath,
                 'download_link' => $this->product_type === Product::TYPE_DIGITAL ? $this->download_link : null,
                 'course_access_url' => $this->product_type === Product::TYPE_COURSE ? $this->course_access_url : null,
@@ -193,14 +207,15 @@ class Create extends Component
             ]);
 
             session()->flash('success', 'Product created successfully.');
-            
+
             return redirect()->route('admin.products.index');
         } catch (\Exception $e) {
             \Log::error('Failed to create product', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
             session()->flash('error', 'Failed to create product. Please check the form and try again.');
+
             return;
         }
     }
@@ -249,58 +264,6 @@ class Create extends Component
         }
     }
 
-    private function resolveVendorId(?User $user): int
-    {
-        if (! $user) {
-            abort(403);
-        }
-
-        if ($user->isVendor()) {
-            return (int) $user->id;
-        }
-
-        if (! $user->canManageProducts()) {
-            abort(403);
-        }
-
-        $vendorId = (int) $this->vendor_id;
-
-        if ($vendorId <= 0) {
-            throw \Illuminate\Validation\ValidationException::withMessages([
-                'vendor_id' => 'Select the vendor store this product belongs to.',
-            ]);
-        }
-
-        $vendorExists = User::query()
-            ->whereKey($vendorId)
-            ->where('role', 'vendor')
-            ->where(function ($query) {
-                $query->where('verification_status', 'approved')
-                    ->orWhereNotNull('verified_at');
-            })
-            ->exists();
-
-        if (! $vendorExists) {
-            throw \Illuminate\Validation\ValidationException::withMessages([
-                'vendor_id' => 'Choose an approved vendor so this product appears in the correct store.',
-            ]);
-        }
-
-        return $vendorId;
-    }
-
-    private function availableVendors()
-    {
-        return User::query()
-            ->where('role', 'vendor')
-            ->where(function ($query) {
-                $query->where('verification_status', 'approved')
-                    ->orWhereNotNull('verified_at');
-            })
-            ->orderByRaw('COALESCE(store_name, name)')
-            ->get(['id', 'name', 'store_name', 'email', 'vendor_is_active']);
-    }
-
     private function prepareFieldsForSelectedType(): void
     {
         if ($this->product_type !== Product::TYPE_PHYSICAL) {
@@ -339,7 +302,6 @@ class Create extends Component
     {
         return view('livewire.admin.products.create', [
             'categories' => $this->categories,
-            'vendors' => $this->vendors,
         ]);
     }
 }

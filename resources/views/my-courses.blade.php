@@ -26,7 +26,7 @@
                             <span class="inline-flex rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">Online Course</span>
                             <h2 class="mt-3 text-lg font-semibold text-gray-900">{{ $product->name }}</h2>
                         </div>
-                        <span class="text-sm font-semibold text-gray-500">₦{{ number_format($product->price, 2) }}</span>
+                        <span class="text-sm font-semibold text-gray-500">{{ \App\Helpers\SettingsHelper::currency($product->price) }}</span>
                     </div>
 
                     @if($product->description)

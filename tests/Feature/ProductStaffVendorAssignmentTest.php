@@ -12,104 +12,47 @@ function productStaffUser(array $attributes = []): User
     return User::factory()->create(array_merge([
         'role' => 'customer',
         'is_admin' => false,
-        'is_staff' => false,
-        'staff_role' => null,
-        'staff_assigned_at' => null,
+        'is_staff' => true,
+        'staff_role' => 'product_manager',
+        'staff_assigned_at' => now(),
         'staff_deactivated_at' => null,
     ], $attributes));
 }
 
-it('lets product staff create a product for an approved vendor', function () {
-    $staff = productStaffUser([
-        'is_staff' => true,
-        'staff_role' => 'product_manager',
-        'staff_assigned_at' => now(),
-    ]);
+it('lets product staff create store products without selecting a vendor', function () {
+    $staff = productStaffUser();
+    $category = Category::create(['name' => 'Electronics', 'is_active' => true]);
 
-    $vendor = productStaffUser([
-        'role' => 'vendor',
-        'store_name' => 'Assigned Store',
-        'store_slug' => 'assigned-store',
-        'vendor_is_active' => true,
-        'verification_status' => 'approved',
-        'verified_at' => now(),
-    ]);
-
-    $category = Category::create([
-        'name' => 'Electronics',
-        'description' => 'Electronics',
-        'is_active' => true,
-    ]);
-
-    Livewire::actingAs($staff)
-        ->test(Create::class)
-        ->set('vendor_id', $vendor->id)
-        ->set('name', 'Staff Created Product')
+    Livewire::actingAs($staff)->test(Create::class)
+        ->assertDontSee('Vendor Store')
+        ->set('name', 'Store Product')
         ->set('category_id', $category->id)
-        ->set('product_type', Product::TYPE_PHYSICAL)
         ->set('price', 25000)
         ->set('quantity', 5)
         ->call('save')
-        ->assertHasNoErrors();
+        ->assertHasNoErrors()
+        ->assertRedirect(route('admin.products.index'));
 
-    $product = Product::query()->where('name', 'Staff Created Product')->first();
-
-    expect($product)->not->toBeNull();
-    expect($product->vendor_id)->toBe($vendor->id);
+    $product = Product::where('name', 'Store Product')->firstOrFail();
+    expect($product->vendor_id)->toBeNull();
 });
 
-it('lets product staff reassign an existing product to another approved vendor', function () {
-    $staff = productStaffUser([
-        'is_staff' => true,
-        'staff_role' => 'product_manager',
-        'staff_assigned_at' => now(),
-    ]);
-
-    $originalVendor = productStaffUser([
-        'role' => 'vendor',
-        'store_name' => 'Original Store',
-        'store_slug' => 'original-store',
-        'vendor_is_active' => true,
-        'verification_status' => 'approved',
-        'verified_at' => now(),
-    ]);
-
-    $newVendor = productStaffUser([
-        'role' => 'vendor',
-        'store_name' => 'New Store',
-        'store_slug' => 'new-store',
-        'vendor_is_active' => true,
-        'verification_status' => 'approved',
-        'verified_at' => now(),
-    ]);
-
-    $category = Category::create([
-        'name' => 'Books',
-        'description' => 'Books',
-        'is_active' => true,
-    ]);
-
+it('lets product staff edit store products without a vendor assignment', function () {
+    $staff = productStaffUser();
+    $category = Category::create(['name' => 'Books', 'is_active' => true]);
     $product = Product::create([
-        'vendor_id' => $originalVendor->id,
-        'category_id' => $category->id,
-        'name' => 'Reassign Me',
-        'slug' => 'reassign-me',
-        'product_type' => Product::TYPE_PHYSICAL,
-        'price' => 1000,
-        'quantity' => 3,
-        'is_active' => true,
+        'category_id' => $category->id, 'name' => 'Original',
+        'product_type' => Product::TYPE_PHYSICAL, 'price' => 1000,
+        'quantity' => 3, 'is_active' => true,
     ]);
 
-    Livewire::actingAs($staff)
-        ->test(Edit::class, ['product' => $product])
-        ->set('vendor_id', $newVendor->id)
-        ->set('name', 'Reassign Me')
-        ->set('category_id', $category->id)
-        ->set('product_type', Product::TYPE_PHYSICAL)
-        ->set('price', 1000)
-        ->set('quantity', 3)
+    Livewire::actingAs($staff)->test(Edit::class, ['product' => $product])
+        ->assertDontSee('Vendor Store')
+        ->set('name', 'Updated')
+        ->set('price', 1500)
         ->call('update')
         ->assertHasNoErrors();
 
-    expect($product->fresh()->vendor_id)->toBe($newVendor->id);
+    expect($product->fresh()->name)->toBe('Updated')
+        ->and($product->fresh()->vendor_id)->toBeNull();
 });

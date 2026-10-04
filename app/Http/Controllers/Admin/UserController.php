@@ -3,12 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Mail\VendorVerificationStatusChangedMail;
 use App\Models\Order;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 
 class UserController extends Controller
 {
@@ -37,7 +34,7 @@ class UserController extends Controller
             $filenameParts[] = $roleFilter;
         }
 
-        $filename = implode('-', $filenameParts) . '.xls';
+        $filename = implode('-', $filenameParts).'.xls';
 
         $users = User::query()
             ->where('is_admin', false)
@@ -122,7 +119,7 @@ class UserController extends Controller
 
         return response($content, 200, [
             'Content-Type' => 'application/vnd.ms-excel; charset=UTF-8',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
             'Cache-Control' => 'max-age=0, no-cache, no-store, must-revalidate',
             'Pragma' => 'public',
         ]);
@@ -169,7 +166,7 @@ class UserController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $user->id,
+            'email' => 'required|email|unique:users,email,'.$user->id,
             'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string',
             'store_name' => 'nullable|string|max:255',
@@ -226,7 +223,7 @@ class UserController extends Controller
         // For Breeze, we don't have an is_active field, but we can add one
         // Or you can implement a ban system
         // For now, we'll just update email_verified_at for demonstration
-        
+
         if ($request->status) {
             $user->update(['email_verified_at' => now()]);
         } else {
@@ -260,64 +257,5 @@ class UserController extends Controller
         }
 
         return view('admin.users.orders', compact('user', 'orders'));
-    }
-
-    public function updateVerification(Request $request, User $user)
-    {
-        abort_unless($user->isVendor(), 404);
-
-        $validated = $request->validate([
-            'verification_status' => 'nullable|required_without:bank_verification_status|in:pending,approved,rejected',
-            'bank_verification_status' => 'nullable|required_without:verification_status|in:pending,verified,rejected',
-            'verification_notes' => 'nullable|string|max:1000',
-        ]);
-
-        $oldStatus = $user->verification_status;
-        $newStatus = $validated['verification_status'] ?? null;
-        $updateData = [];
-
-        if ($newStatus !== null) {
-            $updateData['verification_status'] = $newStatus;
-            $updateData['verification_notes'] = $validated['verification_notes'] ?? null;
-            $updateData['verified_at'] = $newStatus === 'approved' ? now() : null;
-        }
-
-        if (isset($validated['bank_verification_status'])) {
-            $updateData['bank_verification_status'] = $validated['bank_verification_status'];
-            $updateData['bank_verified_at'] = $validated['bank_verification_status'] === 'verified' ? now() : null;
-        }
-
-        $user->update($updateData);
-
-        if ($newStatus !== null && $oldStatus !== $newStatus) {
-            try {
-                Mail::to($user->email)->send(
-                    new VendorVerificationStatusChangedMail(
-                        $user,
-                        $newStatus,
-                        $validated['verification_notes'] ?? null
-                    )
-                );
-                Log::info('Vendor verification status email sent', [
-                    'vendor_id' => $user->id,
-                    'vendor_email' => $user->email,
-                    'old_status' => $oldStatus,
-                    'new_status' => $newStatus,
-                ]);
-            } catch (\Exception $e) {
-                Log::error('Failed to send vendor verification status email', [
-                    'vendor_id' => $user->id,
-                    'vendor_email' => $user->email,
-                    'error' => $e->getMessage(),
-                ]);
-            }
-        }
-
-        $message = $newStatus !== null
-            ? 'Vendor verification updated successfully.'
-            : 'Vendor bank verification updated successfully.';
-
-        return redirect()->route('admin.users.show', $user)
-            ->with('success', $message);
     }
 }

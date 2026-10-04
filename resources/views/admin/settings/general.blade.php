@@ -236,6 +236,14 @@
             <div class="border-b border-gray-200 pb-6">
                 <h3 class="text-lg font-medium text-gray-900 mb-4">Site Appearance</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="md:col-span-2">
+                        <label for="site_tagline" class="block text-sm font-medium text-gray-700 mb-1">Site Tagline</label>
+                        <input type="text" id="site_tagline" name="site_tagline" maxlength="160" value="{{ old('site_tagline', \App\Helpers\SettingsHelper::siteTagline()) }}"
+                               class="shadow-sm focus:ring-red-500 focus:border-red-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                               placeholder="A short promise for your marketplace">
+                        <p class="mt-1 text-sm text-gray-500">Reusable brand message for this deployment.</p>
+                        @error('site_tagline')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                    </div>
                     <!-- Site Description -->
                     <div class="md:col-span-2">
                         <label for="site_description" class="block text-sm font-medium text-gray-700 mb-1">
@@ -251,34 +259,28 @@
                         @enderror
                     </div>
 
-                    <!-- Site Logo URL -->
-                    <div>
-                        <label for="site_logo" class="block text-sm font-medium text-gray-700 mb-1">
-                            Site Logo URL
-                        </label>
+                    <div class="rounded-2xl border border-gray-200 bg-gray-50 p-5">
+                        <div class="mb-4 flex items-center gap-4"><img src="{{ \App\Helpers\SettingsHelper::logoUrl() }}" alt="Current logo" class="h-16 w-16 rounded-2xl border border-gray-200 bg-white object-contain p-2"><div><p class="font-semibold text-gray-900">Application logo</p><p class="text-xs text-gray-500">PNG, JPG or WEBP, up to 4 MB</p></div></div>
+                        <label for="site_logo_upload" class="block text-sm font-medium text-gray-700 mb-1">Upload a new logo</label>
+                        <input type="file" id="site_logo_upload" name="site_logo_upload" accept="image/png,image/jpeg,image/webp" class="block w-full rounded-xl border border-gray-300 bg-white text-sm file:mr-3 file:border-0 file:bg-red-600 file:px-4 file:py-2.5 file:font-semibold file:text-white">
+                        @error('site_logo_upload')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                        <details class="mt-4"><summary class="cursor-pointer text-xs font-semibold text-gray-500">Advanced: use a logo URL</summary>
                         <input type="text" id="site_logo" name="site_logo" value="{{ old('site_logo', \App\Helpers\SettingsHelper::get('site_logo')) }}"
-                               class="shadow-sm focus:ring-red-500 focus:border-red-500 block w-full sm:text-sm border-gray-300 rounded-md">
-                        <p class="mt-1 text-sm text-gray-500">
-                            URL to your site logo image (e.g., /storage/logo.png)
-                        </p>
-                        @error('site_logo')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
+                               class="mt-2 block w-full rounded-xl border-gray-300 text-sm" placeholder="https://example.com/logo.png"></details>
+                        <label class="mt-4 flex items-center gap-2 text-xs text-gray-600"><input type="checkbox" name="remove_site_logo" value="1" class="rounded border-gray-300 text-red-600 focus:ring-red-500">Remove the current custom logo</label>
+                        @error('site_logo')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
                     </div>
 
-                    <!-- Favicon URL -->
-                    <div>
-                        <label for="site_favicon" class="block text-sm font-medium text-gray-700 mb-1">
-                            Favicon URL
-                        </label>
+                    <div class="rounded-2xl border border-gray-200 bg-gray-50 p-5">
+                        <div class="mb-4 flex items-center gap-4"><img src="{{ \App\Helpers\SettingsHelper::faviconUrl() }}" alt="Current browser icon" class="h-12 w-12 rounded-xl border border-gray-200 bg-white object-contain p-1"><div><p class="font-semibold text-gray-900">Browser icon</p><p class="text-xs text-gray-500">Square PNG or ICO works best</p></div></div>
+                        <label for="site_favicon_upload" class="block text-sm font-medium text-gray-700 mb-1">Upload a new favicon</label>
+                        <input type="file" id="site_favicon_upload" name="site_favicon_upload" accept="image/png,image/x-icon,image/jpeg,image/webp" class="block w-full rounded-xl border border-gray-300 bg-white text-sm file:mr-3 file:border-0 file:bg-slate-900 file:px-4 file:py-2.5 file:font-semibold file:text-white">
+                        @error('site_favicon_upload')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                        <details class="mt-4"><summary class="cursor-pointer text-xs font-semibold text-gray-500">Advanced: use a favicon URL</summary>
                         <input type="text" id="site_favicon" name="site_favicon" value="{{ old('site_favicon', \App\Helpers\SettingsHelper::get('site_favicon')) }}"
-                               class="shadow-sm focus:ring-red-500 focus:border-red-500 block w-full sm:text-sm border-gray-300 rounded-md">
-                        <p class="mt-1 text-sm text-gray-500">
-                            URL to your favicon (16x16 or 32x32 pixels)
-                        </p>
-                        @error('site_favicon')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
+                               class="mt-2 block w-full rounded-xl border-gray-300 text-sm" placeholder="https://example.com/favicon.png"></details>
+                        <label class="mt-4 flex items-center gap-2 text-xs text-gray-600"><input type="checkbox" name="remove_site_favicon" value="1" class="rounded border-gray-300 text-red-600 focus:ring-red-500">Remove the current custom favicon</label>
+                        @error('site_favicon')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
                     </div>
                 </div>
             </div>

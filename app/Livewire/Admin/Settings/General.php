@@ -2,9 +2,9 @@
 
 namespace App\Livewire\Admin\Settings;
 
-use Livewire\Component;
-use App\Models\Setting;
 use App\Helpers\SettingsHelper;
+use App\Models\Setting;
+use Livewire\Component;
 
 class General extends Component
 {
@@ -19,6 +19,7 @@ class General extends Component
         'settings.site_currency' => 'required|string|size:3',
         'settings.site_currency_symbol' => 'required|string|max:5',
         'settings.site_description' => 'nullable|string',
+        'settings.site_tagline' => 'nullable|string|max:160',
         'settings.site_logo' => 'nullable|string',
         'settings.site_favicon' => 'nullable|string',
         'settings.checkout_default_country' => 'nullable|string|max:100',
@@ -40,7 +41,7 @@ class General extends Component
     {
         // Load all general settings
         $settings = Setting::where('group', 'general')->get();
-        
+
         foreach ($settings as $setting) {
             $this->settings[$setting->key] = $setting->value;
         }
@@ -52,6 +53,7 @@ class General extends Component
             'support_whatsapp_number' => '',
             'site_currency' => 'NGN',
             'site_currency_symbol' => '₦',
+            'site_tagline' => 'Shop smarter. Discover more.',
             'checkout_default_country' => 'Nigeria',
             'checkout_default_state' => 'Nasarawa',
             'checkout_default_city' => '',
@@ -68,7 +70,7 @@ class General extends Component
         ];
 
         foreach ($defaults as $key => $value) {
-            if (!isset($this->settings[$key])) {
+            if (! isset($this->settings[$key])) {
                 $this->settings[$key] = $value;
             }
         }
@@ -110,6 +112,7 @@ class General extends Component
             'site_currency' => 'Currency Code',
             'site_currency_symbol' => 'Currency Symbol',
             'site_description' => 'Site Description',
+            'site_tagline' => 'Site Tagline',
             'site_logo' => 'Site Logo URL',
             'site_favicon' => 'Favicon URL',
             'checkout_default_country' => 'Checkout Default Country',
@@ -141,8 +144,9 @@ class General extends Component
             'site_currency' => 6,
             'site_currency_symbol' => 7,
             'site_description' => 8,
-            'site_logo' => 9,
-            'site_favicon' => 10,
+            'site_tagline' => 9,
+            'site_logo' => 10,
+            'site_favicon' => 11,
             'checkout_default_country' => 11,
             'checkout_default_state' => 12,
             'checkout_default_city' => 13,

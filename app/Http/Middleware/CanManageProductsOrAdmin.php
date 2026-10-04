@@ -12,12 +12,12 @@ class CanManageProductsOrAdmin
     {
         $user = $request->user();
 
-        if (!$user) {
+        if (! $user) {
             return redirect()->route('login');
         }
 
-        // Allow admins and vendors
-        if ($user->isAdmin() || $user->isVendor()) {
+        // Allow admins
+        if ($user->isAdmin()) {
             return $next($request);
         }
 

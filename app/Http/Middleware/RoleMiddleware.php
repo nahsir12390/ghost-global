@@ -12,7 +12,7 @@ class RoleMiddleware
     {
         $user = $request->user();
 
-        if (!$user) {
+        if (! $user) {
             return redirect()->route('login');
         }
 
@@ -22,10 +22,6 @@ class RoleMiddleware
 
         foreach ($roles as $role) {
             if ($role === 'admin' && $user->isAdmin()) {
-                return $next($request);
-            }
-
-            if ($role === 'vendor' && $user->isVendor()) {
                 return $next($request);
             }
 

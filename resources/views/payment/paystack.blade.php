@@ -10,7 +10,7 @@
 
         <div class="bg-white rounded-lg shadow-md p-8">
             <form id="paymentForm">
-                <input type="hidden" id="email" name="email" value="{{ Auth::user()->email }}">
+                <input type="hidden" id="email" name="email" value="{{ $order->contact_email }}">
                 <input type="hidden" id="amount" name="amount" value="{{ (int) ($order->total * 100) }}">
                 <input type="hidden" id="reference" name="reference" value="{{ $reference }}">
                 <input type="hidden" id="orderId" name="order_id" value="{{ $order->id }}">
@@ -99,7 +99,7 @@ function payWithPaystack() {
         email: email,
         amount: amount,
         ref: reference,
-        currency: 'NGN',
+        currency: @js($order->buyer_email ? 'NGN' : \App\Helpers\SettingsHelper::currencyCode()),
         callback: function(response) {
             paymentVerified = true;
             clearInterval(pollInterval);

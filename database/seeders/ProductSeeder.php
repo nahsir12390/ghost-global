@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use App\Models\Category;
 use App\Models\Product;
-use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
@@ -58,11 +57,9 @@ class ProductSeeder extends Seeder
         Product::query()->delete();
 
         $categoryMap = Category::query()->get()->keyBy('slug');
-        $vendors = User::query()->where('role', 'vendor')->get()->keyBy('email');
 
         $products = [
             [
-                'vendor_email' => 'aisha@demo-store.com',
                 'category_slug' => 'electronics',
                 'name' => 'iPhone 15 Pro 256GB',
                 'description' => 'Premium Apple smartphone with strong battery life, smooth camera performance, and enough storage for work and media.',
@@ -73,7 +70,6 @@ class ProductSeeder extends Seeder
                 'images' => ['https://picsum.photos/seed/iphone-15-pro/900/900'],
             ],
             [
-                'vendor_email' => 'aisha@demo-store.com',
                 'category_slug' => 'electronics',
                 'name' => 'Samsung Galaxy S24 256GB',
                 'description' => 'Fast Android flagship built for photos, social media, video, and everyday multitasking.',
@@ -84,7 +80,6 @@ class ProductSeeder extends Seeder
                 'images' => ['https://picsum.photos/seed/galaxy-s24/900/900'],
             ],
             [
-                'vendor_email' => 'aisha@demo-store.com',
                 'category_slug' => 'electronics',
                 'name' => 'Infinix Note 40 Pro',
                 'description' => 'Mid-range smartphone with strong battery life, clean display, and good value for everyday users.',
@@ -95,7 +90,6 @@ class ProductSeeder extends Seeder
                 'images' => ['https://picsum.photos/seed/infinix-note-40/900/900'],
             ],
             [
-                'vendor_email' => 'aisha@demo-store.com',
                 'category_slug' => 'electronics',
                 'name' => 'Oraimo FreePods Pro',
                 'description' => 'Wireless earbuds with clean audio, portable charging case, and easy everyday Bluetooth pairing.',
@@ -106,7 +100,6 @@ class ProductSeeder extends Seeder
                 'images' => ['https://picsum.photos/seed/oraimo-freepods/900/900'],
             ],
             [
-                'vendor_email' => 'aisha@demo-store.com',
                 'category_slug' => 'electronics',
                 'name' => 'HP Envy 14 Laptop',
                 'description' => 'Portable laptop for office work, browsing, design basics, presentations, and online classes.',
@@ -117,7 +110,6 @@ class ProductSeeder extends Seeder
                 'images' => ['https://picsum.photos/seed/hp-envy-14/900/900'],
             ],
             [
-                'vendor_email' => 'chinedu@demo-store.com',
                 'category_slug' => 'fashion',
                 'name' => 'Nike Air Max 270',
                 'description' => 'Popular sneaker with comfortable cushioning for walking, commuting, and casual daily wear.',
@@ -128,7 +120,6 @@ class ProductSeeder extends Seeder
                 'images' => ['https://picsum.photos/seed/nike-air-max-270/900/900'],
             ],
             [
-                'vendor_email' => 'chinedu@demo-store.com',
                 'category_slug' => 'fashion',
                 'name' => 'Levi 501 Straight Jeans',
                 'description' => 'Classic denim jeans with a simple fit that pairs easily with tees, polos, and sneakers.',
@@ -139,7 +130,6 @@ class ProductSeeder extends Seeder
                 'images' => ['https://picsum.photos/seed/levis-501/900/900'],
             ],
             [
-                'vendor_email' => 'chinedu@demo-store.com',
                 'category_slug' => 'fashion',
                 'name' => 'Unisex Canvas Backpack',
                 'description' => 'Lightweight backpack for school, casual outings, and carrying small daily essentials.',
@@ -150,7 +140,6 @@ class ProductSeeder extends Seeder
                 'images' => ['https://picsum.photos/seed/canvas-backpack/900/900'],
             ],
             [
-                'vendor_email' => 'chinedu@demo-store.com',
                 'category_slug' => 'fashion',
                 'name' => 'Men Basic Polo Shirt',
                 'description' => 'Comfortable short-sleeve polo shirt that works well for office-casual and weekend wear.',
@@ -161,7 +150,6 @@ class ProductSeeder extends Seeder
                 'images' => ['https://picsum.photos/seed/mens-polo/900/900'],
             ],
             [
-                'vendor_email' => 'chinedu@demo-store.com',
                 'category_slug' => 'fashion',
                 'name' => 'Women Flat Leather Sandals',
                 'description' => 'Simple open sandals designed for comfort, movement, and warm-weather daily use.',
@@ -172,7 +160,6 @@ class ProductSeeder extends Seeder
                 'images' => ['https://picsum.photos/seed/women-sandals/900/900'],
             ],
             [
-                'vendor_email' => 'fatima@demo-store.com',
                 'category_slug' => 'home-kitchen',
                 'name' => 'Stainless Electric Kettle 2L',
                 'description' => 'Fast-boiling electric kettle suitable for tea, coffee, noodles, and light kitchen use.',
@@ -183,7 +170,6 @@ class ProductSeeder extends Seeder
                 'images' => ['https://picsum.photos/seed/electric-kettle/900/900'],
             ],
             [
-                'vendor_email' => 'fatima@demo-store.com',
                 'category_slug' => 'home-kitchen',
                 'name' => 'Non-Stick Cookware Set',
                 'description' => 'Kitchen cookware set for daily cooking with easy cleaning and practical family use.',
@@ -194,7 +180,6 @@ class ProductSeeder extends Seeder
                 'images' => ['https://picsum.photos/seed/cookware-set/900/900'],
             ],
             [
-                'vendor_email' => 'fatima@demo-store.com',
                 'category_slug' => 'home-kitchen',
                 'name' => 'Wall Mounted Spice Rack',
                 'description' => 'Compact spice rack to keep your kitchen more organized and easier to use every day.',
@@ -205,7 +190,6 @@ class ProductSeeder extends Seeder
                 'images' => ['https://picsum.photos/seed/spice-rack/900/900'],
             ],
             [
-                'vendor_email' => 'fatima@demo-store.com',
                 'category_slug' => 'beauty-personal-care',
                 'name' => 'Vitamin C Face Serum',
                 'description' => 'Light facial serum designed to support brighter-looking skin in a simple daily routine.',
@@ -216,7 +200,6 @@ class ProductSeeder extends Seeder
                 'images' => ['https://picsum.photos/seed/vitamin-c-serum/900/900'],
             ],
             [
-                'vendor_email' => 'fatima@demo-store.com',
                 'category_slug' => 'beauty-personal-care',
                 'name' => 'Rechargeable Hair Clipper',
                 'description' => 'Cordless clipper for clean home grooming with easy charging and simple maintenance.',
@@ -227,7 +210,6 @@ class ProductSeeder extends Seeder
                 'images' => ['https://picsum.photos/seed/hair-clipper/900/900'],
             ],
             [
-                'vendor_email' => 'aisha@demo-store.com',
                 'category_slug' => 'books-learning',
                 'name' => 'Laravel for Business Projects',
                 'description' => 'Practical course for building real Laravel applications with auth, products, orders, and admin flows.',
@@ -241,7 +223,6 @@ class ProductSeeder extends Seeder
                 'access_instructions' => 'After payment, open your dashboard and go to My Courses to start learning.',
             ],
             [
-                'vendor_email' => 'aisha@demo-store.com',
                 'category_slug' => 'books-learning',
                 'name' => 'Social Media Sales Starter eBook',
                 'description' => 'Short digital guide that explains how to write product posts, price clearly, and sell faster online.',
@@ -254,7 +235,6 @@ class ProductSeeder extends Seeder
                 'download_link' => 'https://example.com/downloads/social-media-sales-starter',
             ],
             [
-                'vendor_email' => 'chinedu@demo-store.com',
                 'category_slug' => 'books-learning',
                 'name' => 'Mini Course: Product Photography with Your Phone',
                 'description' => 'Beginner-friendly course that teaches how to take cleaner product photos with simple lighting and phone settings.',
@@ -268,7 +248,6 @@ class ProductSeeder extends Seeder
                 'access_instructions' => 'Course access appears under My Courses immediately after payment confirmation.',
             ],
             [
-                'vendor_email' => 'fatima@demo-store.com',
                 'category_slug' => 'books-learning',
                 'name' => 'Kitchen Budget Planner Template',
                 'description' => 'Digital planning template for food shopping, monthly kitchen budgeting, and home stock tracking.',
@@ -283,17 +262,15 @@ class ProductSeeder extends Seeder
         ];
 
         foreach ($products as $index => $productData) {
-            $vendor = $vendors->get($productData['vendor_email']);
             $category = $categoryMap->get($productData['category_slug']);
 
-            if (! $vendor || ! $category) {
+            if (! $category) {
                 continue;
             }
 
             $name = $productData['name'];
 
             Product::create([
-                'vendor_id' => $vendor->id,
                 'category_id' => $category->id,
                 'name' => $name,
                 'slug' => Str::slug($name),
@@ -302,7 +279,7 @@ class ProductSeeder extends Seeder
                 'price' => $productData['price'],
                 'compare_price' => $productData['compare_price'] ?? null,
                 'quantity' => $productData['quantity'] ?? 0,
-                'sku' => 'DEMO-' . strtoupper(Str::padLeft((string) ($index + 1), 4, '0')),
+                'sku' => 'DEMO-'.strtoupper(Str::padLeft((string) ($index + 1), 4, '0')),
                 'images' => $productData['images'],
                 'download_link' => $productData['download_link'] ?? null,
                 'course_access_url' => $productData['course_access_url'] ?? null,

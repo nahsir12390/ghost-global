@@ -23,12 +23,12 @@
                         @endif
                         <p class="text-gray-500 mt-2">Showing <span class="font-semibold">{{ $products->total() }}</span> products</p>
                     </div>
-                    
+
                     <!-- Category Image -->
                     @if($category->image)
                         <div class="mt-6 md:mt-0 md:ml-8 flex-shrink-0">
-                            <img src="{{ asset('storage/' . $category->image) }}" 
-                                 alt="{{ $category->name }}" 
+                            <img src="{{ asset('storage/' . $category->image) }}"
+                                 alt="{{ $category->name }}"
                                  class="h-48 w-48 object-cover rounded-lg shadow-lg">
                         </div>
                     @endif
@@ -49,12 +49,12 @@
                                     $images = is_array($product->images) ? $product->images : [];
                                     $firstImage = !empty($images) ? $images[0] : 'https://via.placeholder.com/300x300?text=No+Image';
                                 @endphp
-                                
-                                <img src="{{ asset('storage/' . $firstImage) }}" 
+
+                                <img src="{{ asset('storage/' . $firstImage) }}"
                                      alt="{{ $product->name }}"
                                      class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                                      onerror="this.src='https://via.placeholder.com/300x300?text=No+Image'">
-                                
+
                                 <!-- Wishlist Button -->
                                 <div class="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
                                     <button @click="toggleWishlist({{ $product->id }})"
@@ -90,14 +90,7 @@
                                     </a>
                                 </h3>
 
-                                @if($product->vendor && $product->vendor->storefrontUrl())
-                                    <p class="mb-3 text-xs text-gray-500">
-                                        Sold by
-                                        <a href="{{ $product->vendor->storefrontUrl() }}" class="font-medium text-red-600 transition hover:text-red-700">
-                                            {{ $product->vendor->publicStoreName() }}
-                                        </a>
-                                    </p>
-                                @endif
+
 
                                 <!-- Rating -->
                                 <div class="flex items-center mb-3">
@@ -115,11 +108,11 @@
                                 <div class="flex items-center justify-between mb-4">
                                     <div>
                                         <p class="text-lg font-bold text-gray-900">
-                                            ₦{{ number_format($product->price, 2) }}
+                                            {{ \App\Helpers\SettingsHelper::currency($product->price) }}
                                         </p>
                                         @if($product->compare_price)
                                             <p class="text-sm text-gray-500 line-through">
-                                                ₦{{ number_format($product->compare_price, 2) }}
+                                                {{ \App\Helpers\SettingsHelper::currency($product->compare_price) }}
                                             </p>
                                         @endif
                                     </div>

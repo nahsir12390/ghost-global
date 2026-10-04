@@ -3,8 +3,8 @@
 namespace App\Observers;
 
 use App\Mail\WelcomeUserMail;
-use App\Models\User;
 use App\Models\NewsletterSubscriber;
+use App\Models\User;
 use Illuminate\Support\Facades\Mail;
 
 class UserObserver
@@ -19,37 +19,12 @@ class UserObserver
                 Mail::to($user->email)->send(new WelcomeUserMail($user));
             }
         } catch (\Exception $e) {
-            \Log::warning('Failed to send welcome email: ' . $e->getMessage(), [
+            \Log::warning('Failed to send welcome email: '.$e->getMessage(), [
                 'user_id' => $user->id,
                 'email' => $user->email,
             ]);
         }
 
-        // Automatically subscribe new users to newsletter
-        try {
-            $email = strtolower(trim($user->email));
-            
-            $existingSubscriber = NewsletterSubscriber::where('email', $email)->first();
-            
-            if (!$existingSubscriber) {
-                NewsletterSubscriber::create([
-                    'email' => $email,
-                    'is_active' => true,
-                    'subscribed_at' => now(),
-                ]);
-            } elseif (!$existingSubscriber->is_active) {
-                // Reactivate if previously unsubscribed
-                $existingSubscriber->update([
-                    'is_active' => true,
-                    'subscribed_at' => now(),
-                ]);
-            }
-        } catch (\Exception $e) {
-            \Log::warning('Failed to auto-subscribe user to newsletter: ' . $e->getMessage(), [
-                'user_id' => $user->id,
-                'email' => $user->email,
-            ]);
-        }
     }
 
     /**
@@ -62,13 +37,13 @@ class UserObserver
             try {
                 $oldEmail = strtolower(trim($user->getOriginal('email')));
                 $newEmail = strtolower(trim($user->email));
-                
+
                 $oldSubscriber = NewsletterSubscriber::where('email', $oldEmail)->first();
                 if ($oldSubscriber) {
                     $oldSubscriber->update(['email' => $newEmail]);
                 }
             } catch (\Exception $e) {
-                \Log::warning('Failed to update newsletter subscriber email: ' . $e->getMessage(), [
+                \Log::warning('Failed to update newsletter subscriber email: '.$e->getMessage(), [
                     'user_id' => $user->id,
                 ]);
             }
@@ -85,12 +60,12 @@ class UserObserver
         try {
             $email = strtolower(trim($user->email));
             $subscriber = NewsletterSubscriber::where('email', $email)->first();
-            
+
             if ($subscriber) {
                 $subscriber->update(['is_active' => false]);
             }
         } catch (\Exception $e) {
-            \Log::warning('Failed to deactivate newsletter subscriber on user deletion: ' . $e->getMessage(), [
+            \Log::warning('Failed to deactivate newsletter subscriber on user deletion: '.$e->getMessage(), [
                 'user_id' => $user->id,
                 'email' => $user->email,
             ]);

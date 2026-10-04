@@ -1,6 +1,5 @@
 <div>
     @php
-        $isVendorView = auth()->user()->isVendor();
         $statusOptions = ['ordered', 'confirmed', 'picked_up', 'on_the_way', 'delivered', 'cancelled'];
         $paymentOptions = ['pending', 'paid', 'failed', 'refunded'];
     @endphp
@@ -9,7 +8,7 @@
         <div class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{{ $isVendorView ? 'Store Orders' : 'Total Orders' }}</p>
+                    <p class="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{{ 'Total Orders' }}</p>
                     <p class="text-3xl font-bold tracking-tight text-slate-900">{{ $stats['total'] }}</p>
                 </div>
                 <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-slate-900 to-slate-700">
@@ -23,7 +22,7 @@
         <div class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{{ $isVendorView ? 'Paid Sales' : 'Total Sales' }}</p>
+                    <p class="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{{ 'Total Sales' }}</p>
                     <p class="text-2xl font-bold tracking-tight text-emerald-600">NGN {{ number_format($stats['total_sales'], 2) }}</p>
                 </div>
                 <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700">
@@ -79,7 +78,7 @@
         <div class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{{ $isVendorView ? 'Completed' : 'Delivered' }}</p>
+                    <p class="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{{ 'Delivered' }}</p>
                     <p class="text-3xl font-bold tracking-tight text-teal-600">{{ $stats['delivered'] }}</p>
                 </div>
                 <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-teal-500 to-emerald-600">
@@ -93,15 +92,11 @@
 
     <div class="mb-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
         <div class="flex flex-col gap-4">
-            @if($isVendorView)
-                <div class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-900">
-                    Review fresh orders, track deliveries, and keep an eye on paid order flow from one place.
-                </div>
-            @endif
+
 
             <div class="flex flex-col gap-4 lg:flex-row">
                 <div class="flex-1">
-                    <label class="mb-2 block text-sm font-medium text-slate-700">{{ $isVendorView ? 'Search Store Orders' : 'Search Orders' }}</label>
+                    <label class="mb-2 block text-sm font-medium text-slate-700">{{ 'Search Orders' }}</label>
                     <div class="relative">
                         <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
                             <svg class="h-5 w-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -111,14 +106,14 @@
                         <input
                             wire:model.live.debounce.850ms="search"
                             type="search"
-                            placeholder="{{ $isVendorView ? 'Search by order number, customer, phone, or email...' : 'Search by order number, customer, or vendor...' }}"
+                            placeholder="{{ 'Search by order number, customer, phone, or email...' }}"
                             class="form-input-modern w-full rounded-2xl border border-slate-200 py-3 pl-11 pr-4"
                         >
                     </div>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <div>
                     <label class="mb-2 block text-sm font-medium text-slate-700">Order Status</label>
                     <select wire:model.change="statusFilter" class="form-input-modern w-full rounded-2xl border border-slate-200">
@@ -139,17 +134,9 @@
                     </select>
                 </div>
 
-                @if(!$isVendorView && $vendors->count() > 0)
-                    <div>
-                        <label class="mb-2 block text-sm font-medium text-slate-700">Filter by Vendor</label>
-                        <select wire:model.change="vendorFilter" class="form-input-modern w-full rounded-2xl border border-slate-200">
-                            <option value="">All Vendors</option>
-                            @foreach($vendors as $vendor)
-                                <option value="{{ $vendor->id }}">{{ $vendor->store_name ?: $vendor->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                @endif
+
+
+
 
                 <div>
                     <label class="mb-2 block text-sm font-medium text-slate-700">From Date</label>
@@ -184,9 +171,9 @@
                         <tr>
                             <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-wide text-slate-600">Order #</th>
                             <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-wide text-slate-600">Customer</th>
-                            @if(!$isVendorView)
-                                <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-wide text-slate-600">Vendor(s)</th>
-                            @endif
+
+
+
                             <th class="cursor-pointer px-6 py-4 text-left text-xs font-bold uppercase tracking-wide text-slate-600" wire:click="sortBy('total')">
                                 <div class="flex items-center gap-1">
                                     <span>Amount</span>
@@ -214,9 +201,6 @@
                     </thead>
                     <tbody class="divide-y divide-slate-200">
                         @foreach($orders as $order)
-                            @php
-                                $vendorsInOrder = $order->items->pluck('vendor')->filter()->unique('id');
-                            @endphp
                             <tr class="transition hover:bg-slate-50">
                                 <td class="whitespace-nowrap px-6 py-4">
                                     <a href="{{ route('admin.orders.show', $order) }}" class="font-semibold text-red-600 transition hover:text-red-800">
@@ -227,29 +211,14 @@
                                     <div>
                                         <div class="text-sm font-medium text-slate-900">{{ $order->shipping_first_name }} {{ $order->shipping_last_name }}</div>
                                         <div class="text-xs text-slate-500">{{ $order->shipping_email }}</div>
-                                        @if($isVendorView)
-                                            <div class="mt-1 text-xs text-slate-500">{{ $order->shipping_phone }}</div>
-                                        @endif
+
                                     </div>
                                 </td>
-                                @if(!$isVendorView)
-                                    <td class="px-6 py-4">
-                                        <div class="space-y-1">
-                                            @forelse($vendorsInOrder as $vendor)
-                                                <div class="text-sm">
-                                                    <span class="font-medium text-violet-600">{{ $vendor->store_name ?: $vendor->name }}</span>
-                                                    @if(!$vendor->isVendorVerified())
-                                                        <span class="ml-2 inline-flex items-center rounded-full bg-yellow-100 px-1.5 py-0.5 text-xs font-medium text-yellow-800">Pending</span>
-                                                    @endif
-                                                </div>
-                                            @empty
-                                                <span class="text-sm text-slate-400">No vendor info</span>
-                                            @endforelse
-                                        </div>
-                                    </td>
-                                @endif
+
+
+
                                 <td class="whitespace-nowrap px-6 py-4">
-                                    <div class="text-sm font-bold text-slate-900">NGN {{ number_format($isVendorView ? $order->items->sum('total') : $order->total, 2) }}</div>
+                                    <div class="text-sm font-bold text-slate-900">NGN {{ number_format($order->total, 2) }}</div>
                                     <div class="text-xs text-slate-500">{{ $order->items->count() }} item(s)</div>
                                 </td>
                                 <td class="whitespace-nowrap px-6 py-4">
@@ -257,7 +226,7 @@
                                         <span class="{{ $order->status_badge['status'] }} rounded-full px-3 py-1 text-xs font-semibold">
                                             {{ ucfirst(str_replace('_', ' ', $order->status)) }}
                                         </span>
-                                        @if(!$isVendorView)
+
                                             <div class="relative" x-data="{ open: false }">
                                                 <button @click="open = !open" class="rounded p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600">
                                                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -274,7 +243,7 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                        @endif
+
                                     </div>
                                 </td>
                                 <td class="whitespace-nowrap px-6 py-4">
@@ -282,7 +251,7 @@
                                         <span class="{{ $order->status_badge['payment'] }} rounded-full px-3 py-1 text-xs font-semibold">
                                             {{ ucfirst($order->payment_status) }}
                                         </span>
-                                        @if(!$isVendorView)
+
                                             <div class="relative" x-data="{ open: false }">
                                                 <button @click="open = !open" class="rounded p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600">
                                                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -299,7 +268,7 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                        @endif
+
                                     </div>
                                 </td>
                                 <td class="whitespace-nowrap px-6 py-4 text-sm">
@@ -314,7 +283,7 @@
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                             </svg>
                                         </a>
-                                        @if(!$isVendorView)
+
                                             <a href="{{ route('admin.orders.edit', $order) }}" class="inline-flex items-center justify-center rounded-xl p-2 text-blue-600 transition hover:bg-blue-50 hover:text-blue-900" title="Edit order">
                                                 <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -325,7 +294,7 @@
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                                 </svg>
                                             </button>
-                                        @endif
+
                                     </div>
                                 </td>
                             </tr>
@@ -337,9 +306,6 @@
 
         <div class="space-y-4 md:hidden">
             @foreach($orders as $order)
-                @php
-                    $vendorsInOrder = $order->items->pluck('vendor')->filter()->unique('id');
-                @endphp
                 <div class="overflow-hidden rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md">
                     <div class="mb-4 flex items-start justify-between gap-4">
                         <div>
@@ -349,31 +315,16 @@
                             <p class="mt-1 text-sm text-slate-500">{{ $order->shipping_first_name }} {{ $order->shipping_last_name }}</p>
                         </div>
                         <div class="text-right">
-                            <p class="text-lg font-bold text-slate-900">NGN {{ number_format($isVendorView ? $order->items->sum('total') : $order->total, 2) }}</p>
+                            <p class="text-lg font-bold text-slate-900">NGN {{ number_format($order->total, 2) }}</p>
                             <p class="text-xs text-slate-500">{{ $order->items->count() }} item(s)</p>
                         </div>
                     </div>
 
-                    @if(!$isVendorView && $vendorsInOrder->count() > 0)
-                        <div class="mb-4 rounded-2xl bg-violet-50 p-3">
-                            <p class="mb-2 text-xs font-semibold text-violet-600">Vendor(s)</p>
-                            <div class="flex flex-wrap gap-2">
-                                @foreach($vendorsInOrder as $vendor)
-                                    <span class="rounded-full bg-violet-100 px-2.5 py-1 text-xs font-medium text-violet-700">
-                                        {{ $vendor->store_name ?: $vendor->name }}
-                                    </span>
-                                @endforeach
-                            </div>
-                        </div>
-                    @endif
 
-                    @if($isVendorView)
-                        <div class="mb-4 rounded-2xl bg-slate-50 px-4 py-3">
-                            <p class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Customer Contact</p>
-                            <p class="mt-1 text-sm font-medium text-slate-900">{{ $order->shipping_email }}</p>
-                            <p class="mt-1 text-xs text-slate-500">{{ $order->shipping_phone }}</p>
-                        </div>
-                    @endif
+
+
+
+
 
                     <div class="mb-4 grid grid-cols-2 gap-3">
                         <div>
@@ -396,16 +347,16 @@
 
                     <div class="flex items-center justify-between gap-2">
                         <a href="{{ route('admin.orders.show', $order) }}" class="flex-1 rounded-2xl bg-red-600 px-3 py-2.5 text-center text-sm font-medium text-white transition hover:bg-red-700">
-                            {{ $isVendorView ? 'Open Order' : 'View' }}
+                            {{ 'View' }}
                         </a>
-                        @if(!$isVendorView)
+
                             <a href="{{ route('admin.orders.edit', $order) }}" class="flex-1 rounded-2xl bg-blue-600 px-3 py-2.5 text-center text-sm font-medium text-white transition hover:bg-blue-700">
                                 Edit
                             </a>
                             <button wire:click="confirmDelete({{ $order->id }})" class="flex-1 rounded-2xl bg-red-100 px-3 py-2.5 text-sm font-medium text-red-600 transition hover:bg-red-200">
                                 Delete
                             </button>
-                        @endif
+
                     </div>
                 </div>
             @endforeach
@@ -417,10 +368,10 @@
             </svg>
             <h3 class="mb-2 text-lg font-semibold text-slate-900">No Orders Found</h3>
             <p class="text-slate-500">
-                @if($search || $statusFilter || $paymentStatusFilter || $vendorFilter)
+                @if($search || $statusFilter || $paymentStatusFilter)
                     Try adjusting your filters to find what you're looking for.
                 @else
-                    {{ $isVendorView ? 'Your store has no matching orders yet.' : 'No orders have been placed yet.' }}
+                    {{ 'No orders have been placed yet.' }}
                 @endif
             </p>
         </div>

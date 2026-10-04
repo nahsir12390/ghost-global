@@ -3,23 +3,16 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Mail\VendorVerificationReceivedMail;
-use App\Mail\VendorVerificationSubmittedMail;
+use App\Models\Category;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\User;
 use App\Models\Wallet;
 use App\Models\WalletTransaction;
-use App\Models\Category;
-use App\Helpers\SettingsHelper;
-use App\Services\ImageUploadService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
@@ -42,10 +35,6 @@ class DashboardController extends Controller
     {
         $query = OrderItem::query()->with('order');
 
-        if ($this->user()->isVendor()) {
-            $query->where('vendor_id', $this->user()->id);
-        }
-
         return $query;
     }
 
@@ -54,111 +43,6 @@ class DashboardController extends Controller
      */
     public function index()
     {
-        if ($this->user()->isVendor()) {
-            $visibleOrders = $this->visibleOrdersQuery();
-            $visibleProducts = $this->visibleProductsQuery();
-            $visibleOrderItems = $this->visibleOrderItemsQuery();
-
-            $stats = [
-                'totalOrders' => (clone $visibleOrders)->count(),
-                'totalSales' => (clone $visibleOrderItems)
-                    ->whereHas('order', fn ($query) => $query->where('payment_status', 'paid'))
-                    ->sum('total'),
-                'totalProducts' => (clone $visibleProducts)->count(),
-                'totalCustomers' => User::whereHas('orders.items', function ($query) {
-                    $query->where('vendor_id', $this->user()->id);
-                })->count(),
-                'pendingOrders' => (clone $visibleOrders)->where('status', 'pending')->count(),
-                'outOfStockProducts' => (clone $visibleProducts)->where('quantity', 0)->count(),
-                'processingOrders' => (clone $visibleOrders)->where('status', 'processing')->count(),
-                'todayOrders' => (clone $visibleOrders)->whereDate('created_at', today())->count(),
-                'todaySales' => (clone $visibleOrderItems)
-                    ->whereHas('order', fn ($query) => $query->whereDate('created_at', today())->where('payment_status', 'paid'))
-                    ->sum('total'),
-                'lowStockProducts' => (clone $visibleProducts)->where('quantity', '>', 0)->where('quantity', '<=', 10)->count(),
-                'totalCategories' => Category::count(),
-                'featuredProducts' => (clone $visibleProducts)->where('is_featured', true)->count(),
-            ];
-
-            $recentOrders = $this->visibleOrdersQuery()
-                ->with(['user', 'items.product'])
-                ->latest()
-                ->take(10)
-                ->get();
-
-            $topProducts = DB::table('order_items')
-                ->select(
-                    'products.id',
-                    'products.name',
-                    'products.price',
-                    'products.images',
-                    DB::raw('SUM(order_items.quantity) as total_quantity'),
-                    DB::raw('SUM(order_items.total) as total_sales')
-                )
-                ->join('products', 'order_items.product_id', '=', 'products.id')
-                ->join('orders', 'order_items.order_id', '=', 'orders.id')
-                ->where('order_items.vendor_id', $this->user()->id)
-                ->where('orders.created_at', '>=', now()->subDays(30))
-                ->where('orders.payment_status', 'paid')
-                ->groupBy('order_items.product_id', 'products.id', 'products.name', 'products.price', 'products.images')
-                ->orderByDesc('total_quantity')
-                ->limit(10)
-                ->get();
-
-            $salesData = DB::table('order_items')
-                ->select(
-                    DB::raw('DATE(orders.created_at) as date'),
-                    DB::raw('COUNT(DISTINCT orders.id) as orders_count'),
-                    DB::raw('SUM(order_items.total) as sales_total')
-                )
-                ->join('orders', 'order_items.order_id', '=', 'orders.id')
-                ->where('order_items.vendor_id', $this->user()->id)
-                ->where('orders.created_at', '>=', now()->subDays(30))
-                ->where('orders.payment_status', 'paid')
-                ->groupBy('date')
-                ->orderBy('date')
-                ->get();
-
-            $chartLabels = $salesData->pluck('date')->map(fn ($date) => date('M d', strtotime($date)))->toArray();
-            $chartOrders = $salesData->pluck('orders_count')->toArray();
-            $chartSales = $salesData->pluck('sales_total')->toArray();
-
-            $orderStatusDistribution = $this->visibleOrdersQuery()
-                ->select('status', DB::raw('COUNT(*) as count'))
-                ->groupBy('status')
-                ->pluck('count', 'status');
-
-            $paymentStatusDistribution = $this->visibleOrdersQuery()
-                ->select('payment_status', DB::raw('COUNT(*) as count'))
-                ->groupBy('payment_status')
-                ->pluck('count', 'payment_status');
-
-            $lowStockProducts = $this->visibleProductsQuery()
-                ->where('quantity', '>', 0)
-                ->where('quantity', '<=', 10)
-                ->with('category')
-                ->orderBy('quantity')
-                ->take(5)
-                ->get();
-
-            $recentCustomers = User::whereHas('orders.items', function ($query) {
-                $query->where('vendor_id', $this->user()->id);
-            })->latest()->take(5)->get();
-
-            return view('admin.dashboard.index', array_merge($stats, [
-                'recentOrders' => $recentOrders,
-                'topProducts' => $topProducts,
-                'chartLabels' => $chartLabels,
-                'chartOrders' => $chartOrders,
-                'chartSales' => $chartSales,
-                'orderStatusDistribution' => $orderStatusDistribution,
-                'paymentStatusDistribution' => $paymentStatusDistribution,
-                'lowStockProducts' => $lowStockProducts,
-                'recentCustomers' => $recentCustomers,
-                'pendingVerificationVendors' => collect(),
-                'pendingBankVerifications' => collect(),
-            ]));
-        }
 
         // Cache stats for better performance
         $stats = Cache::remember('dashboard_stats', now()->addMinutes(5), function () {
@@ -212,10 +96,10 @@ class DashboardController extends Controller
         // Sales chart data (last 30 days)
         $salesData = Cache::remember('sales_data_30days', now()->addMinutes(10), function () {
             return Order::select(
-                    DB::raw('DATE(created_at) as date'),
-                    DB::raw('COUNT(*) as orders_count'),
-                    DB::raw('SUM(total) as sales_total')
-                )
+                DB::raw('DATE(created_at) as date'),
+                DB::raw('COUNT(*) as orders_count'),
+                DB::raw('SUM(total) as sales_total')
+            )
                 ->where('created_at', '>=', now()->subDays(30))
                 ->where('payment_status', 'paid')
                 ->groupBy('date')
@@ -257,25 +141,6 @@ class DashboardController extends Controller
         $recentCustomers = User::where('is_admin', false)
             ->latest()
             ->take(5)
-            ->get();
-
-        $vendors = User::where('role', 'vendor')
-            ->latest()
-            ->take(10)
-            ->get();
-
-        $pendingVerificationVendors = User::where('role', 'vendor')
-            ->whereNotNull('verification_submitted_at')
-            ->where('verification_status', 'pending')
-            ->latest('verification_submitted_at')
-            ->take(10)
-            ->get();
-
-        $pendingBankVerifications = User::where('role', 'vendor')
-            ->whereNotNull('bank_account_number')
-            ->where('bank_verification_status', 'pending')
-            ->latest('verification_submitted_at')
-            ->take(10)
             ->get();
 
         $walletSummary = Cache::remember('dashboard_wallet_summary', now()->addMinutes(5), function () {
@@ -328,9 +193,6 @@ class DashboardController extends Controller
             'paymentStatusDistribution' => $paymentStatusDistribution,
             'lowStockProducts' => $lowStockProducts,
             'recentCustomers' => $recentCustomers,
-            'vendors' => $vendors,
-            'pendingVerificationVendors' => $pendingVerificationVendors,
-            'pendingBankVerifications' => $pendingBankVerifications,
             'walletSummary' => $walletSummary,
             'referralSummary' => $referralSummary,
             'recentWalletTransactions' => $recentWalletTransactions,
@@ -343,7 +205,7 @@ class DashboardController extends Controller
      */
     public function modern()
     {
-        return view('admin.dashboard.modern');
+        return $this->index();
     }
 
     /**
@@ -354,7 +216,7 @@ class DashboardController extends Controller
         $period = $request->input('period', 'today'); // today, week, month, year
 
         $today = now();
-        $startDate = match($period) {
+        $startDate = match ($period) {
             'today' => $today->copy()->startOfDay(),
             'week' => $today->copy()->startOfWeek(),
             'month' => $today->copy()->startOfMonth(),
@@ -364,32 +226,19 @@ class DashboardController extends Controller
 
         // Period stats
         $ordersCount = $this->visibleOrdersQuery()->where('created_at', '>=', $startDate)->count();
-        $salesTotal = $this->user()->isVendor()
-            ? $this->visibleOrderItemsQuery()
-                ->whereHas('order', fn ($query) => $query->where('created_at', '>=', $startDate)->where('payment_status', 'paid'))
-                ->sum('total')
-            : Order::where('created_at', '>=', $startDate)
-                ->where('payment_status', 'paid')
-                ->sum('total');
-        
+        $salesTotal = Order::where('created_at', '>=', $startDate)
+            ->where('payment_status', 'paid')
+            ->sum('total');
+
         // New customers
-        $newCustomers = $this->user()->isVendor()
-            ? User::whereHas('orders.items', function ($query) use ($startDate) {
-                $query->where('vendor_id', $this->user()->id)
-                    ->where('created_at', '>=', $startDate);
-            })->count()
-            : User::where('is_admin', false)
-                ->where('created_at', '>=', $startDate)
-                ->count();
+        $newCustomers = User::where('is_admin', false)
+            ->where('created_at', '>=', $startDate)
+            ->count();
 
         // Average order value
-        $avgOrderValue = $this->user()->isVendor()
-            ? $this->visibleOrderItemsQuery()
-                ->whereHas('order', fn ($query) => $query->where('created_at', '>=', $startDate)->where('payment_status', 'paid'))
-                ->avg('total') ?? 0
-            : Order::where('created_at', '>=', $startDate)
-                ->where('payment_status', 'paid')
-                ->avg('total') ?? 0;
+        $avgOrderValue = Order::where('created_at', '>=', $startDate)
+            ->where('payment_status', 'paid')
+            ->avg('total') ?? 0;
 
         // Conversion rate (simplified - orders / estimated visitors)
         $estimatedVisitors = 1000; // This should come from analytics
@@ -401,7 +250,7 @@ class DashboardController extends Controller
             ->where('created_at', '>=', $previousPeriodStart)
             ->where('created_at', '<', $startDate)
             ->count();
-        $customerGrowth = $previousPeriodOrders > 0 ? 
+        $customerGrowth = $previousPeriodOrders > 0 ?
             ((($ordersCount - $previousPeriodOrders) / $previousPeriodOrders) * 100) : 0;
 
         // Inventory value
@@ -417,13 +266,11 @@ class DashboardController extends Controller
                 'conversion_rate' => $conversionRate,
                 'customer_growth' => $customerGrowth,
                 'inventory_value' => $inventoryValue,
-                'wallet_balance_total' => $this->user()->isVendor() ? 0 : (float) Wallet::sum('balance'),
-                'referred_users' => $this->user()->isVendor() ? 0 : User::whereNotNull('referred_by_id')->count(),
-                'total_customers' => $this->user()->isVendor()
-                    ? User::whereHas('orders.items', fn ($query) => $query->where('vendor_id', $this->user()->id))->count()
-                    : User::where('is_admin', false)->count(),
+                'wallet_balance_total' => (float) Wallet::sum('balance'),
+                'referred_users' => User::whereNotNull('referred_by_id')->count(),
+                'total_customers' => User::where('is_admin', false)->count(),
                 'period' => ucfirst($period),
-            ]
+            ],
         ]);
     }
 
@@ -434,7 +281,7 @@ class DashboardController extends Controller
     {
         $period = $request->input('period', '30days'); // 7days, 30days, 90days, 1year
 
-        $days = match($period) {
+        $days = match ($period) {
             '7days' => 7,
             '30days' => 30,
             '90days' => 90,
@@ -442,35 +289,19 @@ class DashboardController extends Controller
             default => 30,
         };
 
-        if ($this->user()->isVendor()) {
-            $salesData = DB::table('order_items')
-                ->select(
-                    DB::raw('DATE(orders.created_at) as date'),
-                    DB::raw('COUNT(DISTINCT orders.id) as orders_count'),
-                    DB::raw('SUM(order_items.total) as sales_total')
-                )
-                ->join('orders', 'order_items.order_id', '=', 'orders.id')
-                ->where('order_items.vendor_id', $this->user()->id)
-                ->where('orders.created_at', '>=', now()->subDays($days))
-                ->where('orders.payment_status', 'paid')
+        $cacheKey = "sales_chart_{$period}_".now()->format('Y-m-d');
+        $salesData = Cache::remember($cacheKey, now()->addMinutes(5), function () use ($days) {
+            return Order::select(
+                DB::raw('DATE(created_at) as date'),
+                DB::raw('COUNT(*) as orders_count'),
+                DB::raw('SUM(total) as sales_total')
+            )
+                ->where('created_at', '>=', now()->subDays($days))
+                ->where('payment_status', 'paid')
                 ->groupBy('date')
                 ->orderBy('date')
                 ->get();
-        } else {
-            $cacheKey = "sales_chart_{$period}_" . now()->format('Y-m-d');
-            $salesData = Cache::remember($cacheKey, now()->addMinutes(5), function () use ($days) {
-                return Order::select(
-                        DB::raw('DATE(created_at) as date'),
-                        DB::raw('COUNT(*) as orders_count'),
-                        DB::raw('SUM(total) as sales_total')
-                    )
-                    ->where('created_at', '>=', now()->subDays($days))
-                    ->where('payment_status', 'paid')
-                    ->groupBy('date')
-                    ->orderBy('date')
-                    ->get();
-            });
-        }
+        });
 
         $labels = $salesData->pluck('date')->map(function ($date) {
             return date('M d', strtotime($date));
@@ -486,7 +317,7 @@ class DashboardController extends Controller
                 'orders' => $orders,
                 'sales' => $sales,
                 'period' => $period,
-            ]
+            ],
         ]);
     }
 
@@ -495,26 +326,19 @@ class DashboardController extends Controller
      */
     public function getOrderStatusSummary()
     {
-        $summary = $this->user()->isVendor()
-            ? $this->visibleOrdersQuery()
-                ->select('status', DB::raw('COUNT(*) as count'))
+        $summary = Cache::remember('order_status_summary', now()->addMinutes(10), function () {
+            return Order::select('status', DB::raw('COUNT(*) as count'))
                 ->groupBy('status')
                 ->orderByDesc('count')
                 ->get()
-                ->mapWithKeys(fn ($item) => [$item->status => $item->count])
-            : Cache::remember('order_status_summary', now()->addMinutes(10), function () {
-                return Order::select('status', DB::raw('COUNT(*) as count'))
-                    ->groupBy('status')
-                    ->orderByDesc('count')
-                    ->get()
-                    ->mapWithKeys(function ($item) {
-                        return [$item->status => $item->count];
-                    });
-            });
+                ->mapWithKeys(function ($item) {
+                    return [$item->status => $item->count];
+                });
+        });
 
         return response()->json([
             'success' => true,
-            'data' => $summary
+            'data' => $summary,
         ]);
     }
 
@@ -524,7 +348,7 @@ class DashboardController extends Controller
     public function getTopProducts(Request $request)
     {
         $limit = $request->input('limit', 5);
-        
+
         $topProducts = DB::table('order_items')
             ->select(
                 'products.id',
@@ -536,9 +360,6 @@ class DashboardController extends Controller
             )
             ->join('products', 'order_items.product_id', '=', 'products.id')
             ->join('orders', 'order_items.order_id', '=', 'orders.id')
-            ->when($this->user()->isVendor(), function ($query) {
-                $query->where('order_items.vendor_id', $this->user()->id);
-            })
             ->where('orders.created_at', '>=', now()->subDays(30))
             ->where('orders.payment_status', 'paid')
             ->groupBy('order_items.product_id', 'products.id', 'products.name', 'products.price', 'products.images')
@@ -546,15 +367,16 @@ class DashboardController extends Controller
             ->limit($limit)
             ->get()
             ->map(function ($product) {
-                $product->image_url = $product->images ? 
-                    (is_array($product->images) ? $product->images[0] ?? null : json_decode($product->images, true)[0] ?? null) : 
+                $product->image_url = $product->images ?
+                    (is_array($product->images) ? $product->images[0] ?? null : json_decode($product->images, true)[0] ?? null) :
                     null;
+
                 return $product;
             });
 
         return response()->json([
             'success' => true,
-            'data' => $topProducts
+            'data' => $topProducts,
         ]);
     }
 
@@ -564,14 +386,14 @@ class DashboardController extends Controller
     public function getRecentOrders(Request $request)
     {
         $limit = $request->input('limit', 10);
-        
+
         $recentOrders = $this->visibleOrdersQuery()
             ->with(['user', 'items.product'])
             ->latest()
             ->take($limit)
             ->get()
             ->map(function ($order) {
-                $customerName = trim(($order->shipping_first_name ?? '') . ' ' . ($order->shipping_last_name ?? ''));
+                $customerName = trim(($order->shipping_first_name ?? '').' '.($order->shipping_last_name ?? ''));
 
                 if ($customerName === '') {
                     $customerName = $order->user?->name ?: 'Customer';
@@ -593,7 +415,7 @@ class DashboardController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $recentOrders
+            'data' => $recentOrders,
         ]);
     }
 
@@ -613,71 +435,7 @@ class DashboardController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Dashboard cache refreshed successfully.'
+            'message' => 'Dashboard cache refreshed successfully.',
         ]);
-    }
-
-    public function submitVendorVerification(Request $request)
-    {
-        $user = $request->user();
-
-        abort_unless($user && $user->isVendor(), 403);
-
-        $validated = $request->validate([
-            'verification_email' => ['required', 'email', 'max:255'],
-            'verification_phone' => ['required', 'string', 'max:20'],
-            'bank_name' => ['required', 'string', 'max:100'],
-            'bank_account_name' => ['required', 'string', 'max:100'],
-            'bank_account_number' => ['required', 'string', 'min:10', 'max:34'],
-        ]);
-
-        $user->update([
-            'verification_email' => $validated['verification_email'],
-            'verification_phone' => $validated['verification_phone'],
-            'bank_name' => $validated['bank_name'],
-            'bank_account_name' => $validated['bank_account_name'],
-            'bank_account_number' => $validated['bank_account_number'],
-            'bank_verification_status' => 'pending',
-            'verification_status' => 'pending',
-            'verification_submitted_at' => now(),
-            'verification_notes' => null,
-            'verified_at' => null,
-        ]);
-
-        try {
-            // Get all admin emails
-            $adminEmails = User::where('is_admin', true)->pluck('email')->toArray();
-
-            // If no admins found, use the site email as fallback
-            if (empty($adminEmails)) {
-                $fallbackEmail = SettingsHelper::get('site_email', config('mail.from.address'));
-                if ($fallbackEmail) {
-                    $adminEmails = [$fallbackEmail];
-                }
-            }
-
-            // Send email to all admins
-            if (!empty($adminEmails)) {
-                Mail::to($adminEmails)->send(new VendorVerificationSubmittedMail($user));
-                
-                Log::info('Vendor verification notification sent to admins.', [
-                    'vendor_id' => $user->id,
-                    'admin_count' => count($adminEmails),
-                    'admins' => $adminEmails,
-                ]);
-            }
-
-            if ($user->email) {
-                Mail::to($user->email)->send(new VendorVerificationReceivedMail($user));
-            }
-        } catch (\Throwable $e) {
-            Log::error('Failed to send vendor verification notification email.', [
-                'vendor_id' => $user->id,
-                'error' => $e->getMessage(),
-            ]);
-        }
-
-        return redirect()->route('admin.dashboard')
-            ->with('success', 'Your verification details and bank account information have been submitted to the admin successfully.');
     }
 }

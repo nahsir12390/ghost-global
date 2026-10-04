@@ -6,6 +6,7 @@ use App\Helpers\SettingsHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class SettingsController extends Controller
 {
@@ -33,8 +34,9 @@ class SettingsController extends Controller
             'site_currency' => ['value' => 'NGN', 'type' => 'string', 'label' => 'Currency Code', 'order' => 6, 'is_public' => true],
             'site_currency_symbol' => ['value' => '₦', 'type' => 'string', 'label' => 'Currency Symbol', 'order' => 7, 'is_public' => true],
             'site_description' => ['value' => '', 'type' => 'textarea', 'label' => 'Site Description', 'order' => 8, 'is_public' => true],
-            'site_logo' => ['value' => '', 'type' => 'string', 'label' => 'Site Logo URL', 'order' => 9, 'is_public' => true],
-            'site_favicon' => ['value' => '', 'type' => 'string', 'label' => 'Favicon URL', 'order' => 10, 'is_public' => true],
+            'site_tagline' => ['value' => 'Shop smarter. Discover more.', 'type' => 'string', 'label' => 'Site Tagline', 'order' => 9, 'is_public' => true],
+            'site_logo' => ['value' => '', 'type' => 'string', 'label' => 'Site Logo URL', 'order' => 10, 'is_public' => true],
+            'site_favicon' => ['value' => '', 'type' => 'string', 'label' => 'Favicon URL', 'order' => 11, 'is_public' => true],
             'maintenance_mode' => ['value' => '0', 'type' => 'boolean', 'label' => 'Maintenance Mode', 'order' => 11, 'is_public' => false],
             'checkout_default_country' => ['value' => 'Nigeria', 'type' => 'string', 'label' => 'Checkout Default Country', 'order' => 12, 'is_public' => true],
             'checkout_default_state' => ['value' => 'Nasarawa', 'type' => 'string', 'label' => 'Checkout Default State', 'order' => 13, 'is_public' => true],
@@ -275,8 +277,13 @@ class SettingsController extends Controller
             'site_currency' => 'nullable|string|size:3',
             'site_currency_symbol' => 'nullable|string|max:5',
             'site_description' => 'nullable|string',
+            'site_tagline' => 'nullable|string|max:160',
             'site_logo' => 'nullable|string|max:255',
             'site_favicon' => 'nullable|string|max:255',
+            'site_logo_upload' => 'nullable|image|mimes:png,jpg,jpeg,webp|max:4096',
+            'site_favicon_upload' => 'nullable|file|mimes:png,ico,jpg,jpeg,webp|max:1024',
+            'remove_site_logo' => 'nullable|boolean',
+            'remove_site_favicon' => 'nullable|boolean',
             'checkout_default_country' => 'nullable|string|max:100',
             'checkout_default_state' => 'nullable|string|max:100',
             'checkout_default_city' => 'nullable|string|max:100',
@@ -305,7 +312,7 @@ class SettingsController extends Controller
                 $photo = $request->file("team_members.{$index}.photo");
 
                 if ($photo && $photo->isValid()) {
-                    $image = 'storage/' . $photo->store('about-team', 'public');
+                    $image = 'storage/'.$photo->store('about-team', 'public');
                 }
 
                 return [
@@ -318,7 +325,10 @@ class SettingsController extends Controller
             ->values()
             ->all();
 
-        unset($validated['team_members']);
+        $this->applyBrandUpload($request, $validated, 'site_logo', 'site_logo_upload', 'remove_site_logo');
+        $this->applyBrandUpload($request, $validated, 'site_favicon', 'site_favicon_upload', 'remove_site_favicon');
+
+        unset($validated['team_members'], $validated['site_logo_upload'], $validated['site_favicon_upload'], $validated['remove_site_logo'], $validated['remove_site_favicon']);
 
         $definitions = $this->generalSettingDefinitions();
 
@@ -358,6 +368,25 @@ class SettingsController extends Controller
         SettingsHelper::clearCache();
 
         return redirect()->back()->with('success', 'General settings updated successfully!');
+    }
+
+    private function applyBrandUpload(Request $request, array &$validated, string $settingKey, string $uploadKey, string $removeKey): void
+    {
+        $currentValue = (string) SettingsHelper::get($settingKey, '');
+        $uploadedFile = $request->file($uploadKey);
+        $shouldRemove = $request->boolean($removeKey);
+
+        if (! $uploadedFile && ! $shouldRemove) {
+            return;
+        }
+
+        if (str_starts_with($currentValue, 'storage/branding/')) {
+            Storage::disk('public')->delete(substr($currentValue, strlen('storage/')));
+        }
+
+        $validated[$settingKey] = $uploadedFile
+            ? 'storage/'.$uploadedFile->store('branding', 'public')
+            : '';
     }
 
     /**

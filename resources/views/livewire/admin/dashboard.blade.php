@@ -1,50 +1,6 @@
 <div>
     <!-- Verification Status Notification -->
-    @if(auth()->user()->role === 'vendor' && auth()->user()->verification_status === 'approved' && auth()->user()->bank_verification_status === 'verified')
-        <div class="mb-8 bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-4 shadow-sm">
-            <div class="flex items-start">
-                <div class="flex-shrink-0">
-                    <svg class="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                </div>
-                <div class="ml-3 flex-1">
-                    <h3 class="text-sm font-medium text-green-900">Account Verified</h3>
-                    <p class="mt-1 text-sm text-green-700">
-                        Your account is fully verified! Order payouts will be credited to your bank account within <strong>24 hours</strong> after order completion, <strong>excluding weekends and public holidays</strong>.
-                    </p>
-                    <p class="mt-2 text-xs text-green-600 font-medium">
-                        📅 Processing Schedule: Business days only (Monday - Friday)
-                    </p>
-                </div>
-            </div>
-        </div>
-    @elseif(auth()->user()->role === 'vendor' && (auth()->user()->verification_status !== 'approved' || auth()->user()->bank_verification_status !== 'verified'))
-        <div class="mb-8 bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-lg p-4 shadow-sm">
-            <div class="flex items-start">
-                <div class="flex-shrink-0">
-                    <svg class="h-5 w-5 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                </div>
-                <div class="ml-3 flex-1">
-                    <h3 class="text-sm font-medium text-yellow-900">Verification Pending</h3>
-                    <p class="mt-1 text-sm text-yellow-700">
-                        @if(auth()->user()->verification_status !== 'approved' && auth()->user()->bank_verification_status !== 'verified')
-                            Your identity and bank verification are pending admin review. Once approved, order payouts will be credited within 24 hours (excluding weekends).
-                        @elseif(auth()->user()->verification_status !== 'approved')
-                            Your identity verification is pending admin review. Bank verification is required before receiving payouts.
-                        @else
-                            Your bank verification is pending admin review. Complete this to start receiving order payouts.
-                        @endif
-                    </p>
-                    <p class="mt-2 text-xs text-yellow-600 font-medium">
-                        ⏱️ Status updates typically sent within 24-48 hours
-                    </p>
-                </div>
-            </div>
-        </div>
-    @endif
+
 
     <!-- Header -->
     <div class="mb-8">
@@ -55,19 +11,19 @@
     <!-- Period Selector -->
     <div class="mb-6">
         <div class="flex space-x-2">
-            <button wire:click="updatePeriod('today')" 
+            <button wire:click="updatePeriod('today')"
                     class="px-4 py-2 text-sm rounded-md {{ $selectedPeriod === 'today' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}">
                 Today
             </button>
-            <button wire:click="updatePeriod('week')" 
+            <button wire:click="updatePeriod('week')"
                     class="px-4 py-2 text-sm rounded-md {{ $selectedPeriod === 'week' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}">
                 This Week
             </button>
-            <button wire:click="updatePeriod('month')" 
+            <button wire:click="updatePeriod('month')"
                     class="px-4 py-2 text-sm rounded-md {{ $selectedPeriod === 'month' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}">
                 This Month
             </button>
-            <button wire:click="updatePeriod('year')" 
+            <button wire:click="updatePeriod('year')"
                     class="px-4 py-2 text-sm rounded-md {{ $selectedPeriod === 'year' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}">
                 This Year
             </button>
@@ -90,7 +46,7 @@
                     <p class="text-sm font-medium text-gray-600">Total Orders</p>
                     <p class="text-2xl font-bold text-gray-900">{{ number_format($stats['total_orders'] ?? 0) }}</p>
                     <p class="text-xs text-gray-500 mt-1">
-                        {{ $selectedPeriod === 'today' ? 'Today: ' . ($stats['today_orders'] ?? 0) : 
+                        {{ $selectedPeriod === 'today' ? 'Today: ' . ($stats['today_orders'] ?? 0) :
                            $selectedPeriod === 'week' ? 'This Week: ' . ($stats['period_orders'] ?? 0) :
                            $selectedPeriod === 'month' ? 'This Month: ' . ($stats['period_orders'] ?? 0) :
                            'This Year: ' . ($stats['period_orders'] ?? 0) }}
@@ -113,7 +69,7 @@
                     <p class="text-sm font-medium text-gray-600">Total Sales</p>
                     <p class="text-2xl font-bold text-gray-900">₦{{ number_format($stats['total_sales'] ?? 0, 2) }}</p>
                     <p class="text-xs text-gray-500 mt-1">
-                        {{ $selectedPeriod === 'today' ? 'Today: ₦' . number_format($stats['today_sales'] ?? 0, 2) : 
+                        {{ $selectedPeriod === 'today' ? 'Today: ₦' . number_format($stats['today_sales'] ?? 0, 2) :
                            $selectedPeriod === 'week' ? 'This Week: ₦' . number_format($stats['period_sales'] ?? 0, 2) :
                            $selectedPeriod === 'month' ? 'This Month: ₦' . number_format($stats['period_sales'] ?? 0, 2) :
                            'This Year: ₦' . number_format($stats['period_sales'] ?? 0, 2) }}
@@ -237,15 +193,15 @@
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-lg font-semibold text-gray-900">Sales Overview</h3>
                 <div class="flex space-x-2">
-                    <button wire:click="updateChartPeriod('7days')" 
+                    <button wire:click="updateChartPeriod('7days')"
                             class="px-3 py-1 text-xs rounded-md {{ $chartPeriod === '7days' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}">
                         7 Days
                     </button>
-                    <button wire:click="updateChartPeriod('30days')" 
+                    <button wire:click="updateChartPeriod('30days')"
                             class="px-3 py-1 text-xs rounded-md {{ $chartPeriod === '30days' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}">
                         30 Days
                     </button>
-                    <button wire:click="updateChartPeriod('90days')" 
+                    <button wire:click="updateChartPeriod('90days')"
                             class="px-3 py-1 text-xs rounded-md {{ $chartPeriod === '90days' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}">
                         90 Days
                     </button>
@@ -315,10 +271,10 @@
                             @if($product->images && count($product->images) > 0)
                                 @php $image = $product->images[0]; @endphp
                                 @if(str_starts_with($image, 'http'))
-                                    <img src="{{ $image }}" alt="{{ $product->name }}" 
+                                    <img src="{{ $image }}" alt="{{ $product->name }}"
                                          class="w-10 h-10 object-cover rounded">
                                 @else
-                                    <img src="{{ Storage::url($image) }}" alt="{{ $product->name }}" 
+                                    <img src="{{ Storage::url($image) }}" alt="{{ $product->name }}"
                                          class="w-10 h-10 object-cover rounded">
                                 @endif
                             @else
@@ -361,10 +317,10 @@
                             @if($product->images && count($product->images) > 0)
                                 @php $image = $product->images[0]; @endphp
                                 @if(str_starts_with($image, 'http'))
-                                    <img src="{{ $image }}" alt="{{ $product->name }}" 
+                                    <img src="{{ $image }}" alt="{{ $product->name }}"
                                          class="w-10 h-10 object-cover rounded">
                                 @else
-                                    <img src="{{ Storage::url($image) }}" alt="{{ $product->name }}" 
+                                    <img src="{{ Storage::url($image) }}" alt="{{ $product->name }}"
                                          class="w-10 h-10 object-cover rounded">
                                 @endif
                             @else
@@ -381,7 +337,7 @@
                                 </p>
                             </div>
                         </div>
-                        <a href="{{ route('admin.products.edit', $product) }}" 
+                        <a href="{{ route('admin.products.edit', $product) }}"
                            class="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">
                             Restock
                         </a>
@@ -399,7 +355,7 @@
     <div class="mt-8 bg-white rounded-lg shadow p-6 border border-gray-200">
         <h3 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <a href="{{ route('admin.products.create') }}" 
+            <a href="{{ route('admin.products.create') }}"
                class="flex items-center justify-center p-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150">
                 <div class="text-center">
                     <svg class="w-8 h-8 text-blue-600 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -409,7 +365,7 @@
                     <p class="text-sm text-gray-500">Create new product listing</p>
                 </div>
             </a>
-            <a href="{{ route('admin.orders.index') }}" 
+            <a href="{{ route('admin.orders.index') }}"
                class="flex items-center justify-center p-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150">
                 <div class="text-center">
                     <svg class="w-8 h-8 text-green-600 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -419,7 +375,7 @@
                     <p class="text-sm text-gray-500">View and process orders</p>
                 </div>
             </a>
-            <a href="{{ route('admin.settings.index') }}" 
+            <a href="{{ route('admin.settings.index') }}"
                class="flex items-center justify-center p-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150">
                 <div class="text-center">
                     <svg class="w-8 h-8 text-purple-600 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -436,15 +392,15 @@
     @script
     <script>
         let salesChart = null;
-        
+
         // Initialize chart
         function initChart() {
             const ctx = document.getElementById('salesChart').getContext('2d');
-            
+
             if (salesChart) {
                 salesChart.destroy();
             }
-            
+
             salesChart = new Chart(ctx, {
                 type: 'line',
                 data: {
@@ -508,11 +464,11 @@
                 }
             });
         }
-        
+
         // Listen for Livewire initialization
         document.addEventListener('livewire:init', () => {
             initChart();
-            
+
             // Listen for chart updates from Livewire
             Livewire.on('updateChart', (data) => {
                 if (salesChart) {
@@ -523,7 +479,7 @@
                 }
             });
         });
-        
+
         // Reinitialize chart when component updates
         document.addEventListener('livewire:update', () => {
             // Add a small delay to ensure DOM is ready

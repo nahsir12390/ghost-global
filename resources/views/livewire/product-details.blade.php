@@ -15,14 +15,14 @@
             -webkit-box-orient: vertical;
             -webkit-line-clamp: 1;
         }
-        
+
         .line-clamp-2 {
             overflow: hidden;
             display: -webkit-box;
             -webkit-box-orient: vertical;
             -webkit-line-clamp: 2;
         }
-        
+
         .line-clamp-3 {
             overflow: hidden;
             display: -webkit-box;
@@ -130,7 +130,7 @@
                     </li>
                     <li class="text-gray-400">/</li>
                     <li>
-                        <a href="{{ route('category.show', $product->category->slug) }}" 
+                        <a href="{{ route('category.show', $product->category->slug) }}"
                            class="text-gray-500 hover:text-red-600 transition-colors">
                             {{ $product->category->name }}
                         </a>
@@ -157,7 +157,7 @@
                     <div class="aspect-w-1 aspect-h-1">
                         @if($images && isset($images[0]))
                             <img :src="images[selectedImage]" src="{{ asset('storage/' . $images[0]) }}"
-                                 alt="{{ $product->name }}" 
+                                 alt="{{ $product->name }}"
                                  class="h-full w-full object-contain p-8 transition-transform duration-700 group-hover:scale-[1.035] sm:p-12">
                         @else
                             <div class="w-full h-[500px] flex items-center justify-center">
@@ -175,7 +175,7 @@
                                 -{{ round((($product->compare_price - $product->price) / $product->compare_price) * 100) }}%
                             </span>
                         @endif
-                        
+
                         @if($product->created_at->gt(now()->subDays(7)))
                             <span class="px-3 py-1.5 bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs font-bold rounded-lg shadow-lg">
                                 New Arrival
@@ -199,11 +199,11 @@
                                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                             </svg>
                         @else
-                            <svg class="w-5 h-5 {{ $wishlistStatus ? 'text-red-600 fill-current' : 'text-gray-600 group-hover:text-red-600' }} transition-colors" 
-                                 stroke="currentColor" 
-                                 stroke-width="{{ $wishlistStatus ? '0' : '1.5' }}" 
+                            <svg class="w-5 h-5 {{ $wishlistStatus ? 'text-red-600 fill-current' : 'text-gray-600 group-hover:text-red-600' }} transition-colors"
+                                 stroke="currentColor"
+                                 stroke-width="{{ $wishlistStatus ? '0' : '1.5' }}"
                                  viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" 
+                                <path stroke-linecap="round" stroke-linejoin="round"
                                       d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
                             </svg>
                         @endif
@@ -218,8 +218,8 @@
                                     :aria-pressed="selectedImage === {{ $index }}"
                                     class="flex-shrink-0 group focus:outline-none">
                                 <div class="relative">
-                                    <img src="{{ asset('storage/' . $image) }}" 
-                                         alt="Thumbnail {{ $index + 1 }}" 
+                                    <img src="{{ asset('storage/' . $image) }}"
+                                         alt="Thumbnail {{ $index + 1 }}"
                                          :class="selectedImage === {{ $index }} ? 'border-red-500 shadow-lg' : 'border-gray-200 group-hover:border-red-300'"
                                          class="w-20 h-20 object-cover rounded-xl border-2 transition-all duration-200">
                                     <div x-show="selectedImage === {{ $index }}" class="absolute inset-0 bg-red-500/10 rounded-xl"></div>
@@ -235,7 +235,7 @@
                 <!-- Product Header -->
                 <div class="mb-6">
                     <div class="flex items-center gap-3 mb-3">
-                        <a href="{{ route('category.show', $product->category->slug) }}" 
+                        <a href="{{ route('category.show', $product->category->slug) }}"
                            class="inline-flex items-center px-3 py-1 bg-red-50 text-red-600 text-xs font-semibold rounded-full hover:bg-red-100 transition-colors">
                             {{ $product->category->name }}
                         </a>
@@ -263,23 +263,7 @@
                             {{ ucfirst($product->product_type ?? 'physical') }}
                         </span>
                         <div class="w-px h-4 bg-gray-300"></div>
-                        @if($product->vendor)
-                            <span class="rounded-full px-3 py-1 text-xs font-semibold {{ $product->vendorIsAvailable() ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
-                                {{ $product->vendorIsAvailable() ? 'Vendor Active' : 'Vendor Inactive' }}
-                            </span>
-                            <div class="w-px h-4 bg-gray-300"></div>
-                            @if($product->vendor->storefrontUrl())
-                                <a href="{{ $product->vendor->storefrontUrl() }}" class="text-sm font-semibold text-red-600 transition hover:text-red-700 hover:underline">
-                                    {{ $product->vendor->publicStoreName() }}
-                                </a>
-                                <div class="w-px h-4 bg-gray-300"></div>
-                            @elseif($product->vendor->store_name)
-                                <span class="text-sm font-medium text-gray-600">
-                                    {{ $product->vendor->store_name }}
-                                </span>
-                                <div class="w-px h-4 bg-gray-300"></div>
-                            @endif
-                        @endif
+
                         <div class="flex items-center gap-2">
                             <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
@@ -330,17 +314,17 @@
                     <div class="flex items-baseline gap-4">
                         <div>
                             <span class="text-4xl lg:text-5xl font-bold text-gray-900">
-                                ₦{{ number_format($product->price, 2) }}
+                                {{ \App\Helpers\SettingsHelper::currency($product->price) }}
                             </span>
                             @if($product->compare_price && $product->compare_price > $product->price)
                                 <span class="text-lg text-gray-500 line-through ml-3">
-                                    ₦{{ number_format($product->compare_price, 2) }}
+                                    {{ \App\Helpers\SettingsHelper::currency($product->compare_price) }}
                                 </span>
                             @endif
                         </div>
                         @if($product->compare_price && $product->compare_price > $product->price)
                             <div class="bg-red-600 text-white px-3 py-1.5 rounded-full text-sm font-bold">
-                                Save ₦{{ number_format($product->compare_price - $product->price, 2) }}
+                                Save {{ \App\Helpers\SettingsHelper::currency($product->compare_price - $product->price) }}
                             </div>
                         @endif
                     </div>
@@ -419,7 +403,7 @@
                                     </button>
                                 </div>
 
-                                <a href="{{ route('cart') }}" 
+                                <a href="{{ route('cart') }}"
                                    class="flex-1 bg-gradient-to-r from-red-600 to-red-700 text-white py-3 px-6 rounded-xl font-semibold hover:from-red-700 hover:to-red-800 transition-all duration-300 text-center shadow-lg hover:shadow-xl">
                                     View Cart →
                                 </a>
@@ -446,7 +430,7 @@
                                 </div>
 
                                 <div class="text-sm text-gray-500">
-                                    {{ $product->isCourse() ? 'Course enrollment' : ($product->isDigital() ? 'Digital access' : '₦' . number_format($product->price, 2) . ' each') }}
+                                    {{ $product->isCourse() ? 'Course enrollment' : ($product->isDigital() ? 'Digital access' : \App\Helpers\SettingsHelper::currency($product->price) . ' each') }}
                                 </div>
                             </div>
 
@@ -461,14 +445,14 @@
 
                             <!-- Quick Actions -->
                             <div class="grid grid-cols-2 gap-3">
-                                    <a href="{{ route('shop', ['category' => $product->category->slug]) }}" 
+                                    <a href="{{ route('shop', ['category' => $product->category->slug]) }}"
                                        class="flex items-center justify-center gap-2 border-2 border-red-600 text-red-600 py-3 px-4 rounded-xl font-semibold hover:bg-red-50 transition-all duration-300">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                                         </svg>
                                         View Similar
                                     </a>
-                                    <a href="{{ route('contact') }}" 
+                                    <a href="{{ route('contact') }}"
                                        class="flex items-center justify-center gap-2 border-2 border-gray-300 text-gray-700 py-3 px-4 rounded-xl font-semibold hover:bg-gray-50 transition-all duration-300">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -485,7 +469,7 @@
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
                                 </svg>
-                                {{ $product->vendorIsAvailable() ? 'Out of Stock' : 'Vendor Unavailable' }}
+                                {{ $product->isPurchasable() ? 'Out of Stock' : 'Unavailable' }}
                             </button>
 
                             <!-- Notify Button -->
@@ -531,7 +515,7 @@
                         </div>
                         <div>
                             <p class="text-sm font-semibold text-gray-900">Free Shipping</p>
-                            <p class="text-xs text-gray-500">On orders over ₦{{ number_format(\App\Helpers\SettingsHelper::freeShippingThreshold(), 0) }}</p>
+                            <p class="text-xs text-gray-500">On orders over {{ \App\Helpers\SettingsHelper::currency(\App\Helpers\SettingsHelper::freeShippingThreshold()) }}</p>
                         </div>
                     </div>
                     <div class="flex items-start gap-3">
@@ -565,18 +549,18 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     @foreach($this->relatedProducts as $relatedProduct)
                         @php
-                            $cartQuantity = isset($cart[$relatedProduct->id]) 
-                                ? $cart[$relatedProduct->id]['quantity'] 
+                            $cartQuantity = isset($cart[$relatedProduct->id])
+                                ? $cart[$relatedProduct->id]['quantity']
                                 : 0;
                             $isInCart = $cartQuantity > 0;
                         @endphp
-                        
+
                         <div class="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden modern-card">
                             <a href="{{ route('product.show', $relatedProduct->slug) }}" class="block">
                                 <div class="relative overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
                                     @if($relatedProduct->images && isset($relatedProduct->images[0]))
-                                        <img src="{{ asset('storage/' . $relatedProduct->images[0]) }}" 
-                                             alt="{{ $relatedProduct->name }}" 
+                                        <img src="{{ asset('storage/' . $relatedProduct->images[0]) }}"
+                                             alt="{{ $relatedProduct->name }}"
                                              class="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-700">
                                     @else
                                         <div class="w-full h-64 flex items-center justify-center">
@@ -606,11 +590,11 @@
 
                                 <div class="mb-4">
                                     <p class="text-xl font-bold text-gray-900">
-                                        ₦{{ number_format($relatedProduct->price, 2) }}
+                                        {{ \App\Helpers\SettingsHelper::currency($relatedProduct->price) }}
                                     </p>
                                     @if($relatedProduct->compare_price && $relatedProduct->compare_price > $relatedProduct->price)
                                         <p class="text-sm text-gray-500 line-through">
-                                            ₦{{ number_format($relatedProduct->compare_price, 2) }}
+                                            {{ \App\Helpers\SettingsHelper::currency($relatedProduct->compare_price) }}
                                         </p>
                                     @endif
                                 </div>
@@ -660,18 +644,18 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 @foreach($this->recentlyViewed as $recentProduct)
                     @php
-                        $cartQuantity = isset($cart[$recentProduct->id]) 
-                            ? $cart[$recentProduct->id]['quantity'] 
+                        $cartQuantity = isset($cart[$recentProduct->id])
+                            ? $cart[$recentProduct->id]['quantity']
                             : 0;
                         $isInCart = $cartQuantity > 0;
                     @endphp
-                    
+
                     <div class="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden modern-card">
                         <a href="{{ route('product.show', $recentProduct->slug) }}" class="block">
                             <div class="relative overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
                                 @if($recentProduct->images && isset($recentProduct->images[0]))
-                                    <img src="{{ asset('storage/' . $recentProduct->images[0]) }}" 
-                                         alt="{{ $recentProduct->name }}" 
+                                    <img src="{{ asset('storage/' . $recentProduct->images[0]) }}"
+                                         alt="{{ $recentProduct->name }}"
                                          class="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-700">
                                 @else
                                     <div class="w-full h-64 flex items-center justify-center">
@@ -693,7 +677,7 @@
 
                             <div class="mb-4">
                                 <p class="text-xl font-bold text-gray-900">
-                                    ₦{{ number_format($recentProduct->price, 2) }}
+                                    {{ \App\Helpers\SettingsHelper::currency($recentProduct->price) }}
                                 </p>
                             </div>
 

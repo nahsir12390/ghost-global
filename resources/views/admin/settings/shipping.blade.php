@@ -4,6 +4,7 @@
 @section('breadcrumb', 'Settings / Shipping')
 
 @section('content')
+<div class="mb-6 rounded-xl bg-blue-50 p-5"><a href="{{ route('admin.settings.delivery') }}" class="font-semibold text-blue-800 underline">Manage worldwide destinations, fees, and delivery estimates</a><p class="mt-2 text-sm text-slate-600">Worldwide checkout uses destination rates. The settings below apply to legacy orders.</p></div>
 <div class="space-y-6">
     <!-- Page Header -->
     <div class="flex justify-between items-center">

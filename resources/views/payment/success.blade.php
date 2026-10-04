@@ -43,7 +43,7 @@
                             @endif
                             <div>
                                 <p class="text-gray-600 text-sm">Total Amount</p>
-                                <p class="text-lg font-semibold text-gray-900">₦{{ number_format($order->total, 2) }}</p>
+                                <p class="text-lg font-semibold text-gray-900">{{ \App\Helpers\SettingsHelper::currency($order->total) }}</p>
                             </div>
                         </div>
                     </div>
@@ -67,8 +67,8 @@
                                 <tr class="hover:bg-gray-50">
                                     <td class="px-6 py-4 text-sm text-gray-900">{{ $item->product_name }}</td>
                                     <td class="px-6 py-4 text-right text-sm text-gray-600">{{ $item->quantity }}</td>
-                                    <td class="px-6 py-4 text-right text-sm text-gray-600">₦{{ number_format($item->price, 2) }}</td>
-                                    <td class="px-6 py-4 text-right text-sm font-semibold text-gray-900">₦{{ number_format($item->total, 2) }}</td>
+                                    <td class="px-6 py-4 text-right text-sm text-gray-600">{{ \App\Helpers\SettingsHelper::currency($item->price) }}</td>
+                                    <td class="px-6 py-4 text-right text-sm font-semibold text-gray-900">{{ \App\Helpers\SettingsHelper::currency($item->total) }}</td>
                                 </tr>
                                 @endforeach
                             </tbody>
@@ -82,20 +82,20 @@
                     <div class="bg-gray-50 rounded-lg p-6 space-y-3">
                         <div class="flex justify-between">
                             <span class="text-gray-600">Subtotal:</span>
-                            <span class="font-semibold">₦{{ number_format($order->subtotal, 2) }}</span>
+                            <span class="font-semibold">{{ \App\Helpers\SettingsHelper::currency($order->subtotal) }}</span>
                         </div>
                         <div class="flex justify-between">
                             <span class="text-gray-600">Delivery Fee:</span>
-                            <span class="font-semibold">₦{{ number_format($order->shipping, 2) }}</span>
+                            <span class="font-semibold">{{ \App\Helpers\SettingsHelper::currency($order->shipping) }}</span>
                         </div>
                         <div class="flex justify-between">
                             <span class="text-gray-600">Platform Service Fee:</span>
-                            <span class="font-semibold">₦{{ number_format($order->tax, 2) }}</span>
+                            <span class="font-semibold">{{ \App\Helpers\SettingsHelper::currency($order->tax) }}</span>
                         </div>
                         <hr class="my-4">
                         <div class="flex justify-between">
                             <span class="text-lg font-bold text-gray-900">Total:</span>
-                            <span class="text-lg font-bold text-green-600">₦{{ number_format($order->total, 2) }}</span>
+                            <span class="text-lg font-bold text-green-600">{{ \App\Helpers\SettingsHelper::currency($order->total) }}</span>
                         </div>
                     </div>
                 </div>

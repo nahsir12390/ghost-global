@@ -26,6 +26,7 @@
     </div>
 
     <form wire:submit="save" class="space-y-6">
+        @include('partials.product-delivery')
         <div class="grid grid-cols-1 gap-6 xl:grid-cols-[1.1fr_.9fr]">
             <div class="space-y-6">
                 <section class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -35,25 +36,7 @@
                     </div>
 
                     <div class="mt-5 grid gap-5">
-                        @if(!auth()->user()?->isVendor())
-                            <div class="rounded-2xl border border-blue-100 bg-blue-50/70 p-4">
-                                <label for="vendor_id" class="mb-2 block text-sm font-medium text-slate-700">Vendor Store *</label>
-                                <select id="vendor_id"
-                                        wire:model.defer="vendor_id"
-                                        class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm shadow-sm focus:border-red-400 focus:outline-none focus:ring-2 focus:ring-red-200 @error('vendor_id') border-red-500 @enderror">
-                                    <option value="">Choose the vendor this product belongs to</option>
-                                    @foreach($vendors as $vendor)
-                                        <option value="{{ $vendor->id }}">
-                                            {{ $vendor->store_name ?: $vendor->name }}{{ $vendor->vendor_is_active ? '' : ' (Inactive)' }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                @error('vendor_id')
-                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                                @enderror
-                                <p class="mt-2 text-xs text-slate-500">Staff and admins can publish directly into a vendor's store from here.</p>
-                            </div>
-                        @endif
+
 
                         <div>
                             <label for="name" class="mb-2 block text-sm font-medium text-slate-700">Product Name *</label>

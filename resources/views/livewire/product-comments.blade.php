@@ -66,7 +66,7 @@
         @if($comments->isNotEmpty())
             <section aria-label="Customer review list" class="space-y-4">
                 @foreach($comments as $review)
-                    @php $reviewerName = $review->user?->name ?: ($review->guest_name ?: 'Keffi Cart shopper'); @endphp
+                    @php $reviewerName = $review->user?->name ?: ($review->guest_name ?: 'Verified shopper'); @endphp
                     <article class="rounded-[1.75rem] border border-white/10 bg-white/[.06] p-5 backdrop-blur transition hover:bg-white/[.09] sm:p-6">
                         <div class="flex items-start justify-between gap-4">
                             <div class="flex min-w-0 items-center gap-3">

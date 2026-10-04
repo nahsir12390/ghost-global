@@ -3,7 +3,7 @@
 @section('title', 'About Us')
 
 @section('content')
-@php($siteName = \App\Helpers\SettingsHelper::get('site_name', config('app.name', 'Keffi Cart')))
+@php($siteName = \App\Helpers\SettingsHelper::siteName())
 
 <x-storefront.page-hero eyebrow="Built for better commerce" :title="'Local ambition. Bigger possibilities.'" :description="$siteName . ' connects remarkable products, trusted sellers and everyday shoppers through one thoughtful marketplace.'" />
 
@@ -41,7 +41,7 @@
     <section class="px-5 py-16 sm:px-8 lg:px-12 lg:py-28">
         <div class="mx-auto max-w-[90rem] rounded-[2rem] bg-[#101010] px-6 py-12 text-white sm:px-10 lg:flex lg:items-end lg:justify-between lg:px-14 lg:py-16">
             <div class="max-w-2xl"><span class="text-xs font-bold uppercase tracking-[.22em] text-red-400">Your next find is waiting</span><h2 class="mt-4 text-3xl font-semibold tracking-[-.04em] sm:text-5xl">Be part of what we’re building.</h2><p class="mt-4 text-white/50">Discover products or bring your own store into the marketplace.</p></div>
-            <div class="mt-8 flex flex-col gap-3 sm:flex-row lg:mt-0"><a href="{{ route('shop') }}" class="storefront-button storefront-button--light">Start shopping</a>@auth<a href="{{ route('vendor-upgrade.create') }}" class="storefront-button storefront-button--ghost">Become a seller</a>@else<a href="{{ route('register') }}" class="storefront-button storefront-button--ghost">Join {{ $siteName }}</a>@endauth</div>
+            <div class="mt-8 flex flex-col gap-3 sm:flex-row lg:mt-0"><a href="{{ route('shop') }}" class="storefront-button storefront-button--light">Start shopping</a>@auth<a href="{{ route('my.orders') }}" class="storefront-button storefront-button--ghost">My orders</a>@else<a href="{{ route('register') }}" class="storefront-button storefront-button--ghost">Join {{ $siteName }}</a>@endauth</div>
         </div>
     </section>
 </div>

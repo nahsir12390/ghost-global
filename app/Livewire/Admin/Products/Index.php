@@ -2,24 +2,31 @@
 
 namespace App\Livewire\Admin\Products;
 
-use Livewire\Component;
-use Livewire\WithPagination;
-use App\Models\Product;
 use App\Models\Category;
+use App\Models\Product;
 use App\Services\ImageUploadService;
 use Illuminate\Support\Facades\Storage;
+use Livewire\Component;
+use Livewire\WithPagination;
 
 class Index extends Component
 {
     use WithPagination;
 
     public $search = '';
+
     public $categoryFilter = '';
+
     public $statusFilter = '';
+
     public $sortField = 'created_at';
+
     public $sortDirection = 'desc';
+
     public $selectedProducts = [];
+
     public $selectAll = false;
+
     public $categories = [];
 
     protected $queryString = [
@@ -81,12 +88,12 @@ class Index extends Component
         try {
             $product = Product::forManager(auth()->user())->find($productId);
             if ($product) {
-                $product->update(['is_active' => !$product->is_active]);
+                $product->update(['is_active' => ! $product->is_active]);
                 $this->dispatch('productUpdated');
                 session()->flash('success', 'Product status updated successfully.');
             }
         } catch (\Exception $e) {
-            session()->flash('error', 'Failed to update product status: ' . $e->getMessage());
+            session()->flash('error', 'Failed to update product status: '.$e->getMessage());
         }
     }
 
@@ -95,12 +102,12 @@ class Index extends Component
         try {
             $product = Product::forManager(auth()->user())->find($productId);
             if ($product) {
-                $product->update(['is_featured' => !$product->is_featured]);
+                $product->update(['is_featured' => ! $product->is_featured]);
                 $this->dispatch('productUpdated');
                 session()->flash('success', 'Product featured status updated successfully.');
             }
         } catch (\Exception $e) {
-            session()->flash('error', 'Failed to update featured status: ' . $e->getMessage());
+            session()->flash('error', 'Failed to update featured status: '.$e->getMessage());
         }
     }
 
@@ -111,7 +118,7 @@ class Index extends Component
             if ($product) {
                 // Delete images from storage
                 if ($product->images) {
-                    $imageService = new ImageUploadService();
+                    $imageService = new ImageUploadService;
                     $images = is_string($product->images) ? json_decode($product->images, true) : $product->images;
                     if (is_array($images)) {
                         $imageService->deleteImages($images);
@@ -122,7 +129,7 @@ class Index extends Component
                 session()->flash('success', 'Product deleted successfully.');
             }
         } catch (\Exception $e) {
-            session()->flash('error', 'Failed to delete product: ' . $e->getMessage());
+            session()->flash('error', 'Failed to delete product: '.$e->getMessage());
         }
     }
 
@@ -131,12 +138,13 @@ class Index extends Component
         try {
             if (empty($this->selectedProducts)) {
                 session()->flash('error', 'No products selected.');
+
                 return;
             }
 
             $products = Product::forManager(auth()->user())->whereIn('id', $this->selectedProducts)->get();
-            $imageService = new ImageUploadService();
-            
+            $imageService = new ImageUploadService;
+
             foreach ($products as $product) {
                 // Delete images from storage
                 if ($product->images) {
@@ -151,9 +159,9 @@ class Index extends Component
             $this->selectedProducts = [];
             $this->selectAll = false;
             $this->dispatch('productUpdated');
-            session()->flash('success', count($products) . ' product(s) deleted successfully.');
+            session()->flash('success', count($products).' product(s) deleted successfully.');
         } catch (\Exception $e) {
-            session()->flash('error', 'Failed to delete products: ' . $e->getMessage());
+            session()->flash('error', 'Failed to delete products: '.$e->getMessage());
         }
     }
 
@@ -172,12 +180,12 @@ class Index extends Component
     {
         return Product::query()
             ->forManager(auth()->user())
-            ->with(['category', 'vendor'])
+            ->with(['category'])
             ->when($this->search, function ($query) {
                 $query->where(function ($q) {
-                    $q->where('name', 'like', '%' . $this->search . '%')
-                      ->orWhere('sku', 'like', '%' . $this->search . '%')
-                      ->orWhere('description', 'like', '%' . $this->search . '%');
+                    $q->where('name', 'like', '%'.$this->search.'%')
+                        ->orWhere('sku', 'like', '%'.$this->search.'%')
+                        ->orWhere('description', 'like', '%'.$this->search.'%');
                 });
             })
             ->when($this->categoryFilter, function ($query) {

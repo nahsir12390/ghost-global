@@ -53,7 +53,7 @@
                     <div class="relative space-y-1 text-sm">
                         <a href="{{ route(auth()->user()->dashboardRouteName()) }}" 
                            class="block rounded-xl px-4 py-3 font-medium text-slate-300 transition hover:bg-white/10 hover:text-white">
-                            {{ auth()->user()->isVendor() ? 'Vendor Dashboard' : (auth()->user()->isAdmin() ? 'Admin Dashboard' : 'Dashboard') }}
+                            {{ auth()->user()->isAdmin() ? 'Admin Dashboard' : 'Dashboard' }}
                         </a>
                         <a href="{{ route('my.orders') }}" 
                            class="block rounded-xl px-4 py-3 font-medium text-slate-300 transition hover:bg-white/10 hover:text-white">

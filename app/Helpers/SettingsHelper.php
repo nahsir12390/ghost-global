@@ -4,11 +4,14 @@ namespace App\Helpers;
 
 use App\Models\Setting;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 
 class SettingsHelper
 {
     protected static $cacheKey = 'app_settings';
+
     protected static $cacheTTL = 3600; // 1 hour
+
     protected static $defaultTeamMembers = [
         [
             'name' => 'Acholoh Emmanuel',
@@ -30,7 +33,7 @@ class SettingsHelper
         $settings = Cache::remember(self::$cacheKey, self::$cacheTTL, function () {
             return Setting::all()->pluck('value', 'key')->toArray();
         });
-        
+
         return $settings[$key] ?? $default;
     }
 
@@ -41,10 +44,65 @@ class SettingsHelper
         Cache::forget(self::$cacheKey);
     }
 
+    public static function siteName(): string
+    {
+        return (string) self::get('site_name', config('app.name', 'Marketplace'));
+    }
+
+    public static function siteTagline(): string
+    {
+        return (string) self::get('site_tagline', 'Shop smarter. Discover more.');
+    }
+
+    public static function siteDescription(): string
+    {
+        return (string) self::get('site_description', 'A modern marketplace for products you will love.');
+    }
+
+    public static function currencyCode(): string
+    {
+        return strtoupper((string) self::get('site_currency', 'NGN'));
+    }
+
+    public static function currencySymbol(): string
+    {
+        return (string) self::get('site_currency_symbol', '₦');
+    }
+
+    public static function assetUrl(string $setting, string $fallback): string
+    {
+        $value = trim((string) self::get($setting, ''));
+
+        if ($value === '') {
+            return asset($fallback);
+        }
+
+        return Str::startsWith($value, ['http://', 'https://', '/']) ? $value : asset($value);
+    }
+
+    public static function logoUrl(): string
+    {
+        if (trim((string) self::get('site_logo', '')) === '' && file_exists(public_path('storage/logo.png'))) {
+            return asset('storage/logo.png');
+        }
+
+        return self::assetUrl('site_logo', 'images/keffi-cart-logo.svg');
+    }
+
+    public static function faviconUrl(): string
+    {
+        return self::assetUrl('site_favicon', 'favicon.ico');
+    }
+
+    public static function browserStorageKey(string $feature): string
+    {
+        return Str::slug(self::siteName() ?: 'storefront').'-'.$feature;
+    }
+
     public static function supportWhatsAppNumber()
     {
         return self::formatWhatsAppNumber(
-            self::get('support_whatsapp_number') ?: self::get('site_phone') ?: '2348123456789'
+            self::get('support_whatsapp_number') ?: self::get('site_phone') ?: ''
         );
     }
 
@@ -84,10 +142,7 @@ class SettingsHelper
 
     public static function currency($amount)
     {
-        $symbol = self::get('site_currency_symbol', '₦');
-        $code = self::get('site_currency', 'NGN');
-        
-        return $symbol . number_format($amount, 2);
+        return self::currencySymbol().number_format((float) $amount, 2);
     }
 
     public static function shippingFee()
@@ -182,20 +237,23 @@ class SettingsHelper
     }
 
     public static function paystackPublicKey()
-{
-    $testMode = self::isTestMode();
-    return $testMode 
-        ? self::get('paystack_test_public_key')
-        : self::get('paystack_public_key');
-}
+    {
+        $testMode = self::isTestMode();
 
-public static function paystackSecretKey()
-{
-    $testMode = self::isTestMode();
-    return $testMode 
-        ? self::get('paystack_test_secret_key')
-        : self::get('paystack_secret_key');
-}
+        return $testMode
+            ? self::get('paystack_test_public_key')
+            : self::get('paystack_public_key');
+    }
+
+    public static function paystackSecretKey()
+    {
+        $testMode = self::isTestMode();
+
+        return $testMode
+            ? self::get('paystack_test_secret_key')
+            : self::get('paystack_secret_key');
+    }
+
     public static function taxRate()
     {
         return self::platformServiceFeeRate(0);

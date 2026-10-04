@@ -4,10 +4,10 @@
 
 @section('content')
 @php
-    $siteName = \App\Helpers\SettingsHelper::get('site_name', config('app.name', 'Keffi Cart'));
+    $siteName = \App\Helpers\SettingsHelper::siteName();
     $siteEmail = \App\Helpers\SettingsHelper::get('site_email', config('mail.from.address'));
-    $sitePhone = \App\Helpers\SettingsHelper::get('site_phone', '+234 909 123 456');
-    $siteAddress = \App\Helpers\SettingsHelper::get('site_address', 'Keffi, Nigeria');
+    $sitePhone = \App\Helpers\SettingsHelper::get('site_phone', '');
+    $siteAddress = \App\Helpers\SettingsHelper::get('site_address', 'Available online');
     $whatsAppNumber = \App\Helpers\SettingsHelper::supportWhatsAppNumber();
 @endphp
 

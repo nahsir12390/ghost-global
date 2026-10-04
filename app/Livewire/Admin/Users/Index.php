@@ -2,23 +2,32 @@
 
 namespace App\Livewire\Admin\Users;
 
+use App\Models\User;
 use Livewire\Component;
 use Livewire\WithPagination;
-use App\Models\User;
 
 class Index extends Component
 {
     use WithPagination;
 
     public $search = '';
+
     public $roleFilter = '';
+
     public $statusFilter = '';
+
     public $sortField = 'created_at';
+
     public $sortDirection = 'desc';
+
     public $selectedUsers = [];
+
     public $selectAll = false;
+
     public $showDeleteModal = false;
+
     public $userIdToDelete = null;
+
     public array $summary = [];
 
     protected $queryString = [
@@ -29,7 +38,7 @@ class Index extends Component
 
     protected $listeners = [
         'userUpdated' => '$refresh',
-        'confirm-delete' => 'confirmDeleteUser'
+        'confirm-delete' => 'confirmDeleteUser',
     ];
 
     public function updatingSearch()
@@ -103,21 +112,22 @@ class Index extends Component
         if ($adminUsers > 0) {
             $this->dispatch('notify', [
                 'type' => 'error',
-                'message' => 'Cannot delete admin users.'
+                'message' => 'Cannot delete admin users.',
             ]);
             $this->showDeleteModal = false;
+
             return;
         }
 
         User::whereIn('id', $this->selectedUsers)->delete();
-        
+
         $this->selectedUsers = [];
         $this->selectAll = false;
         $this->showDeleteModal = false;
-        
+
         $this->dispatch('notify', [
             'type' => 'success',
-            'message' => 'Selected users deleted successfully!'
+            'message' => 'Selected users deleted successfully!',
         ]);
 
         $this->summary = $this->buildSummary();
@@ -125,39 +135,41 @@ class Index extends Component
 
     public function deleteUser()
     {
-        if (!$this->userIdToDelete) {
+        if (! $this->userIdToDelete) {
             return;
         }
 
         $user = User::find($this->userIdToDelete);
-        
-        if (!$user) {
+
+        if (! $user) {
             $this->dispatch('notify', [
                 'type' => 'error',
-                'message' => 'User not found.'
+                'message' => 'User not found.',
             ]);
             $this->showDeleteModal = false;
+
             return;
         }
 
         if ($user->is_admin) {
             $this->dispatch('notify', [
                 'type' => 'error',
-                'message' => 'Cannot delete admin users.'
+                'message' => 'Cannot delete admin users.',
             ]);
             $this->showDeleteModal = false;
+
             return;
         }
 
         $user->delete();
-        
+
         $this->userIdToDelete = null;
         $this->showDeleteModal = false;
         $this->dispatch('userUpdated');
-        
+
         $this->dispatch('notify', [
             'type' => 'success',
-            'message' => 'User deleted successfully!'
+            'message' => 'User deleted successfully!',
         ]);
 
         $this->summary = $this->buildSummary();
@@ -167,40 +179,17 @@ class Index extends Component
     {
         $user = User::find($userId);
         if ($user) {
-            $user->update(['is_admin' => !$user->is_admin]);
+            $user->update(['is_admin' => ! $user->is_admin]);
             $this->dispatch('userUpdated');
-            
+
             $status = $user->is_admin ? 'admin' : 'regular user';
             $this->dispatch('notify', [
                 'type' => 'success',
-                'message' => "User updated to {$status}!"
+                'message' => "User updated to {$status}!",
             ]);
 
             $this->summary = $this->buildSummary();
         }
-    }
-
-    public function updateVendorVerification($userId, $status)
-    {
-        $user = User::where('is_admin', false)->find($userId);
-
-        if (!$user || !$user->isVendor()) {
-            return;
-        }
-
-        $user->update([
-            'verification_status' => $status,
-            'verified_at' => $status === 'approved' ? now() : null,
-            'vendor_is_active' => $status === 'approved',
-        ]);
-
-        $this->dispatch('userUpdated');
-        $this->dispatch('notify', [
-            'type' => 'success',
-            'message' => 'Vendor verification updated successfully!'
-        ]);
-
-        $this->summary = $this->buildSummary();
     }
 
     private function buildSummary(): array
@@ -222,9 +211,9 @@ class Index extends Component
             ->where('is_admin', false)
             ->when($this->search, function ($query) {
                 $query->where(function ($q) {
-                    $q->where('name', 'like', '%' . $this->search . '%')
-                      ->orWhere('email', 'like', '%' . $this->search . '%')
-                      ->orWhere('store_name', 'like', '%' . $this->search . '%');
+                    $q->where('name', 'like', '%'.$this->search.'%')
+                        ->orWhere('email', 'like', '%'.$this->search.'%')
+                        ->orWhere('store_name', 'like', '%'.$this->search.'%');
                 });
             })
             ->when($this->roleFilter, function ($query) {
@@ -236,16 +225,19 @@ class Index extends Component
                         $statusQuery->whereNotNull('email_verified_at')
                             ->orWhere('verification_status', 'approved');
                     });
+
                     return;
                 }
 
                 if ($this->statusFilter === 'pending_vendor') {
                     $query->where('role', 'vendor')->where('verification_status', 'pending');
+
                     return;
                 }
 
                 if ($this->statusFilter === 'inactive_vendor') {
                     $query->where('role', 'vendor')->where('vendor_is_active', false);
+
                     return;
                 }
 
