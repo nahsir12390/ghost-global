@@ -15,20 +15,32 @@ class Category extends Model
         'slug',
         'description',
         'image',
-        'is_active'
+        'is_active',
     ];
 
     protected static function boot()
     {
         parent::boot();
 
-        static::creating(function ($category) {
-            $category->slug = Str::slug($category->name);
+        static::saving(function (Category $category) {
+            $category->slug = static::uniqueSlug($category->name, $category->exists ? $category->id : null);
         });
+    }
 
-        static::updating(function ($category) {
-            $category->slug = Str::slug($category->name);
-        });
+    public static function uniqueSlug(string $name, ?int $ignoreId = null): string
+    {
+        $base = Str::slug($name) ?: 'category';
+        $slug = $base;
+        $counter = 2;
+
+        while (static::query()
+            ->where('slug', $slug)
+            ->when($ignoreId, fn ($query) => $query->whereKeyNot($ignoreId))
+            ->exists()) {
+            $slug = $base.'-'.$counter++;
+        }
+
+        return $slug;
     }
 
     public function products()
