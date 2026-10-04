@@ -1,3 +1,4 @@
+import '../css/ghost-brand.css';
 import axios from 'axios';
 window.axios = axios;
 
