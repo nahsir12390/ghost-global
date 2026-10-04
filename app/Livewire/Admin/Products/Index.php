@@ -44,13 +44,8 @@ class Index extends Component
     {
         $allowed = ['name', 'price', 'quantity', 'created_at', 'is_active'];
         if (! in_array($field, $allowed, true)) return;
-
-        if ($this->sortField === $field) {
-            $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
-        } else {
-            $this->sortField = $field;
-            $this->sortDirection = 'asc';
-        }
+        if ($this->sortField === $field) $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
+        else { $this->sortField = $field; $this->sortDirection = 'asc'; }
     }
 
     public function updatedSelectAll()
@@ -60,14 +55,17 @@ class Index extends Component
 
     public function updatedSelectedProducts()
     {
-        $allProductsCount = $this->getQuery()->count();
-        $this->selectAll = count($this->selectedProducts) === $allProductsCount && $allProductsCount > 0;
+        $count = $this->getQuery()->count();
+        $this->selectAll = count($this->selectedProducts) === $count && $count > 0;
     }
 
     public function toggleProductStatus($productId)
     {
-        $this->managedProduct($productId)?->update(['is_active' => ! $this->managedProduct($productId)->is_active]);
+        $product = $this->managedProduct($productId);
+        if (! $product) return;
+        $product->update(['is_active' => ! $product->is_active]);
         $this->dispatch('productUpdated');
+        session()->flash('success', 'Product status updated successfully.');
     }
 
     public function toggleFeatured($productId)
@@ -76,6 +74,7 @@ class Index extends Component
         if (! $product) return;
         $product->update(['is_featured' => ! $product->is_featured]);
         $this->dispatch('productUpdated');
+        session()->flash('success', 'Product featured status updated successfully.');
     }
 
     public function deleteProduct($productId)
@@ -104,9 +103,7 @@ class Index extends Component
         }
 
         $products = Product::forManager(auth()->user())->whereIn('id', $this->selectedProducts)->get();
-        $deleted = 0;
-        $deactivated = 0;
-
+        $deleted = $deactivated = 0;
         foreach ($products as $product) {
             if ($product->orderItems()->exists()) {
                 $product->update(['is_active' => false, 'is_featured' => false]);
@@ -131,9 +128,7 @@ class Index extends Component
 
     public function getQuery()
     {
-        return Product::query()
-            ->forManager(auth()->user())
-            ->with('category')
+        return Product::query()->forManager(auth()->user())->with('category')
             ->when($this->search, function ($query) {
                 $query->where(function ($q) {
                     $q->where('name', 'like', '%'.$this->search.'%')
@@ -141,8 +136,8 @@ class Index extends Component
                         ->orWhere('description', 'like', '%'.$this->search.'%');
                 });
             })
-            ->when($this->categoryFilter, fn ($query) => $query->where('category_id', $this->categoryFilter))
-            ->when($this->statusFilter !== '', fn ($query) => $query->where('is_active', $this->statusFilter))
+            ->when($this->categoryFilter, fn ($q) => $q->where('category_id', $this->categoryFilter))
+            ->when($this->statusFilter !== '', fn ($q) => $q->where('is_active', $this->statusFilter))
             ->orderBy($this->sortField, $this->sortDirection);
     }
 
@@ -154,8 +149,7 @@ class Index extends Component
 
     private function deleteProductFiles(Product $product): void
     {
-        $images = $product->images ?? [];
-        if (! empty($images)) (new ImageUploadService)->deleteImages($images);
+        if (! empty($product->images)) (new ImageUploadService)->deleteImages($product->images);
         if ($product->download_file_path) Storage::disk('public')->delete($product->download_file_path);
     }
 
