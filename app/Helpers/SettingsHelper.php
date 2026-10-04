@@ -29,7 +29,6 @@ class SettingsHelper
 
     public static function get($key, $default = null)
     {
-        // Get all settings from cache
         $settings = Cache::remember(self::$cacheKey, self::$cacheTTL, function () {
             return Setting::all()->pluck('value', 'key')->toArray();
         });
@@ -40,23 +39,22 @@ class SettingsHelper
     public static function set($key, $value)
     {
         Setting::setValue($key, $value);
-        // Clear cache so next request gets fresh data
         Cache::forget(self::$cacheKey);
     }
 
     public static function siteName(): string
     {
-        return (string) self::get('site_name', config('app.name', 'Marketplace'));
+        return (string) self::get('site_name', config('app.name', 'Ghost Global'));
     }
 
     public static function siteTagline(): string
     {
-        return (string) self::get('site_tagline', 'Shop smarter. Discover more.');
+        return (string) self::get('site_tagline', 'Shop globally. Delivered locally.');
     }
 
     public static function siteDescription(): string
     {
-        return (string) self::get('site_description', 'A modern marketplace for products you will love.');
+        return (string) self::get('site_description', 'Ghost Global is a modern marketplace for discovering and ordering products with reliable worldwide fulfilment.');
     }
 
     public static function currencyCode(): string
@@ -86,7 +84,7 @@ class SettingsHelper
             return asset('storage/logo.png');
         }
 
-        return self::assetUrl('site_logo', 'images/keffi-cart-logo.svg');
+        return self::assetUrl('site_logo', 'images/ghost-global-logo.svg');
     }
 
     public static function faviconUrl(): string
@@ -96,7 +94,7 @@ class SettingsHelper
 
     public static function browserStorageKey(string $feature): string
     {
-        return Str::slug(self::siteName() ?: 'storefront').'-'.$feature;
+        return Str::slug(self::siteName() ?: 'ghost-global').'-'.$feature;
     }
 
     public static function supportWhatsAppNumber()
@@ -180,30 +178,9 @@ class SettingsHelper
         return (string) self::get('checkout_default_postal_code', '961101');
     }
 
-    public static function checkoutDefaultAddress(): string
+    public static function taxRate()
     {
-        return (string) self::get('checkout_default_address', '');
-    }
-
-    public static function checkoutDefaults(): array
-    {
-        return [
-            'country' => self::checkoutDefaultCountry(),
-            'state' => self::checkoutDefaultState(),
-            'city' => self::checkoutDefaultCity(),
-            'postal_code' => self::checkoutDefaultPostalCode(),
-            'address' => self::checkoutDefaultAddress(),
-        ];
-    }
-
-    public static function isMaintenanceMode()
-    {
-        return (bool) self::get('maintenance_mode', false);
-    }
-
-    public static function getPaymentGateway()
-    {
-        return self::get('default_payment_gateway', 'paystack');
+        return (float) self::get('tax_rate', 7.5);
     }
 
     public static function isCashOnDeliveryEnabled()
@@ -216,104 +193,24 @@ class SettingsHelper
         return (bool) self::get('enable_wallet', true);
     }
 
-    public static function walletMinimumTopup(): float
+    public static function paystackPublicKey(): ?string
     {
-        return (float) self::get('wallet_minimum_topup', 500);
+        $testMode = (bool) self::get('test_mode', true);
+        $key = $testMode ? self::get('paystack_test_public_key') : self::get('paystack_live_public_key');
+
+        return $key ?: null;
     }
 
-    public static function isReferralEnabled(): bool
+    public static function paystackSecretKey(): ?string
     {
-        return (bool) self::get('enable_referrals', true);
+        $testMode = (bool) self::get('test_mode', true);
+        $key = $testMode ? self::get('paystack_test_secret_key') : self::get('paystack_live_secret_key');
+
+        return $key ?: null;
     }
 
-    public static function referralRewardAmount(): float
-    {
-        return (float) self::get('referral_reward_amount', 500);
-    }
-
-    public static function isTestMode()
+    public static function isTestMode(): bool
     {
         return (bool) self::get('test_mode', true);
-    }
-
-    public static function paystackPublicKey()
-    {
-        $testMode = self::isTestMode();
-
-        return $testMode
-            ? self::get('paystack_test_public_key')
-            : self::get('paystack_public_key');
-    }
-
-    public static function paystackSecretKey()
-    {
-        $testMode = self::isTestMode();
-
-        return $testMode
-            ? self::get('paystack_test_secret_key')
-            : self::get('paystack_secret_key');
-    }
-
-    public static function taxRate()
-    {
-        return self::platformServiceFeeRate(0);
-    }
-
-    public static function platformServiceFeeRate(float $subtotal): float
-    {
-        $firstTierMax = (float) self::get('platform_fee_tier_1_max', 10000);
-        $secondTierMax = (float) self::get('platform_fee_tier_2_max', 50000);
-        $thirdTierMax = (float) self::get('platform_fee_tier_3_max', 200000);
-
-        if ($subtotal <= $firstTierMax) {
-            return (float) self::get('platform_fee_tier_1_rate', 7.5);
-        }
-
-        if ($subtotal <= $secondTierMax) {
-            return (float) self::get('platform_fee_tier_2_rate', 5);
-        }
-
-        if ($subtotal <= $thirdTierMax) {
-            return (float) self::get('platform_fee_tier_3_rate', 3);
-        }
-
-        return (float) self::get('platform_fee_tier_4_rate', 2);
-    }
-
-    public static function platformServiceFee(float $subtotal): float
-    {
-        return round($subtotal * (self::platformServiceFeeRate($subtotal) / 100), 2);
-    }
-
-    public static function getShippingFee($subtotal = 0)
-    {
-        $shippingFee = self::shippingFee();
-        $freeShippingThreshold = self::freeShippingThreshold();
-
-        if ($freeShippingThreshold > 0 && $subtotal >= $freeShippingThreshold) {
-            return 0;
-        }
-
-        return $shippingFee;
-    }
-
-    public static function calculateOrderBreakdown(float $subtotal): array
-    {
-        $serviceFeeRate = self::platformServiceFeeRate($subtotal);
-        $serviceFee = round($subtotal * ($serviceFeeRate / 100), 2);
-        $shipping = round(self::getShippingFee($subtotal), 2);
-
-        return [
-            'subtotal' => round($subtotal, 2),
-            'service_fee_rate' => $serviceFeeRate,
-            'service_fee' => $serviceFee,
-            'shipping' => $shipping,
-            'total' => round($subtotal + $serviceFee + $shipping, 2),
-        ];
-    }
-
-    public static function calculateOrderTotal($subtotal)
-    {
-        return self::calculateOrderBreakdown((float) $subtotal)['total'];
     }
 }
