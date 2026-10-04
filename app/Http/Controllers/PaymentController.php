@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Throwable;
 
 class PaymentController extends Controller
@@ -21,111 +22,72 @@ class PaymentController extends Controller
         private readonly ReferralService $referralService
     ) {}
 
-    /**
-     * Display payment method selection page.
-     */
     public function index(Order $order)
     {
-        // Ensure user owns this order
-        if ($order->user_id !== Auth::id()) {
-            abort(403);
-        }
+        $this->authorizeOwner($order);
 
-        // Only allow payment for pending orders
         if ($order->payment_status !== 'pending') {
-            return redirect()->route('my.orders.show', $order)
-                ->with('info', 'Order has already been paid.');
+            return redirect()->route('my.orders.show', $order)->with('info', 'This order is not awaiting payment.');
         }
 
-        $paymentMethods = $this->getAvailablePaymentMethods($order);
-
-        Log::info('Payment methods available: '.json_encode($paymentMethods));
-        Log::info('Payment methods type: '.gettype($paymentMethods));
-
-        return view('payment.select', compact('order', 'paymentMethods'));
+        return view('payment.select', [
+            'order' => $order,
+            'paymentMethods' => $this->getAvailablePaymentMethods($order),
+        ]);
     }
 
-    /**
-     * Process payment with selected method.
-     */
     public function process(Order $order, Request $request)
     {
-        if ($order->user_id !== Auth::id()) {
-            abort(403);
-        }
+        $this->authorizeOwner($order);
+        abort_unless($order->payment_status === 'pending', 422, 'This order is not awaiting payment.');
 
-        Log::info('Payment process initiated for order: '.$order->order_number);
-        Log::info('Payment method: '.$request->input('payment_method'));
-
-        $request->validate([
+        $validated = $request->validate([
             'payment_method' => 'required|in:paystack,cash_on_delivery,wallet',
         ]);
 
-        abort_unless(array_key_exists($request->payment_method, $this->getAvailablePaymentMethods($order)), 422, 'This payment method is not available for this order.');
+        abort_unless(array_key_exists($validated['payment_method'], $this->getAvailablePaymentMethods($order)), 422, 'This payment method is not available for this order.');
 
-        if ($request->payment_method === 'paystack') {
-            Log::info('Processing Paystack payment');
-
-            return $this->payWithPaystack($order);
-        } elseif ($request->payment_method === 'wallet') {
-            Log::info('Processing wallet payment');
-
-            return $this->payWithWallet($order);
-        } elseif ($request->payment_method === 'cash_on_delivery') {
-            Log::info('Processing COD payment');
-
-            return $this->payWithCOD($order);
-        }
-
-        return back()->with('error', 'Invalid payment method');
+        return match ($validated['payment_method']) {
+            'paystack' => $this->payWithPaystack($order),
+            'wallet' => $this->payWithWallet($order),
+            'cash_on_delivery' => $this->payWithCOD($order),
+        };
     }
 
-    /**
-     * Paystack payment form.
-     */
     private function payWithPaystack(Order $order)
     {
-        try {
-            $publicKey = SettingsHelper::paystackPublicKey();
+        $publicKey = SettingsHelper::paystackPublicKey();
+        $secretKey = SettingsHelper::paystackSecretKey();
 
-            if (! $publicKey) {
-                throw new \Exception('Paystack is not configured.');
-            }
-
-            // Generate payment reference
-            $reference = 'ORD-'.$order->id.'-'.time();
-            $order->update(['payment_reference' => $reference]);
-
-            Log::info('Paystack payment initiated for order: '.$order->order_number);
-
-            return view('payment.paystack', [
-                'order' => $order,
-                'publicKey' => $publicKey,
-                'amount' => (int) ($order->total * 100),
-                'reference' => $reference,
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error('Paystack setup failed: '.$e->getMessage());
-
-            return back()->with('error', $e->getMessage());
+        if (! $publicKey || ! $secretKey) {
+            return back()->with('error', 'Paystack is not configured.');
         }
+
+        $reference = 'ORD-'.$order->id.'-'.Str::upper(Str::random(12));
+        $order->update([
+            'payment_method' => 'paystack',
+            'payment_reference' => $reference,
+        ]);
+
+        return view('payment.paystack', [
+            'order' => $order,
+            'publicKey' => $publicKey,
+            'amount' => $this->expectedAmount($order),
+            'reference' => $reference,
+            'currency' => $this->expectedCurrency($order),
+        ]);
     }
 
-    /**
-     * Cash on delivery payment.
-     */
     private function payWithCOD(Order $order)
     {
         $order->update([
+            'payment_method' => 'cash_on_delivery',
             'payment_status' => 'pending',
             'status' => 'ordered',
             'tracking_number' => $order->tracking_number ?: $order->order_number,
         ]);
 
         $this->sendConfirmationEmail($order);
-
-        Log::info('COD order confirmed: '.$order->order_number);
 
         return redirect()->route('payment.success', $order)
             ->with('success', 'Order confirmed! You will pay upon delivery.');
@@ -138,10 +100,8 @@ class PaymentController extends Controller
         }
 
         $wallet = $this->walletService->getOrCreateWallet(Auth::user());
-
         if ((float) $wallet->balance < (float) $order->total) {
-            return redirect()->route('wallet.index')
-                ->with('error', 'Your wallet balance is not enough for this order. Please fund your wallet first.');
+            return redirect()->route('wallet.index')->with('error', 'Your wallet balance is not enough for this order.');
         }
 
         try {
@@ -162,130 +122,233 @@ class PaymentController extends Controller
                 'tracking_number' => $order->tracking_number ?: $order->order_number,
             ]);
 
-            $this->referralService->rewardReferrerForFirstPaidOrder($order);
-            $this->sendConfirmationEmail($order);
+            $this->afterFirstSuccessfulPayment($order);
 
-            return redirect()->route('payment.success', $order)
-                ->with('success', 'Order paid successfully from your wallet.');
-        } catch (\Throwable $e) {
-            Log::error('Wallet payment failed: '.$e->getMessage(), ['order_id' => $order->id, 'exception' => $e]);
-
-            return back()->with('error', 'Wallet payment failed: '.$e->getMessage());
+            return redirect()->route('payment.success', $order)->with('success', 'Order paid successfully from your wallet.');
+        } catch (Throwable $e) {
+            Log::error('Wallet payment failed', ['order_id' => $order->id, 'exception' => $e]);
+            return back()->with('error', 'Wallet payment failed. Please try again.');
         }
     }
 
-    /**
-     * Paystack callback - user redirected here after payment.
-     */
     public function callback(Request $request)
     {
-        $reference = $request->query('reference');
+        $reference = (string) $request->query('reference', '');
+        if ($reference === '') {
+            return redirect()->route('payment.failed')->with('error', 'No payment reference found.');
+        }
 
-        if (! $reference) {
-            return redirect()->route('payment.failed')
-                ->with('error', 'No payment reference found.');
+        $order = Order::where('payment_reference', $reference)->first();
+        if (! $order) {
+            return redirect()->route('payment.failed')->with('error', 'Payment reference does not match an order.');
         }
 
         try {
-            $secretKey = SettingsHelper::paystackSecretKey();
+            $result = $this->verifyWithPaystack($order, $reference);
 
-            if (! $secretKey) {
-                throw new \Exception('Paystack not configured.');
+            if ($result['success']) {
+                $this->completePaystackPayment($order, $reference, $result['payload']);
+                return redirect()->route('payment.success', $order)->with('success', 'Payment successful!');
             }
 
-            // Verify payment with Paystack
-            $response = Http::withToken($secretKey)
-                ->timeout(10)
-                ->get('https://api.paystack.co/transaction/verify/'.urlencode($reference));
-
-            $data = $response->json();
-
-            if ($response->successful() && isset($data['data']['status']) && $data['data']['status'] === 'success') {
-                $order = Order::where('payment_reference', $reference)->firstOrFail();
-
-                if (! $this->isValidSuccessfulPayment($order, $reference, $data)) {
-                    Log::warning('Rejected Paystack callback due to mismatched order details.', [
-                        'order_id' => $order->id,
-                        'reference' => $reference,
-                    ]);
-
-                    return redirect()->route('payment.failed')
-                        ->with('error', 'Payment verification failed for this order.');
-                }
-
-                $this->markOrderAsPaid($order, $reference, $data);
-
-                $this->referralService->rewardReferrerForFirstPaidOrder($order);
-                $this->sendConfirmationEmail($order);
-
-                Log::info('Payment confirmed for order: '.$order->order_number);
-
-                return redirect()->route('payment.success', $order)
-                    ->with('success', 'Payment successful!');
-            } else {
-                // Payment failed
-                $order = Order::where('payment_reference', $reference)->first();
-
-                if ($order) {
-                    $order->update([
-                        'payment_status' => 'failed',
-                        'status' => 'failed',
-                    ]);
-                }
-
-                Log::error('Payment verification failed: '.$reference);
-
-                return redirect()->route('payment.failed')
-                    ->with('error', 'Payment could not be verified.');
+            if ($result['terminal_failure']) {
+                $this->markPaymentFailed($order);
             }
 
-        } catch (\Exception $e) {
-            Log::error('Payment callback error: '.$e->getMessage());
-
-            return redirect()->route('payment.failed')
-                ->with('error', 'Payment error: '.$e->getMessage());
+            return redirect()->route('payment.failed')->with('error', $result['message']);
+        } catch (Throwable $e) {
+            Log::error('Payment callback error', ['reference' => $reference, 'exception' => $e]);
+            return redirect()->route('payment.failed')->with('error', 'We could not confirm your payment right now. Please check your order before trying again.');
         }
     }
 
-    /**
-     * Success page.
-     */
     public function success(Order $order)
     {
-        if ($order->user_id !== Auth::id()) {
-            abort(403);
-        }
-
+        $this->authorizeOwner($order);
         return view('payment.success', compact('order'));
     }
 
-    /**
-     * Failed page.
-     */
     public function failed()
     {
         return view('payment.failed');
     }
 
-    /**
-     * Get available payment methods.
-     */
-    private function getAvailablePaymentMethods(?Order $order = null)
+    public function checkStatus(Request $request)
+    {
+        $validated = $request->validate([
+            'reference' => 'required|string|max:150',
+            'order_id' => 'required|integer',
+        ]);
+
+        $order = Order::find($validated['order_id']);
+        if (! $order || $order->user_id !== Auth::id()) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
+
+        if (! hash_equals((string) $order->payment_reference, (string) $validated['reference'])) {
+            return response()->json(['success' => false, 'message' => 'Payment reference mismatch.'], 422);
+        }
+
+        if ($order->payment_status === 'paid') {
+            return response()->json(['success' => true, 'message' => 'Payment completed']);
+        }
+
+        try {
+            $result = $this->verifyWithPaystack($order, $validated['reference']);
+            return response()->json([
+                'success' => $result['success'],
+                'message' => $result['success'] ? 'Payment completed' : $result['message'],
+            ]);
+        } catch (Throwable $e) {
+            Log::error('Payment status check error', ['order_id' => $order->id, 'exception' => $e]);
+            return response()->json(['success' => false, 'message' => 'Unable to check payment status right now.'], 503);
+        }
+    }
+
+    public function verify(Request $request)
+    {
+        $validated = $request->validate([
+            'reference' => 'required|string|max:150',
+            'order_id' => 'required|integer',
+        ]);
+
+        $order = Order::find($validated['order_id']);
+        if (! $order || $order->user_id !== Auth::id()) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
+
+        if (! hash_equals((string) $order->payment_reference, (string) $validated['reference'])) {
+            return response()->json(['success' => false, 'message' => 'Payment reference mismatch.'], 422);
+        }
+
+        if ($order->payment_status === 'paid') {
+            return response()->json([
+                'success' => true,
+                'message' => 'Payment already verified.',
+                'redirect' => route('payment.success', $order),
+            ]);
+        }
+
+        try {
+            $result = $this->verifyWithPaystack($order, $validated['reference']);
+
+            if (! $result['success']) {
+                if ($result['terminal_failure']) $this->markPaymentFailed($order);
+                return response()->json(['success' => false, 'message' => $result['message']], $result['terminal_failure'] ? 400 : 202);
+            }
+
+            $this->completePaystackPayment($order, $validated['reference'], $result['payload']);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Payment verified successfully',
+                'redirect' => route('payment.success', $order),
+            ]);
+        } catch (Throwable $e) {
+            Log::error('Payment verification error', ['order_id' => $order->id, 'exception' => $e]);
+            return response()->json(['success' => false, 'message' => 'Unable to verify payment right now.'], 503);
+        }
+    }
+
+    private function verifyWithPaystack(Order $order, string $reference): array
+    {
+        $secretKey = SettingsHelper::paystackSecretKey();
+        if (! $secretKey) throw new \RuntimeException('Paystack is not configured.');
+
+        $response = Http::withToken($secretKey)
+            ->acceptJson()
+            ->timeout(15)
+            ->retry(2, 250)
+            ->get('https://api.paystack.co/transaction/verify/'.rawurlencode($reference));
+
+        if (! $response->successful()) {
+            throw new \RuntimeException('Paystack verification request failed.');
+        }
+
+        $payload = $response->json();
+        $status = strtolower((string) data_get($payload, 'data.status', ''));
+
+        if ($status === 'success') {
+            return [
+                'success' => $this->isValidSuccessfulPayment($order, $reference, $payload),
+                'terminal_failure' => false,
+                'message' => 'Payment details did not match this order.',
+                'payload' => $payload,
+            ];
+        }
+
+        $terminal = in_array($status, ['failed', 'abandoned', 'reversed'], true);
+
+        return [
+            'success' => false,
+            'terminal_failure' => $terminal,
+            'message' => $terminal ? 'Payment was not successful.' : 'Payment is still being processed.',
+            'payload' => $payload,
+        ];
+    }
+
+    private function isValidSuccessfulPayment(Order $order, string $reference, array $payload): bool
+    {
+        $transactionReference = (string) data_get($payload, 'data.reference', '');
+        $paidAmount = (int) data_get($payload, 'data.amount', 0);
+        $currency = strtoupper((string) data_get($payload, 'data.currency', ''));
+
+        return $order->payment_status === 'pending'
+            && filled($order->payment_reference)
+            && hash_equals((string) $order->payment_reference, $reference)
+            && hash_equals((string) $order->payment_reference, $transactionReference)
+            && $paidAmount === $this->expectedAmount($order)
+            && $currency === $this->expectedCurrency($order);
+    }
+
+    private function completePaystackPayment(Order $order, string $reference, array $payload): void
+    {
+        $order->refresh();
+        if ($order->payment_status === 'paid') return;
+        if (! $this->isValidSuccessfulPayment($order, $reference, $payload)) {
+            throw new \RuntimeException('Verified transaction does not match this order.');
+        }
+
+        $order->update([
+            'payment_method' => 'paystack',
+            'payment_status' => 'paid',
+            'status' => 'ordered',
+            'payment_id' => data_get($payload, 'data.id'),
+            'payment_reference' => $reference,
+            'tracking_number' => $order->tracking_number ?: $order->order_number,
+        ]);
+
+        $this->afterFirstSuccessfulPayment($order);
+    }
+
+    private function markPaymentFailed(Order $order): void
+    {
+        if ($order->payment_status !== 'paid') {
+            $order->update(['payment_status' => 'failed']);
+        }
+    }
+
+    private function afterFirstSuccessfulPayment(Order $order): void
+    {
+        $this->referralService->rewardReferrerForFirstPaidOrder($order);
+        $this->sendConfirmationEmail($order);
+    }
+
+    private function getAvailablePaymentMethods(?Order $order = null): array
     {
         $methods = [];
 
-        $paystackSecret = SettingsHelper::paystackSecretKey();
-        if ($paystackSecret && strlen($paystackSecret) > 20) {
+        if (SettingsHelper::paystackPublicKey() && SettingsHelper::paystackSecretKey()) {
             $methods['paystack'] = 'Paystack';
         }
 
+        // Worldwide Ghost Global orders are prepaid. Keep COD only for legacy/local orders without buyer_email.
         if (SettingsHelper::isCashOnDeliveryEnabled() && ! $order?->buyer_email) {
             $methods['cash_on_delivery'] = 'Cash on Delivery';
         }
 
         if (SettingsHelper::isWalletEnabled() && Auth::check()) {
             $wallet = $this->walletService->getOrCreateWallet(Auth::user());
-
             if (! $order || (float) $wallet->balance >= (float) $order->total) {
                 $methods['wallet'] = 'Wallet Balance';
             }
@@ -294,238 +357,40 @@ class PaymentController extends Controller
         return $methods;
     }
 
-    /**
-     * Send confirmation email.
-     */
-    private function sendConfirmationEmail(Order $order)
+    private function expectedAmount(Order $order): int
+    {
+        return (int) round(((float) $order->total) * 100);
+    }
+
+    private function expectedCurrency(Order $order): string
+    {
+        // Current storefront prices are stored and displayed in NGN.
+        return $order->buyer_email ? 'NGN' : strtoupper(SettingsHelper::currencyCode());
+    }
+
+    private function authorizeOwner(Order $order): void
+    {
+        abort_unless((int) $order->user_id === (int) Auth::id(), 403);
+    }
+
+    private function sendConfirmationEmail(Order $order): void
     {
         try {
             if (config('mail.default') === 'log') {
                 Log::info('Confirmation email for order: '.$order->order_number);
-
                 return;
             }
 
-            Mail::to($order->contact_email)->send(new \App\Mail\OrderConfirmationMail($order));
+            if ($order->contact_email) {
+                Mail::to($order->contact_email)->send(new \App\Mail\OrderConfirmationMail($order));
+            }
 
             $adminEmail = SettingsHelper::get('site_email', config('mail.from.address'));
             if ($adminEmail) {
                 Mail::to($adminEmail)->send(new \App\Mail\AdminOrderNotificationMail($order));
             }
-
-        } catch (\Exception $e) {
-            Log::error('Email send failed: '.$e->getMessage());
-        }
-    }
-
-    /**
-     * Check payment status without verifying
-     */
-    public function checkStatus(Request $request)
-    {
-        $request->validate([
-            'reference' => 'required|string',
-            'order_id' => 'required|integer',
-        ]);
-
-        try {
-            $reference = $request->input('reference');
-            $orderId = $request->input('order_id');
-
-            Log::info('Checking payment status', ['reference' => $reference, 'order_id' => $orderId]);
-
-            $secretKey = SettingsHelper::paystackSecretKey();
-
-            if (! $secretKey) {
-                Log::error('Paystack secret key not configured');
-
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Paystack is not configured.',
-                ], 400);
-            }
-
-            // Check payment status with Paystack
-            $response = Http::withToken($secretKey)
-                ->timeout(10)
-                ->get('https://api.paystack.co/transaction/verify/'.urlencode($reference));
-
-            $data = $response->json();
-
-            Log::info('Paystack status check response', [
-                'status_code' => $response->status(),
-                'transaction_status' => $data['data']['status'] ?? null,
-            ]);
-
-            // If payment is successful, return true
-            $order = Order::find($orderId);
-
-            if (! $order || $order->user_id !== Auth::id()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Unauthorized',
-                ], 403);
-            }
-
-            if (
-                $response->successful()
-                && isset($data['data']['status'])
-                && $data['data']['status'] === 'success'
-                && $this->isValidSuccessfulPayment($order, $reference, $data)
-            ) {
-                Log::info('Payment status check: SUCCESS', ['reference' => $reference]);
-
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Payment completed',
-                ]);
-            } else {
-                Log::info('Payment status check: NOT SUCCESSFUL', ['reference' => $reference, 'status' => $data['data']['status'] ?? 'unknown']);
-
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Payment not completed',
-                ]);
-            }
-
-        } catch (\Exception $e) {
-            Log::error('Payment status check error: '.$e->getMessage());
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Status check error',
-            ], 500);
-        }
-    }
-
-    /**
-     * Verify Paystack payment via AJAX
-     */
-    public function verify(Request $request)
-    {
-        $request->validate([
-            'reference' => 'required|string',
-            'order_id' => 'required|integer',
-        ]);
-
-        try {
-            $reference = $request->input('reference');
-            $orderId = $request->input('order_id');
-
-            Log::info('Payment verification started', ['reference' => $reference, 'order_id' => $orderId]);
-
-            $secretKey = SettingsHelper::paystackSecretKey();
-
-            if (! $secretKey) {
-                Log::error('Paystack secret key not configured');
-
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Paystack is not configured.',
-                ], 400);
-            }
-
-            // Verify payment with Paystack
-            $response = Http::withToken($secretKey)
-                ->timeout(10)
-                ->get('https://api.paystack.co/transaction/verify/'.urlencode($reference));
-
-            $data = $response->json();
-
-            Log::info('Paystack API response', [
-                'status_code' => $response->status(),
-                'data' => $data,
-            ]);
-
-            $order = Order::findOrFail($orderId);
-
-            if ($response->successful() && isset($data['data']['status']) && $data['data']['status'] === 'success') {
-                Log::info('Order found', ['order_id' => $orderId, 'user_id' => $order->user_id]);
-
-                // Verify user owns this order
-                if ($order->user_id !== Auth::id()) {
-                    Log::warning('Unauthorized payment verification attempt', ['order_id' => $orderId]);
-
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Unauthorized',
-                    ], 403);
-                }
-
-                if (! $this->isValidSuccessfulPayment($order, $reference, $data)) {
-                    Log::warning('Rejected Paystack verification due to mismatched order details.', [
-                        'order_id' => $order->id,
-                        'reference' => $reference,
-                    ]);
-
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Payment details did not match this order.',
-                    ], 422);
-                }
-
-                $this->markOrderAsPaid($order, $reference, $data);
-
-                $this->referralService->rewardReferrerForFirstPaidOrder($order);
-                $this->sendConfirmationEmail($order);
-
-                Log::info('Payment confirmed for order: '.$order->order_number);
-
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Payment verified successfully',
-                    'redirect' => route('payment.success', $order),
-                ]);
-            } else {
-                // Payment failed
-                if ($order->user_id === Auth::id()) {
-                    $order->update([
-                        'payment_status' => 'failed',
-                        'status' => 'failed',
-                    ]);
-                }
-
-                Log::error('Payment verification failed: '.$reference, ['response' => $data]);
-
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Payment could not be verified.',
-                ], 400);
-            }
-
         } catch (Throwable $e) {
-            Log::error('Payment verification error: '.$e->getMessage(), ['exception' => $e]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Payment verification error: '.$e->getMessage(),
-            ], 500);
+            Log::error('Order confirmation email failed', ['order_id' => $order->id, 'exception' => $e]);
         }
-    }
-
-    private function isValidSuccessfulPayment(Order $order, string $reference, array $payload): bool
-    {
-        $transaction = $payload['data'] ?? [];
-        $transactionReference = (string) ($transaction['reference'] ?? '');
-        $paidAmount = (int) ($transaction['amount'] ?? 0);
-        $expectedAmount = (int) round(((float) $order->total) * 100);
-
-        return $order->payment_status === 'pending'
-            && ! empty($order->payment_reference)
-            && hash_equals((string) $order->payment_reference, $reference)
-            && hash_equals((string) $order->payment_reference, $transactionReference)
-            && $paidAmount === $expectedAmount
-            && strtoupper((string) ($transaction['currency'] ?? '')) === ($order->buyer_email ? 'NGN' : SettingsHelper::currencyCode());
-    }
-
-    private function markOrderAsPaid(Order $order, string $reference, array $payload): void
-    {
-        $order->update([
-            'payment_status' => 'paid',
-            'status' => 'ordered',
-            'payment_id' => $payload['data']['id'] ?? null,
-            'payment_reference' => $reference,
-            'tracking_number' => $order->tracking_number ?: $order->order_number,
-        ]);
     }
 }
