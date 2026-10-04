@@ -2,7 +2,7 @@
     $siteName = \App\Helpers\SettingsHelper::siteName();
     $siteTagline = \App\Helpers\SettingsHelper::siteTagline();
     $productSections = [
-        ['id' => 'featured', 'eyebrow' => 'Curated for you', 'title' => 'The edit everyone is talking about.', 'description' => 'Standout finds from trusted sellers, selected to make your next great purchase effortless.', 'products' => $featuredProducts, 'tag' => null],
+        ['id' => 'featured', 'eyebrow' => 'Curated for you', 'title' => 'The edit everyone is talking about.', 'description' => 'Standout finds selected to make your next great purchase effortless.', 'products' => $featuredProducts, 'tag' => null],
         ['id' => 'new-arrivals', 'eyebrow' => 'Freshly landed', 'title' => 'New energy. New essentials.', 'description' => 'The latest products to arrive across the store.', 'products' => $newArrivals, 'tag' => 'New'],
         ['id' => 'on-sale', 'eyebrow' => 'Limited drop', 'title' => 'Big finds. Better prices.', 'description' => 'Special offers worth moving quickly for.', 'products' => $onSaleProducts, 'tag' => 'Sale'],
         ['id' => 'best-sellers', 'eyebrow' => 'Most wanted', 'title' => 'Loved across our store.', 'description' => 'The products customers keep coming back for.', 'products' => $bestSellingProducts, 'tag' => 'Popular'],
@@ -19,20 +19,20 @@
                 <div class="max-w-4xl">
                     <div class="storefront-eyebrow storefront-eyebrow--dark" data-hero-reveal><span class="storefront-eyebrow__dot"></span>The store, reimagined</div>
                     <h1 class="mt-7 text-[clamp(3.3rem,9vw,8.5rem)] font-semibold leading-[.82] tracking-[-0.075em]" data-hero-reveal>Find your<br><span class="storefront-outline-text">next</span> thing.</h1>
-                    <p class="mt-8 max-w-xl text-base leading-7 text-white/60 sm:text-lg" data-hero-reveal>{{ $siteTagline }} {{ $siteName }} brings great products, verified sellers and secure checkout together in one beautifully simple experience.</p>
+                    <p class="mt-8 max-w-xl text-base leading-7 text-white/60 sm:text-lg" data-hero-reveal>{{ $siteTagline }} {{ $siteName }} brings great products, secure checkout and clear fulfilment together in one beautifully simple experience.</p>
                     <div class="mt-9 flex flex-col gap-3 sm:flex-row" data-hero-reveal>
                         <a href="{{ route('shop') }}" class="storefront-button storefront-button--primary">Explore the store <span aria-hidden="true">↗</span></a>
                         <a href="#categories" class="storefront-button storefront-button--ghost">See what’s trending</a>
                     </div>
                 </div>
                 <div class="relative min-h-[20rem] lg:min-h-[36rem]" aria-hidden="true">
-                    <div class="hero-orbit-card hero-orbit-card--one" data-float-card><span class="hero-orbit-card__icon">✦</span><span><strong>Curated</strong><small>Fresh daily</small></span></div>
-                    <div class="hero-orbit-card hero-orbit-card--two" data-float-card><span class="hero-orbit-card__icon">✓</span><span><strong>Verified</strong><small>Trusted sellers</small></span></div>
+                    <div class="hero-orbit-card hero-orbit-card--one" data-float-card><span class="hero-orbit-card__icon">✦</span><span><strong>Curated</strong><small>Fresh finds</small></span></div>
+                    <div class="hero-orbit-card hero-orbit-card--two" data-float-card><span class="hero-orbit-card__icon">✓</span><span><strong>Secure</strong><small>Confident checkout</small></span></div>
                     <div class="hero-orbit-card hero-orbit-card--three" data-float-card><span class="hero-orbit-card__icon">→</span><span><strong>Delivered</strong><small>Track every step</small></span></div>
                 </div>
             </div>
             <div class="mt-12 flex flex-col gap-6 border-t border-white/10 pt-6 sm:flex-row sm:items-end sm:justify-between" data-hero-reveal>
-                <div class="grid grid-cols-3 gap-4 sm:gap-8"><x-storefront.metric value="100%" label="Secure" dark /><x-storefront.metric value="24/7" label="Discovery" dark /><x-storefront.metric value="Trusted" label="Service" dark /></div>
+                <div class="grid grid-cols-3 gap-4 sm:gap-8"><x-storefront.metric value="100%" label="Secure" dark /><x-storefront.metric value="Global" label="Reach" dark /><x-storefront.metric value="Tracked" label="Delivery" dark /></div>
                 <a href="#categories" class="hidden items-center gap-3 text-xs font-semibold uppercase tracking-[0.2em] text-white/45 transition hover:text-white sm:flex">Scroll to discover <span class="storefront-scroll-dot">↓</span></a>
             </div>
         </div>
@@ -67,7 +67,7 @@
         <div class="relative z-10 mx-auto grid max-w-[90rem] gap-16 lg:grid-cols-[.8fr_1.2fr] lg:items-center">
             <div data-reveal><span class="text-xs font-semibold uppercase tracking-[.25em] text-white/60">The {{ $siteName }} way</span><p class="mt-6 max-w-md text-2xl font-medium leading-tight tracking-[-.035em] sm:text-4xl">Shopping should feel less like searching—and more like finding.</p></div>
             <div class="grid gap-px overflow-hidden rounded-[2rem] bg-white/15 sm:grid-cols-3" data-reveal>
-                @foreach([['01', 'Discover', 'Browse a store designed around clarity, quality and surprise.'], ['02', 'Choose', 'Buy confidently from active, trusted sellers with transparent prices.'], ['03', 'Receive', 'Check out securely and follow your order from cart to doorstep.']] as [$number, $title, $copy])
+                @foreach([['01', 'Discover', 'Browse a store designed around clarity, quality and surprise.'], ['02', 'Choose', 'Buy confidently with transparent product information and clear prices.'], ['03', 'Receive', 'Check out securely and follow your order from cart to doorstep.']] as [$number, $title, $copy])
                     <article class="bg-[#c91f27] p-7 sm:min-h-[20rem] sm:p-8"><span class="text-xs font-bold tracking-[.2em] text-white/45">{{ $number }}</span><h3 class="mt-16 text-3xl font-semibold tracking-tight">{{ $title }}</h3><p class="mt-4 text-sm leading-6 text-white/65">{{ $copy }}</p></article>
                 @endforeach
             </div>
@@ -78,10 +78,13 @@
         @if($section['products']->count() > 0)
             <section id="{{ $section['id'] }}" class="px-5 py-20 sm:px-8 lg:px-12 lg:py-32 {{ $loop->even ? 'bg-white' : 'bg-[#f5f3ee]' }}">
                 <div class="mx-auto max-w-[90rem]">
-                    <div class="grid gap-8 lg:grid-cols-[.8fr_1.2fr] lg:items-end"><x-storefront.section-heading :eyebrow="$section['eyebrow']" :title="$section['title']" :description="$section['description']" /><div class="flex lg:justify-end"><a href="{{ route('shop') }}" class="storefront-text-link">Shop the full collection <span>↗</span></a></div></div>
-                    <div class="mt-12 grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-5 lg:grid-cols-4">
+                    <div class="grid gap-6 lg:grid-cols-[.8fr_1.2fr] lg:items-end">
+                        <x-storefront.section-heading :eyebrow="$section['eyebrow']" :title="$section['title']" :description="$section['description']" />
+                        <div class="flex lg:justify-end"><a href="{{ route('shop') }}" class="storefront-text-link">Shop all products <span>↗</span></a></div>
+                    </div>
+                    <div class="mt-12 grid grid-cols-2 gap-x-3 gap-y-10 sm:gap-x-5 lg:grid-cols-4">
                         @foreach($section['products'] as $product)
-                            <div class="relative" data-reveal>@if($section['tag'])<span class="absolute left-3 top-3 z-20 rounded-full bg-[#d9272e] px-3 py-1 text-[9px] font-bold uppercase tracking-[.15em] text-white">{{ $section['tag'] }}</span>@endif<x-instant-product-card :product="$product" /></div>
+                            <x-storefront.product-card :product="$product" :tag="$section['tag']" />
                         @endforeach
                     </div>
                 </div>
@@ -89,13 +92,10 @@
         @endif
     @endforeach
 
-    <section class="bg-[#090909] px-5 py-20 text-white sm:px-8 lg:px-12 lg:py-32">
-        <div class="mx-auto max-w-[90rem]">
-            <div class="storefront-install relative overflow-hidden rounded-[2rem] border border-white/10 px-6 py-12 sm:px-12 lg:px-16 lg:py-20" data-reveal>
-                <div class="relative z-10 grid gap-10 lg:grid-cols-[1fr_auto] lg:items-end"><x-storefront.section-heading theme="dark" eyebrow="Take us with you" title="Your favourite store. One tap away." :description="'Install ' . $siteName . ' for faster access, smoother mobile shopping and easier order tracking.'" /><div class="flex flex-col gap-3 sm:flex-row"><button type="button" onclick="window.triggerStoreInstallPrompt?.()" class="storefront-button storefront-button--light">Install app <span>↓</span></button><a href="{{ route('tracking.index') }}" class="storefront-button storefront-button--ghost">Track an order</a></div></div>
-            </div>
-            <div class="mt-20 border-t border-white/10 pt-16">@livewire('newsletter-subscribe')</div>
+    <section class="px-5 py-20 sm:px-8 lg:px-12 lg:py-32">
+        <div class="mx-auto max-w-[90rem] overflow-hidden rounded-[2.5rem] bg-[#101010] px-6 py-14 text-white sm:px-10 lg:grid lg:grid-cols-[1.15fr_.85fr] lg:items-center lg:px-14 lg:py-20">
+            <div data-reveal><span class="text-xs font-bold uppercase tracking-[.22em] text-red-400">Shop with confidence</span><h2 class="mt-5 max-w-3xl text-4xl font-semibold leading-[.98] tracking-[-.055em] sm:text-6xl">From discovery to delivery, keep every step clear.</h2><p class="mt-5 max-w-xl text-base leading-7 text-white/55">Browse products, check availability for your destination, pay securely and track your order as it moves through fulfilment.</p><a href="{{ route('shop') }}" class="storefront-button storefront-button--light mt-8">Explore products</a></div>
+            <div class="mt-12 grid grid-cols-2 gap-3 lg:mt-0" data-reveal><x-storefront.metric class="rounded-3xl bg-white/5 p-6" value="Secure" label="Checkout" dark /><x-storefront.metric class="rounded-3xl bg-white/5 p-6" value="Global" label="Destinations" dark /><x-storefront.metric class="rounded-3xl bg-white/5 p-6" value="Clear" label="Order updates" dark /><x-storefront.metric class="rounded-3xl bg-white/5 p-6" value="Tracked" label="Shipments" dark /></div>
         </div>
     </section>
-    <section class="bg-white px-5 py-12 sm:px-8 lg:px-12"><div class="mx-auto grid max-w-[90rem] grid-cols-2 gap-8 sm:grid-cols-4"><x-storefront.metric value="SSL" label="Secure checkout" /><x-storefront.metric value="30 days" label="Easy returns" /><x-storefront.metric value="Live" label="Order tracking" /><x-storefront.metric value="Human" label="Customer support" /></div></section>
 </main>
